@@ -338,43 +338,21 @@ function calcScore(k,b,threshold,asOf,marketRegime,regimeOn=true,qualityOn=false
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function fetchK(symbol,count=200,to=null){const d=await call('/candles',{symbol,count,to});return d.candles||[]}
 async function fetchDay(count=200,to=null){const d=await call('/candles',{symbol:'BTC',frame:'day',count,to});return d.candles||[]}
-async function historyDaily(days=320){
-  const need=Math.max(220,Math.min(420,days+230));
-  if(DAILY_BTC_CACHE.length>=need)return DAILY_BTC_CACHE.slice(-need);
-  let out=[...DAILY_BTC_CACHE],to=out.length?out[0][0]-1:null;
-  while(out.length<need){
-    $('btLog').textContent=`BTC 일봉 Regime 데이터 ${Math.min(out.length,need)}/${need}일 수집 중…`;
-    const requestCount=Math.min(200,need-out.length);
-    const a=await fetchDay(requestCount,to);
-    if(!a.length)break;
-    const before=out.length;
-    const uniqPage=new Map(a.concat(out).map(x=>[x[0],x]));
-    out=[...uniqPage.values()].sort((x,y)=>x[0]-y[0]);
-    to=Math.min(...a.map(x=>Number(x[0])))-1;
-    if(out.length===before||a.length<requestCount)break;
-    await sleep(130);
-  }
-  const uniq=new Map(out.map(x=>[x[0],x]));
-  DAILY_BTC_CACHE=[...uniq.values()].sort((a,b)=>a[0]-b[0]);
-  return DAILY_BTC_CACHE.slice(-need);
-}
+async function historyDaily(days=320){const need=Math.max(220,Math.min(420,days+230));if(DAILY_BTC_CACHE.length>=need)return DAILY_BTC_CACHE.slice(-need);let out=[...DAILY_BTC_CACHE],to=out.length?out[0][0]:null;while(out.length<need){$('btLog').textContent=`BTC 일봉 Regime 데이터 ${Math.min(out.length,need)}/${need}일 수집 중…`;const a=await fetchDay(Math.min(200,need-out.length),to);if(!a.length)break;out=a.concat(out);if(a.length<200)break;to=a[0][0];await sleep(200)}const uniq=new Map(out.map(x=>[x[0],x]));DAILY_BTC_CACHE=[...uniq.values()].sort((a,b)=>a[0]-b[0]);return DAILY_BTC_CACHE.slice(-need)}
 function regimeAt(daily,asOf){const KST=9*60*60*1000,d=new Date(Number(asOf)+KST),cut=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-KST;return analyzeMarketRegime((daily||[]).filter(x=>x[0]<cut).slice(-200))}
 async function history(symbol,days){
   const need=Math.ceil(days*288)+220;
   const cached=HISTORY_CACHE.get(symbol);
   if(cached&&cached.length>=need)return cached.slice(-need);
-  let out=cached?[...cached]:[],to=out.length?out[0][0]-1:null;
+  let out=cached?[...cached]:[],to=out.length?out[0][0]:null;
   while(out.length<need){
     $('btLog').textContent=`${symbol}/KRW 과거 데이터 ${Math.min(out.length,need).toLocaleString()}/${need.toLocaleString()}봉 수집 중…`;
-    const requestCount=Math.min(200,need-out.length);
-    const a=await fetchK(symbol,requestCount,to);
+    const a=await fetchK(symbol,Math.min(200,need-out.length),to);
     if(!a.length)break;
-    const before=out.length;
-    const uniqPage=new Map(a.concat(out).map(x=>[x[0],x]));
-    out=[...uniqPage.values()].sort((x,y)=>x[0]-y[0]);
-    to=Math.min(...a.map(x=>Number(x[0])))-1;
-    if(out.length===before||a.length<requestCount)break;
-    await sleep(130);
+    out=a.concat(out);
+    if(a.length<200)break;
+    to=a[0][0];
+    await sleep(200);
   }
   const cutoff=Math.floor(Date.now()/FIVE_MIN)*FIVE_MIN;
   const uniq=new Map(out.filter(x=>x[0]<cutoff).map(x=>[x[0],x]));
@@ -522,7 +500,7 @@ function backtestAligned(symbol,a,bm,startIdx,endIdx,opts,daily=[]){
   return trades;
 }
 async function backtestOne(symbol,opts,preloadedBtc=null,preloadedDaily=null){
-  const[k,b,daily]=await Promise.all([history(symbol,opts.days),preloadedBtc?Promise.resolve(preloadedBtc):history('BTC',opts.days),preloadedDaily?Promise.resolve(preloadedDaily):historyDaily(opts.days)]),{a,bm}=alignHistory(k,b);
+  const b=preloadedBtc||await history('BTC',opts.days),k=await history(symbol,opts.days),daily=preloadedDaily||await historyDaily(opts.days),{a,bm}=alignHistory(k,b);
   return{symbol,trades:backtestAligned(symbol,a,bm,0,a.length,opts,daily)};
 }
 
@@ -560,7 +538,7 @@ function researchCandidates(base){
 $('btRun').onclick=async()=>{try{const c=$('btCoin').value,opts=btOptions();if(c==='ALL'&&opts.days>=60)$('btLog').textContent='장기 ALL 백테스트는 데이터 수집량이 많아 수분이 걸릴 수 있습니다…';const out=await loadRuns(c,opts);renderDetails(out,opts);$('btLog').textContent=`완료 · ${opts.days}일 · ${c==='ALL'?'ALL(동시 1포지션)':c+'/KRW'} · ${modeLabel(opts.mode)} · Pattern ${opts.pattern==='off'?'OFF':'ON'} · Regime ${opts.regime==='off'?'OFF':'ON'} · Score ${opts.threshold} · 거래 ${LAST.stats.n}회`;$('candidate').textContent=judge(LAST.stats,null)}catch(e){$('btLog').textContent='오류: '+e.message}};
 
 $('optRun').onclick=async()=>{try{
-  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions(),[k,b,daily]=await Promise.all([history(c,base.days),history('BTC',base.days),historyDaily(base.days)]),{a,bm}=alignHistory(k,b);let best=null,rows=[];
+  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions(),b=await history('BTC',base.days),k=await history(c,base.days),daily=await historyDaily(base.days),{a,bm}=alignHistory(k,b);let best=null,rows=[];
   for(const cfg of researchCandidates(base)){const q=stats(backtestAligned(c,a,bm,0,a.length,cfg,daily)),sc=quality(q);rows.push({cfg,q,sc});if(q.n>=8&&(!best||sc>best.sc))best={cfg,q,sc}}
   if(!best){$('optResult').textContent='충분한 거래 표본이 없습니다.';return}
   const thSummary=[75,80,85,90].map(th=>{const r=rows.filter(x=>x.cfg.threshold===th).sort((a,b)=>b.sc-a.sc)[0];return r?`${th}: ${r.q.n}회 / 기대 ${r.q.avg.toFixed(3)}% / PF ${r.q.pf===Infinity?'∞':r.q.pf.toFixed(2)}`:`${th}: —`}).join('<br>');
@@ -568,7 +546,7 @@ $('optRun').onclick=async()=>{try{
 }catch(e){$('optResult').textContent='오류: '+e.message}};
 
 $('wfRun').onclick=async()=>{try{
-  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions({days:Math.max(30,+$('btDays').value)}),[k,b,daily]=await Promise.all([history(c,base.days),history('BTC',base.days),historyDaily(base.days)]),{a,bm}=alignHistory(k,b),split=Math.floor(a.length*.65);let best=null;
+  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions({days:Math.max(30,+$('btDays').value)}),b=await history('BTC',base.days),k=await history(c,base.days),daily=await historyDaily(base.days),{a,bm}=alignHistory(k,b),split=Math.floor(a.length*.65);let best=null;
   for(const cfg of researchCandidates(base)){const q=stats(backtestAligned(c,a,bm,160,split,cfg,daily));if(q.n>=6&&(!best||quality(q)>quality(best.q)))best={cfg,q}}
   if(!best){$('wfResult').textContent='학습구간 신호가 부족합니다.';return}
   const test=stats(backtestAligned(c,a,bm,split,a.length,best.cfg,daily));

@@ -338,20 +338,42 @@ function calcScore(k,b,threshold,asOf,marketRegime,regimeOn=true,qualityOn=false
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function fetchK(symbol,count=200,to=null){const d=await call('/candles',{symbol,count,to});return d.candles||[]}
 async function fetchDay(count=200,to=null){const d=await call('/candles',{symbol:'BTC',frame:'day',count,to});return d.candles||[]}
-async function historyDaily(days=320){const need=Math.max(220,Math.min(420,days+230));if(DAILY_BTC_CACHE.length>=need)return DAILY_BTC_CACHE.slice(-need);let out=[...DAILY_BTC_CACHE],to=out.length?out[0][0]:null;while(out.length<need){$('btLog').textContent=`BTC 일봉 Regime 데이터 ${Math.min(out.length,need)}/${need}일 수집 중…`;const a=await fetchDay(Math.min(200,need-out.length),to);if(!a.length)break;out=a.concat(out);if(a.length<200)break;to=a[0][0];await sleep(130)}const uniq=new Map(out.map(x=>[x[0],x]));DAILY_BTC_CACHE=[...uniq.values()].sort((a,b)=>a[0]-b[0]);return DAILY_BTC_CACHE.slice(-need)}
+async function historyDaily(days=320){
+  const need=Math.max(220,Math.min(420,days+230));
+  if(DAILY_BTC_CACHE.length>=need)return DAILY_BTC_CACHE.slice(-need);
+  let out=[...DAILY_BTC_CACHE],to=out.length?out[0][0]-1:null;
+  while(out.length<need){
+    $('btLog').textContent=`BTC 일봉 Regime 데이터 ${Math.min(out.length,need)}/${need}일 수집 중…`;
+    const requestCount=Math.min(200,need-out.length);
+    const a=await fetchDay(requestCount,to);
+    if(!a.length)break;
+    const before=out.length;
+    const uniqPage=new Map(a.concat(out).map(x=>[x[0],x]));
+    out=[...uniqPage.values()].sort((x,y)=>x[0]-y[0]);
+    to=Math.min(...a.map(x=>Number(x[0])))-1;
+    if(out.length===before||a.length<requestCount)break;
+    await sleep(130);
+  }
+  const uniq=new Map(out.map(x=>[x[0],x]));
+  DAILY_BTC_CACHE=[...uniq.values()].sort((a,b)=>a[0]-b[0]);
+  return DAILY_BTC_CACHE.slice(-need);
+}
 function regimeAt(daily,asOf){const KST=9*60*60*1000,d=new Date(Number(asOf)+KST),cut=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-KST;return analyzeMarketRegime((daily||[]).filter(x=>x[0]<cut).slice(-200))}
 async function history(symbol,days){
   const need=Math.ceil(days*288)+220;
   const cached=HISTORY_CACHE.get(symbol);
   if(cached&&cached.length>=need)return cached.slice(-need);
-  let out=cached?[...cached]:[],to=out.length?out[0][0]:null;
+  let out=cached?[...cached]:[],to=out.length?out[0][0]-1:null;
   while(out.length<need){
     $('btLog').textContent=`${symbol}/KRW 과거 데이터 ${Math.min(out.length,need).toLocaleString()}/${need.toLocaleString()}봉 수집 중…`;
-    const a=await fetchK(symbol,Math.min(200,need-out.length),to);
+    const requestCount=Math.min(200,need-out.length);
+    const a=await fetchK(symbol,requestCount,to);
     if(!a.length)break;
-    out=a.concat(out);
-    if(a.length<200)break;
-    to=a[0][0];
+    const before=out.length;
+    const uniqPage=new Map(a.concat(out).map(x=>[x[0],x]));
+    out=[...uniqPage.values()].sort((x,y)=>x[0]-y[0]);
+    to=Math.min(...a.map(x=>Number(x[0])))-1;
+    if(out.length===before||a.length<requestCount)break;
     await sleep(130);
   }
   const cutoff=Math.floor(Date.now()/FIVE_MIN)*FIVE_MIN;

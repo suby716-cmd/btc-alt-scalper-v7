@@ -1,3 +1,11 @@
+## v8.3.1 history pagination hotfix
+
+- 백테스트/워크포워드 과거 5분봉 수집이 마지막 1봉에서 멈출 수 있던 pagination cursor 중복 문제 수정
+- 다음 페이지 cursor를 마지막(가장 오래된) 봉보다 1ms 이전으로 이동해 동일 봉 재수집 방지
+- 실제 요청 개수(requestCount) 기준으로 마지막 페이지 종료 조건을 판단하도록 수정
+- BTC 일봉 Regime 데이터 수집에도 동일한 안전장치 적용
+- 매매 전략/Score/Regime/TP·SL 로직은 변경하지 않음
+
 # Changelog
 
 ## v8.3.1 Regime Quality Filter

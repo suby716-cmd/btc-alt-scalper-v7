@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0e17">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v8.3.1</title>
+<title>BTC ALT REGIME TRADER v8.3.2</title>
 <style>
 :root{--bg:#080c15;--panel:#11182a;--panel2:#151f34;--line:#263149;--text:#e9edf7;--muted:#8290aa;--green:#4ade80;--yellow:#facc15;--red:#fb7185;--blue:#38bdf8;--violet:#a78bfa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1440px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#0c1220;border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#121a2d}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -15,7 +15,7 @@
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.1</h1><div class="sub">Upbit KRW · 일봉 Regime + 15분/5분 Pattern · Cloudflare 24시간 Cron · Telegram 수동매매 알림 전용</div></div>
+    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.2</h1><div class="sub">Upbit KRW · 일봉 Regime + 15분/5분 Pattern · Cloudflare 24시간 Cron · Telegram 수동매매 알림 전용</div></div>
     <div class="status"><span class="dot" id="dot"></span><span id="status">연결 준비중</span></div>
   </div>
 
@@ -80,7 +80,7 @@
   </div>
 
   <div class="panel">
-    <b>📊 V8.3.1 Upbit KRW Regime Quality 백테스트</b>
+    <b>📊 V8.3.2 Upbit KRW Regime Quality 백테스트</b>
     <p class="small">v8.3.1은 BTC <b>완료 일봉 Regime</b>을 상위 필터로 두고 5분 기술조건·15분 구조·Pattern을 결합합니다. 90일 검증에서 손실이 컸던 <b>RANGE 신규 BUY를 차단</b>하고, 알트의 15분 BTC 상대강도/중기 EMA 품질과 Anti-Chase(과열 추격 방지)를 추가했습니다. STRONG_BULL/BULL의 작은 BTC Risk-Off는 즉시 SELL하지 않고 Hard Crash와 복수 약화를 구분합니다. TP/SL/Trail도 고정 1.2/2.2/0.8% 대신 <b>각 코인의 5분 ATR + 대세 Regime</b>에 따라 넓이와 보유시간을 바꿉니다. 백테스트는 완료봉에서 판정하고 다음 5분봉 시가에 진입하며 수수료·슬리피지를 반영합니다. <b>외부 거시/뉴스 점수는 과거 시점 복원이 불완전하여 백테스트에는 포함하지 않습니다.</b></p>
     <div class="btgrid">
       <select id="btCoin"><option value="ALL">ALL</option><option>ETH</option><option>SOL</option><option>XRP</option><option>HBAR</option><option>ONDO</option><option>LINK</option><option>AVAX</option><option>DOGE</option><option>SUI</option><option>TAO</option><option>UNI</option><option>AAVE</option></select>
@@ -98,10 +98,10 @@
       <input id="btTrail" type="number" step="0.1" value="1.1" placeholder="ATR Trail 배수">
       <button class="btn" id="btRun">백테스트 실행</button>
     </div>
-    <div class="small" style="margin-top:7px">권장 비교 순서: 같은 90일·같은 비용·Score 75에서 먼저 <b>v8.3.0 비교</b>, 다음 <b>v8.3.1 Regime Quality Filter</b>를 실행하세요. v8.3.1은 RANGE BUY 차단, 알트 상대강도 품질, Anti-Chase, Hard/Soft BTC 급락 분리를 적용합니다. 목표는 PF 1.0 돌파 여부를 검증하는 것입니다. 60~90일 ALL은 데이터 수집에 수분이 걸릴 수 있습니다.</div>
+    <div class="small" style="margin-top:7px">권장 비교 순서: 같은 90일·같은 비용·Score 75에서 먼저 <b>v8.3.0 비교</b>, 다음 <b>v8.3.1 Regime Quality Filter</b>를 실행하세요. v8.3.1은 RANGE BUY 차단, 알트 상대강도 품질, Anti-Chase, Hard/Soft BTC 급락 분리를 적용합니다. 목표는 PF 1.0 돌파 여부를 검증하는 것입니다. 60~90일 ALL은 데이터 수집량이 많습니다. 과거 데이터는 타임아웃·재시도와 세션 캐시를 사용합니다.</div>
     <div id="btMetrics" class="metricgrid" style="margin-top:10px"></div>
     <div id="btModeStats" class="subpanel"></div><div id="btCoinStats" class="subpanel"></div><div id="btScoreStats" class="subpanel"></div><div id="btTimeStats" class="subpanel"></div><div id="btRegimeStats" class="subpanel"></div><div id="btRiskStats" class="subpanel"></div>
-    <div class="log" id="btLog" style="margin-top:10px">아직 실행하지 않았습니다. 첫 실행은 Upbit 과거 데이터를 페이지 단위로 받아오므로 시간이 걸릴 수 있으며, 같은 세션에서는 더 긴 기간의 캐시를 재사용합니다.</div>
+    <div class="log" id="btLog" style="margin-top:10px">아직 실행하지 않았습니다. 첫 실행은 Upbit 과거 데이터를 페이지 단위로 받습니다. 요청별 15초 타임아웃·최대 2회 재시도와 진행률을 표시하며, 같은 세션에서는 캐시를 재사용합니다.</div>
   </div>
 
   <div class="panel">
@@ -116,7 +116,7 @@
 </div>
 
 <script>
-const VERSION='v8.3.1';
+const VERSION='v8.3.2';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -144,6 +144,25 @@ function workerBase(){const w=W.value.trim();if(!w)throw Error('Worker URL을 �
 
 async function parseResponse(r){const text=await r.text();let d=null;try{d=text?JSON.parse(text):{}}catch{const head=text.replace(/\s+/g,' ').slice(0,90);throw Error(`Worker가 JSON 대신 다른 응답을 보냈습니다 (${r.status}). URL을 확인하세요: ${head||'빈 응답'}`)}if(!r.ok)throw Error(d.error||`요청 실패 (${r.status})`);return d}
 async function call(path,body){const r=await fetch(workerBase()+path,{method:'POST',headers:Object.assign({'x-scalper-pin':P.value.trim()},body?{'content-type':'application/json'}:{}),body:body?JSON.stringify(body):undefined});return parseResponse(r)}
+async function callTimed(path,body,timeoutMs=15000,retries=2,label='데이터'){
+  let last=null;
+  for(let attempt=0;attempt<=retries;attempt++){
+    const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),timeoutMs);
+    try{
+      const r=await fetch(workerBase()+path,{method:'POST',headers:Object.assign({'x-scalper-pin':P.value.trim()},body?{'content-type':'application/json'}:{}),body:body?JSON.stringify(body):undefined,signal:ctrl.signal,cache:'no-store'});
+      return await parseResponse(r);
+    }catch(e){
+      last=e;
+      if(attempt<retries){
+        const why=e?.name==='AbortError'?`응답 지연 ${Math.round(timeoutMs/1000)}초`:(e?.message||'네트워크 오류');
+        $('btLog').textContent=`${label} · 요청 재시도 ${attempt+1}/${retries} · ${why}`;
+        await sleep(700*(attempt+1));
+      }
+    }finally{clearTimeout(timer)}
+  }
+  if(last?.name==='AbortError')throw Error(`${label} 요청 시간초과(${Math.round(timeoutMs/1000)}초). Worker/Upbit 연결을 확인하세요.`);
+  throw last||Error(`${label} 요청 실패`);
+}
 async function health(){const r=await fetch(workerBase()+'/health',{cache:'no-store'});return parseResponse(r)}
 
 function applyConfig(d){if(!d?.strategy)return;SERVER_CFG={...SERVER_CFG,...d.strategy};$('btTP').value=SERVER_CFG.tp1Pct;$('btTP2').value=SERVER_CFG.tp2Pct;$('btSL').value=SERVER_CFG.stopLossPct;$('btThreshold').value=SERVER_CFG.minScore}
@@ -336,28 +355,53 @@ function calcScore(k,b,threshold,asOf,marketRegime,regimeOn=true,qualityOn=false
 
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function fetchK(symbol,count=200,to=null){const d=await call('/candles',{symbol,count,to});return d.candles||[]}
-async function fetchDay(count=200,to=null){const d=await call('/candles',{symbol:'BTC',frame:'day',count,to});return d.candles||[]}
-async function historyDaily(days=320){const need=Math.max(220,Math.min(420,days+230));if(DAILY_BTC_CACHE.length>=need)return DAILY_BTC_CACHE.slice(-need);let out=[...DAILY_BTC_CACHE],to=out.length?out[0][0]:null;while(out.length<need){$('btLog').textContent=`BTC 일봉 Regime 데이터 ${Math.min(out.length,need)}/${need}일 수집 중…`;const a=await fetchDay(Math.min(200,need-out.length),to);if(!a.length)break;out=a.concat(out);if(a.length<200)break;to=a[0][0];await sleep(200)}const uniq=new Map(out.map(x=>[x[0],x]));DAILY_BTC_CACHE=[...uniq.values()].sort((a,b)=>a[0]-b[0]);return DAILY_BTC_CACHE.slice(-need)}
+async function fetchK(symbol,count=200,to=null){const d=await callTimed('/candles',{symbol,count,to},15000,2,`${symbol}/KRW 5분봉`);return d.candles||[]}
+async function fetchDay(count=200,to=null){const d=await callTimed('/candles',{symbol:'BTC',frame:'day',count,to},15000,2,'BTC 일봉');return d.candles||[]}
+async function historyDaily(days=320){
+  const need=Math.max(220,Math.min(420,days+230));
+  if(DAILY_BTC_CACHE.length>=need){$('btLog').textContent=`BTC 일봉 Regime 캐시 사용 · ${need}일`;return DAILY_BTC_CACHE.slice(-need)}
+  let out=[...DAILY_BTC_CACHE],to=out.length?out[0][0]:null,req=0,total=Math.ceil((need-out.length)/200);
+  while(out.length<need){
+    req++;
+    const want=Math.min(200,need-out.length);
+    $('btLog').textContent=`BTC 일봉 Regime 데이터 ${Math.min(out.length,need)}/${need}일 수집 중… · 요청 ${req}/${total}`;
+    const before=out.length,a=await fetchDay(want,to);
+    if(!a.length)break;
+    out=a.concat(out);
+    if(out.length<=before)throw Error('BTC 일봉 데이터가 증가하지 않았습니다. Worker의 to 파라미터를 확인하세요.');
+    if(a.length<want)break;
+    to=a[0][0];
+    await sleep(250);
+  }
+  const uniq=new Map(out.map(x=>[x[0],x]));
+  DAILY_BTC_CACHE=[...uniq.values()].sort((a,b)=>a[0]-b[0]);
+  if(DAILY_BTC_CACHE.length<Math.min(60,need))throw Error(`BTC 일봉 데이터 부족: ${DAILY_BTC_CACHE.length}/${need}`);
+  return DAILY_BTC_CACHE.slice(-need);
+}
 function regimeAt(daily,asOf){const KST=9*60*60*1000,d=new Date(Number(asOf)+KST),cut=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-KST;return analyzeMarketRegime((daily||[]).filter(x=>x[0]<cut).slice(-200))}
 async function history(symbol,days){
   const need=Math.ceil(days*288)+220;
   const cached=HISTORY_CACHE.get(symbol);
-  if(cached&&cached.length>=need)return cached.slice(-need);
-  let out=cached?[...cached]:[],to=out.length?out[0][0]:null;
+  if(cached&&cached.length>=need){$('btLog').textContent=`${symbol}/KRW 5분봉 캐시 사용 · ${need.toLocaleString()}봉`;return cached.slice(-need);}
+  let out=cached?[...cached]:[],to=out.length?out[0][0]:null,req=0,total=Math.ceil((need-out.length)/200);
   while(out.length<need){
-    $('btLog').textContent=`${symbol}/KRW 과거 데이터 ${Math.min(out.length,need).toLocaleString()}/${need.toLocaleString()}봉 수집 중…`;
-    const a=await fetchK(symbol,Math.min(200,need-out.length),to);
+    req++;
+    const want=Math.min(200,need-out.length);
+    $('btLog').textContent=`${symbol}/KRW 과거 데이터 ${Math.min(out.length,need).toLocaleString()}/${need.toLocaleString()}봉 수집 중… · 요청 ${req}/${total}`;
+    const before=out.length,a=await fetchK(symbol,want,to);
     if(!a.length)break;
     out=a.concat(out);
-    if(a.length<200)break;
+    if(out.length<=before)throw Error(`${symbol}/KRW 데이터가 증가하지 않았습니다. Worker의 to 파라미터를 확인하세요.`);
+    if(a.length<want)break;
     to=a[0][0];
-    await sleep(200);
+    await sleep(250);
   }
   const cutoff=Math.floor(Date.now()/FIVE_MIN)*FIVE_MIN;
   const uniq=new Map(out.filter(x=>x[0]<cutoff).map(x=>[x[0],x]));
   const arr=[...uniq.values()].sort((a,b)=>a[0]-b[0]);
   HISTORY_CACHE.set(symbol,arr);
+  if(arr.length<Math.min(200,need))throw Error(`${symbol}/KRW 과거 데이터 부족: ${arr.length.toLocaleString()}/${need.toLocaleString()}봉`);
+  if(arr.length<need)$('btLog').textContent=`${symbol}/KRW 수집 종료 · ${arr.length.toLocaleString()}/${need.toLocaleString()}봉`;
   return arr.slice(-need);
 }
 
@@ -524,7 +568,7 @@ function renderDetails(out,opts){
 function quality(q){if(!q.n)return-999;const sample=Math.min(1,q.n/30),pf=Math.min(1.6,Math.max(0,Number.isFinite(q.pf)?q.pf:1.6))/1.6,mdd=Math.max(0,1-Math.min(25,q.mdd)/25),ev=Math.max(0,Math.min(1,(q.avg+.10)/.8));return(sample*.25+pf*.30+mdd*.20+ev*.25)*100}
 function judge(q,wf){if(!q||q.n<15)return'⚪ 표본 부족: 최소 15회, 가능하면 30회 이상의 거래가 필요합니다.';const qs=quality(q);if(wf&&wf.n>=10&&wf.avg>0&&wf.net>0&&wf.pf>1&&qs>=60)return`🟢 연구 후보: 안정성 ${qs.toFixed(0)}/100 · 검증 기대값 ${wf.avg.toFixed(3)}% · 검증 복리 ${wf.net.toFixed(2)}%`;if(qs>=65&&q.avg>0&&q.pf>1&&q.mdd<12)return`🟡 연구 우수: 안정성 ${qs.toFixed(0)}/100. 별도 미래구간과 페이퍼 트레이딩 확인이 필요합니다.`;return`🔴 보류: 안정성 ${qs.toFixed(0)}/100. 수익성 또는 리스크가 충분히 확인되지 않았습니다.`}
 function researchCandidates(base){
-  const ths=[75,80,85,90],out=[];
+  const ths=[60,65,70,75,80,85,90],out=[];
   if(base.mode==='regime'||base.mode==='regimeq'){for(const th of ths)out.push({...base,threshold:th,profile:base.mode==='regimeq'?'Regime Quality':'Regime Dynamic'});
   }else if(base.mode==='adaptive'){
     const profiles=[['좁게',1.2,2.0,.8],['균형',1.6,2.5,1.1],['넓게',2.0,3.0,1.4]];
@@ -538,19 +582,25 @@ function researchCandidates(base){
 $('btRun').onclick=async()=>{try{const c=$('btCoin').value,opts=btOptions();if(c==='ALL'&&opts.days>=60)$('btLog').textContent='장기 ALL 백테스트는 데이터 수집량이 많아 수분이 걸릴 수 있습니다…';const out=await loadRuns(c,opts);renderDetails(out,opts);$('btLog').textContent=`완료 · ${opts.days}일 · ${c==='ALL'?'ALL(동시 1포지션)':c+'/KRW'} · ${modeLabel(opts.mode)} · Pattern ${opts.pattern==='off'?'OFF':'ON'} · Regime ${opts.regime==='off'?'OFF':'ON'} · Score ${opts.threshold} · 거래 ${LAST.stats.n}회`;$('candidate').textContent=judge(LAST.stats,null)}catch(e){$('btLog').textContent='오류: '+e.message}};
 
 $('optRun').onclick=async()=>{try{
+  $('optResult').textContent='조건 탐색 준비 중…';
   const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions(),b=await history('BTC',base.days),k=await history(c,base.days),daily=await historyDaily(base.days),{a,bm}=alignHistory(k,b);let best=null,rows=[];
   for(const cfg of researchCandidates(base)){const q=stats(backtestAligned(c,a,bm,0,a.length,cfg,daily)),sc=quality(q);rows.push({cfg,q,sc});if(q.n>=8&&(!best||sc>best.sc))best={cfg,q,sc}}
-  if(!best){$('optResult').textContent='충분한 거래 표본이 없습니다.';return}
-  const thSummary=[75,80,85,90].map(th=>{const r=rows.filter(x=>x.cfg.threshold===th).sort((a,b)=>b.sc-a.sc)[0];return r?`${th}: ${r.q.n}회 / 기대 ${r.q.avg.toFixed(3)}% / PF ${r.q.pf===Infinity?'∞':r.q.pf.toFixed(2)}`:`${th}: —`}).join('<br>');
-  $('optResult').innerHTML=`<b>${c}/KRW ${modeLabel(base.mode)} 연구 후보</b><br>최우수: Score <b>${best.cfg.threshold}</b> · 프로필 <b>${best.cfg.profile}</b>${base.mode==='adaptive'?` · ATR SL ${best.cfg.atrSl} / TP ${best.cfg.atrTp} / Trail ${best.cfg.trail}`:''}<br>거래 ${best.q.n} · 승률 ${best.q.win.toFixed(1)}% · 기대값 ${best.q.avg.toFixed(3)}% · PF ${best.q.pf===Infinity?'∞':best.q.pf.toFixed(2)} · MDD ${best.q.mdd.toFixed(2)}% · 안정성 <b>${best.sc.toFixed(0)}/100</b><hr><b>Score 비교(각 Threshold의 최우수 프로필)</b><br>${thSummary}<br><span class="small">같은 구간에서 고른 최적값은 과적합될 수 있으므로 아래 워크포워드 검증을 반드시 확인하세요. 자동 실전 적용은 하지 않습니다.</span>`;
+  const thresholds=[...new Set(rows.map(x=>x.cfg.threshold))];
+  const thSummary=thresholds.map(th=>{const r=rows.filter(x=>x.cfg.threshold===th).sort((a,b)=>b.sc-a.sc)[0];return r?`Score ${th}: <b>${r.q.n}회</b> · 기대 ${r.q.avg.toFixed(3)}% · PF ${r.q.pf===Infinity?'∞':r.q.pf.toFixed(2)}`:`Score ${th}: —`}).join('<br>');
+  if(!best){$('optResult').innerHTML=`<b>${c}/KRW 조건 탐색</b><br>${thSummary}<hr>⚠️ 최소 8회 이상의 거래를 가진 연구 후보가 없습니다. 실전 조건은 변경하지 않았습니다.`;return}
+  $('optResult').innerHTML=`<b>${c}/KRW ${modeLabel(base.mode)} 연구 후보</b><br>최우수: Score <b>${best.cfg.threshold}</b> · 프로필 <b>${best.cfg.profile}</b>${base.mode==='adaptive'?` · ATR SL ${best.cfg.atrSl} / TP ${best.cfg.atrTp} / Trail ${best.cfg.trail}`:''}<br>거래 ${best.q.n} · 승률 ${best.q.win.toFixed(1)}% · 기대값 ${best.q.avg.toFixed(3)}% · PF ${best.q.pf===Infinity?'∞':best.q.pf.toFixed(2)} · MDD ${best.q.mdd.toFixed(2)}% · 안정성 <b>${best.sc.toFixed(0)}/100</b><hr><b>Score별 표본 진단</b><br>${thSummary}<br><span class="small">같은 구간에서 고른 최적값은 과적합될 수 있으므로 아래 워크포워드 검증을 확인하세요. 실전 Worker 설정은 자동 변경하지 않습니다.</span>`;
 }catch(e){$('optResult').textContent='오류: '+e.message}};
 
 $('wfRun').onclick=async()=>{try{
-  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions({days:Math.max(30,+$('btDays').value)}),b=await history('BTC',base.days),k=await history(c,base.days),daily=await historyDaily(base.days),{a,bm}=alignHistory(k,b),split=Math.floor(a.length*.65);let best=null;
-  for(const cfg of researchCandidates(base)){const q=stats(backtestAligned(c,a,bm,160,split,cfg,daily));if(q.n>=6&&(!best||quality(q)>quality(best.q)))best={cfg,q}}
-  if(!best){$('wfResult').textContent='학습구간 신호가 부족합니다.';return}
+  $('wfResult').textContent='워크포워드 데이터 준비 중…';
+  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions({days:Math.max(30,+$('btDays').value)}),b=await history('BTC',base.days),k=await history(c,base.days),daily=await historyDaily(base.days),{a,bm}=alignHistory(k,b),split=Math.floor(a.length*.65);let best=null,rows=[];
+  for(const cfg of researchCandidates(base)){const q=stats(backtestAligned(c,a,bm,160,split,cfg,daily));rows.push({cfg,q});if(q.n>=6&&(!best||quality(q)>quality(best.q)))best={cfg,q}}
+  const thSummary=rows.map(r=>`Score ${r.cfg.threshold}: <b>${r.q.n}회</b>`).join(' · ');
+  if(!best){$('wfResult').innerHTML=`<b>학습구간 신호가 부족합니다.</b><br>학습 65% 구간 · ${thSummary}<br><span class="small">현재 v8.3.2는 Score 60~90을 모두 탐색했습니다. 6회 미만인 후보는 워크포워드 선택에서 제외합니다. 실전 조건은 변경하지 않습니다.</span>`;return}
   const test=stats(backtestAligned(c,a,bm,split,a.length,best.cfg,daily));
-  $('wfResult').innerHTML=`학습 65%에서 선택: Score <b>${best.cfg.threshold}</b> · ${best.cfg.profile}${base.mode==='adaptive'?` · ATR ${best.cfg.atrSl}/${best.cfg.atrTp}/${best.cfg.trail}`:''}<br>미래 35% 고정 검증: 거래 ${test.n} · 승률 ${test.win.toFixed(1)}% · 기대값 ${test.avg.toFixed(3)}% · 복리 ${test.net.toFixed(2)}% · PF ${test.pf===Infinity?'∞':test.pf.toFixed(2)} · MDD ${test.mdd.toFixed(2)}%<br><b>${judge(test,test)}</b>`;
+  const trainText=`학습 거래 ${best.q.n} · 승률 ${best.q.win.toFixed(1)}% · 기대값 ${best.q.avg.toFixed(3)}% · PF ${best.q.pf===Infinity?'∞':best.q.pf.toFixed(2)} · MDD ${best.q.mdd.toFixed(2)}%`;
+  const overfit=best.q.pf>1&&test.pf<1;
+  $('wfResult').innerHTML=`학습 65%에서 선택: Score <b>${best.cfg.threshold}</b> · ${best.cfg.profile}<br>${trainText}<br>미래 35% 고정 검증: 거래 ${test.n} · 승률 ${test.win.toFixed(1)}% · 기대값 ${test.avg.toFixed(3)}% · 복리 ${test.net.toFixed(2)}% · PF ${test.pf===Infinity?'∞':test.pf.toFixed(2)} · MDD ${test.mdd.toFixed(2)}%<br>${overfit?'<b class="bad">⚠️ 과적합 경고: 학습 PF는 1 초과지만 검증 PF가 1 미만입니다.</b><br>':'<b>Score별 학습 표본: '+thSummary+'</b><br>'}<b>${judge(test,test)}</b>`;
   $('candidate').textContent=judge(test,test);
 }catch(e){$('wfResult').textContent='워크포워드 오류: '+e.message}};
 

@@ -1,0 +1,8 @@
+aiohttp>=3.10
+websockets>=13
+PyJWT>=2.9
+PyYAML>=6.0
+pandas>=2.2
+numpy>=2.0
+aiosqlite>=0.20
+python-dotenv>=1.0

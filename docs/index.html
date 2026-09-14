@@ -80,7 +80,7 @@
   </div>
 
   <div class="panel">
-    <b>📊 V8.3.2 Upbit KRW Regime Quality 백테스트</b>
+    <b>📊 V8.3.3 Upbit KRW Regime Quality 백테스트</b>
     <p class="small">v8.3.1은 BTC <b>완료 일봉 Regime</b>을 상위 필터로 두고 5분 기술조건·15분 구조·Pattern을 결합합니다. 90일 검증에서 손실이 컸던 <b>RANGE 신규 BUY를 차단</b>하고, 알트의 15분 BTC 상대강도/중기 EMA 품질과 Anti-Chase(과열 추격 방지)를 추가했습니다. STRONG_BULL/BULL의 작은 BTC Risk-Off는 즉시 SELL하지 않고 Hard Crash와 복수 약화를 구분합니다. TP/SL/Trail도 고정 1.2/2.2/0.8% 대신 <b>각 코인의 5분 ATR + 대세 Regime</b>에 따라 넓이와 보유시간을 바꿉니다. 백테스트는 완료봉에서 판정하고 다음 5분봉 시가에 진입하며 수수료·슬리피지를 반영합니다. <b>외부 거시/뉴스 점수는 과거 시점 복원이 불완전하여 백테스트에는 포함하지 않습니다.</b></p>
     <div class="btgrid">
       <select id="btCoin"><option value="ALL">ALL</option><option>ETH</option><option>SOL</option><option>XRP</option><option>HBAR</option><option>ONDO</option><option>LINK</option><option>AVAX</option><option>DOGE</option><option>SUI</option><option>TAO</option><option>UNI</option><option>AAVE</option></select>
@@ -566,7 +566,23 @@ function renderDetails(out,opts){
   LAST={out,all,stats:s,opts};
 }
 function quality(q){if(!q.n)return-999;const sample=Math.min(1,q.n/30),pf=Math.min(1.6,Math.max(0,Number.isFinite(q.pf)?q.pf:1.6))/1.6,mdd=Math.max(0,1-Math.min(25,q.mdd)/25),ev=Math.max(0,Math.min(1,(q.avg+.10)/.8));return(sample*.25+pf*.30+mdd*.20+ev*.25)*100}
-function judge(q,wf){if(!q||q.n<15)return'⚪ 표본 부족: 최소 15회, 가능하면 30회 이상의 거래가 필요합니다.';const qs=quality(q);if(wf&&wf.n>=10&&wf.avg>0&&wf.net>0&&wf.pf>1&&qs>=60)return`🟢 연구 후보: 안정성 ${qs.toFixed(0)}/100 · 검증 기대값 ${wf.avg.toFixed(3)}% · 검증 복리 ${wf.net.toFixed(2)}%`;if(qs>=65&&q.avg>0&&q.pf>1&&q.mdd<12)return`🟡 연구 우수: 안정성 ${qs.toFixed(0)}/100. 별도 미래구간과 페이퍼 트레이딩 확인이 필요합니다.`;return`🔴 보류: 안정성 ${qs.toFixed(0)}/100. 수익성 또는 리스크가 충분히 확인되지 않았습니다.`}
+function judge(q,wf){
+  if(!q||!q.n)return'⚪ 표본 없음: 거래가 발생하지 않았습니다.';
+  const qs=quality(q);
+  if(wf){
+    if(wf.n<10)return`⚪ 검증 표본 부족: 미래 검증 거래 ${wf.n}회 · 최소 10회, 권장 15회 이상입니다.`;
+    if(wf.n<15){
+      if(wf.avg>0&&wf.net>0&&wf.pf>1&&qs>=55)return`🟡 잠정 연구 후보: 안정성 ${qs.toFixed(0)}/100 · 검증 ${wf.n}회(권장 15회 미만) · 기대값 ${wf.avg.toFixed(3)}% · 검증 복리 ${wf.net.toFixed(2)}%`;
+      return`🟠 보류: 검증 표본 ${wf.n}회로 아직 작습니다. 최소 15회, 가능하면 30회 이상을 권장합니다.`;
+    }
+    if(wf.avg>0&&wf.net>0&&wf.pf>1&&qs>=60)return`🟢 연구 후보: 안정성 ${qs.toFixed(0)}/100 · 검증 ${wf.n}회 · 기대값 ${wf.avg.toFixed(3)}% · 검증 복리 ${wf.net.toFixed(2)}%`;
+    if(qs>=65&&wf.avg>0&&wf.pf>1)return`🟡 연구 우수: 안정성 ${qs.toFixed(0)}/100 · 검증 ${wf.n}회. 페이퍼 트레이딩으로 추가 확인이 필요합니다.`;
+    return`🔴 보류: 안정성 ${qs.toFixed(0)}/100. 검증 수익성 또는 리스크가 충분하지 않습니다.`;
+  }
+  if(q.n<15)return`⚪ 표본 부족: 거래 ${q.n}회 · 최소 15회, 가능하면 30회 이상이 필요합니다.`;
+  if(qs>=65&&q.avg>0&&q.pf>1&&q.mdd<12)return`🟡 연구 우수: 안정성 ${qs.toFixed(0)}/100. 별도 미래구간과 페이퍼 트레이딩 확인이 필요합니다.`;
+  return`🔴 보류: 안정성 ${qs.toFixed(0)}/100. 수익성 또는 리스크가 충분히 확인되지 않았습니다.`;
+}
 function researchCandidates(base){
   const ths=[60,65,70,75,80,85,90],out=[];
   if(base.mode==='regime'||base.mode==='regimeq'){for(const th of ths)out.push({...base,threshold:th,profile:base.mode==='regimeq'?'Regime Quality':'Regime Dynamic'});
@@ -592,11 +608,11 @@ $('optRun').onclick=async()=>{try{
 }catch(e){$('optResult').textContent='오류: '+e.message}};
 
 $('wfRun').onclick=async()=>{try{
-  $('wfResult').textContent='워크포워드 데이터 준비 중…';
-  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions({days:Math.max(30,+$('btDays').value)}),b=await history('BTC',base.days),k=await history(c,base.days),daily=await historyDaily(base.days),{a,bm}=alignHistory(k,b),split=Math.floor(a.length*.65);let best=null,rows=[];
+  $('wfResult').textContent=`워크포워드 데이터 준비 중… · 최소 ${Math.max(60,+$('btDays').value)}일 연구구간`;
+  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,researchDays=Math.max(60,+$('btDays').value),base=btOptions({days:researchDays}),b=await history('BTC',base.days),k=await history(c,base.days),daily=await historyDaily(base.days),{a,bm}=alignHistory(k,b),split=Math.floor(a.length*.65);let best=null,rows=[];
   for(const cfg of researchCandidates(base)){const q=stats(backtestAligned(c,a,bm,160,split,cfg,daily));rows.push({cfg,q});if(q.n>=6&&(!best||quality(q)>quality(best.q)))best={cfg,q}}
   const thSummary=rows.map(r=>`Score ${r.cfg.threshold}: <b>${r.q.n}회</b>`).join(' · ');
-  if(!best){$('wfResult').innerHTML=`<b>학습구간 신호가 부족합니다.</b><br>학습 65% 구간 · ${thSummary}<br><span class="small">현재 v8.3.2는 Score 60~90을 모두 탐색했습니다. 6회 미만인 후보는 워크포워드 선택에서 제외합니다. 실전 조건은 변경하지 않습니다.</span>`;return}
+  if(!best){$('wfResult').innerHTML=`<b>학습구간 신호가 부족합니다.</b><br>학습 65% 구간 · ${thSummary}<br><span class="small">현재 v8.3.3은 Score 60~90을 모두 탐색했습니다. 6회 미만인 후보는 워크포워드 선택에서 제외합니다. 실전 조건은 변경하지 않습니다.</span>`;return}
   const test=stats(backtestAligned(c,a,bm,split,a.length,best.cfg,daily));
   const trainText=`학습 거래 ${best.q.n} · 승률 ${best.q.win.toFixed(1)}% · 기대값 ${best.q.avg.toFixed(3)}% · PF ${best.q.pf===Infinity?'∞':best.q.pf.toFixed(2)} · MDD ${best.q.mdd.toFixed(2)}%`;
   const overfit=best.q.pf>1&&test.pf<1;

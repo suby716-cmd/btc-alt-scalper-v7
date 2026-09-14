@@ -1647,6 +1647,43 @@ async function markNotified(env, key, candleStart, cooldownMs) {
   });
 }
 
+// v8.4: 대세 국면 자동 분류 (로테이션장 vs 동반강세장)
+// 10개 알트의 RSI 상대강도(relR) 편차가 작고 BTC 자체가 강하게 오르면,
+// "알트가 BTC를 이기고 있는가"만 보는 상대강도 로직이 구조적으로 신호를 못 내는
+// 동반강세장으로 판정합니다.
+function classifyAltRegime(results, marketRegime) {
+  const valid = results.filter(r => Number.isFinite(r.rsiRel) && Number.isFinite(r.btcRet5));
+  if (valid.length < 5) return { state: 'UNKNOWN', spread: 0, mean: 0, btcUptrend: false };
+  const vals = valid.map(r => r.rsiRel);
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const variance = vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length;
+  const spread = Math.sqrt(variance);
+  const btcRet5 = valid[0].btcRet5;
+  const btcUptrend = (marketRegime?.state === 'STRONG_BULL' || marketRegime?.state === 'BULL') && btcRet5 > 0;
+  const state = (btcUptrend && spread < 6) ? 'BROAD_RALLY' : 'ROTATION';
+  return { state, spread: rnd(spread, 2), mean: rnd(mean, 2), btcUptrend };
+}
+
+// 동반강세장(BROAD_RALLY)에서, 상대강도(relR>=5)만 못 채웠을 뿐 알트 자체의
+// 추세·거래량·패턴은 충분히 강한 코인을 "절대모멘텀형 BUY"로 별도 승격합니다.
+// 로테이션장(ROTATION)에서는 절대 작동하지 않아 기존 상대강도 로직을 그대로 보존합니다.
+function momentumUpgrade(r, altRegime, cfg) {
+  if (altRegime.state !== 'BROAD_RALLY') return null;
+  if (!Number.isFinite(r.score) || r.signal === 'BUY') return null;
+  const minScore = Math.max(60, (cfg?.minScore || 75) - 10);
+  const qualifies = r.ema9 > r.ema20 && r.ema20 > r.ema50
+    && r.breakout && r.volRatio >= 1.15
+    && r.rsi >= 52 && r.rsi <= 74
+    && r.ret5 > 0.35
+    && !r.btcCrash && !r.contextBlocked
+    && r.altQualityGate && !r.antiChase
+    && r.regimePolicy?.allowed !== false
+    && (r.patternBullish || r.patternTrend15 === 'UP')
+    && r.score >= minScore;
+  if (!qualifies) return null;
+  return { reasons: [...(r.reasons || []), '동반강세장 절대모멘텀 신호(상대강도 미충족, 알트 자체 추세로 승격)'] };
+}
+
 async function scanAll(env, { notify = false, source = 'manual', asOf = Date.now() } = {}) {
   const cfg = strategyConfig(env);
   const startedAt = Date.now();
@@ -1665,6 +1702,20 @@ async function scanAll(env, { notify = false, source = 'manual', asOf = Date.now
       results.push({ symbol, market: marketOf(symbol), signal: 'ERROR', error: e instanceof Error ? e.message : String(e) });
     }
     await sleep(130); // Upbit candle 그룹 제한을 여유 있게 지킵니다.
+  }
+
+  const altRegime = classifyAltRegime(results, marketRegime);
+  for (const r of results) {
+    if (!Number.isFinite(r.score)) continue;
+    r.signalType = r.signal === 'BUY' ? 'RELATIVE' : null;
+    if (r.signal !== 'BUY') {
+      const upgrade = momentumUpgrade(r, altRegime, cfg);
+      if (upgrade) {
+        r.signal = 'BUY';
+        r.signalType = 'MOMENTUM';
+        r.reasons = upgrade.reasons.slice(0, 7);
+      }
+    }
   }
 
   const positions = env.SCALPER_KV ? await getPositions(env) : {};
@@ -1778,6 +1829,7 @@ async function scanAll(env, { notify = false, source = 'manual', asOf = Date.now
     btcRsi: rnd(RSI(bp)),
     btcRet5: rnd(pct(bp.at(-1), bp.at(-2))),
     marketRegime,
+    altRegime,
     held,
     positions,
     sent,
@@ -1803,7 +1855,8 @@ function kstTime(ms) {
 
 function formatBuy(s, cfg) {
   const plan=s.tradePlan||tradePlanFor(s.marketRegime,s.atrPct,cfg);
-  return `🟢 BUY REVIEW ${VERSION}\n\n${s.symbol}/KRW\n완료봉: ${kstTime(s.candleStart)} KST\n가격: ₩${fmt(s.price)}\n대세 Regime: ${s.marketRegime} ${s.marketRegimeScore>=0?'+':''}${s.marketRegimeScore} · 단기 BTC ${s.regime}\nTech Score: ${s.score}/100 (기준 ${s.regimePolicy?.minScore??cfg.minScore})\nPattern: ${s.patternScore >= 0 ? '+' : ''}${s.patternScore} · ${s.patternLabel} · 15m ${s.patternTrend15}\n외부 Context: ${s.contextScore >= 0 ? '+' : ''}${s.contextScore} · Regime 보정 ${s.regimeContribution>=0?'+':''}${s.regimeContribution} · 합산 ${s.adjustedScore}/100\n신뢰도: ${s.confidence}/100 · 위험: ${s.risk}\nBTC RSI: ${s.btcRsi} · ALT RSI: ${s.rsi}\nRSI 상대강도: ${s.rsiRel >= 0 ? '+' : ''}${s.rsiRel}p\n5m 상대모멘텀: ${s.relRet5 >= 0 ? '+' : ''}${s.relRet5}%\n거래량: ${s.volRatio}x · 5m ATR: ${s.atrPct}%\nEMA9/20/50: ${fmt(s.ema9)} / ${fmt(s.ema20)} / ${fmt(s.ema50)}\n\n📐 Regime 적응형 수동 매매 계획\n🎯 TP1 +${plan.tp1Pct}%: ₩${fmt(s.tp1)} · 1차 익절 참고 ${(plan.partialPct*100).toFixed(0)}%\n🎯 TP2 +${plan.tp2Pct}%: ₩${fmt(s.tp2)}\n🛑 변동성 SL -${plan.slPct}%: ₩${fmt(s.sl)}\n📎 Trail ${plan.trailPct}% · 최대 관찰 ${plan.horizonHours}h\n\n기술 근거: ${s.reasons.join(' · ')}\n패턴: ${(s.patternReasons||[]).join(' · ') || '확정 패턴 없음'}\n대세 근거: ${(s.marketRegimeReasons||[]).slice(0,4).join(' · ') || '—'}\n⚠️ 수동매매 검토 알림입니다. 실제 주문은 자동 실행하지 않습니다.`;
+  const typeLabel = s.signalType==='MOMENTUM' ? '🚀 절대모멘텀형 (동반강세장)' : '⚖️ 상대강도형';
+  return `🟢 BUY REVIEW ${VERSION}\n${typeLabel}\n\n${s.symbol}/KRW\n완료봉: ${kstTime(s.candleStart)} KST\n가격: ₩${fmt(s.price)}\n대세 Regime: ${s.marketRegime} ${s.marketRegimeScore>=0?'+':''}${s.marketRegimeScore} · 단기 BTC ${s.regime}\nTech Score: ${s.score}/100 (기준 ${s.regimePolicy?.minScore??cfg.minScore})\nPattern: ${s.patternScore >= 0 ? '+' : ''}${s.patternScore} · ${s.patternLabel} · 15m ${s.patternTrend15}\n외부 Context: ${s.contextScore >= 0 ? '+' : ''}${s.contextScore} · Regime 보정 ${s.regimeContribution>=0?'+':''}${s.regimeContribution} · 합산 ${s.adjustedScore}/100\n신뢰도: ${s.confidence}/100 · 위험: ${s.risk}\nBTC RSI: ${s.btcRsi} · ALT RSI: ${s.rsi}\nRSI 상대강도: ${s.rsiRel >= 0 ? '+' : ''}${s.rsiRel}p\n5m 상대모멘텀: ${s.relRet5 >= 0 ? '+' : ''}${s.relRet5}%\n거래량: ${s.volRatio}x · 5m ATR: ${s.atrPct}%\nEMA9/20/50: ${fmt(s.ema9)} / ${fmt(s.ema20)} / ${fmt(s.ema50)}\n\n📐 Regime 적응형 수동 매매 계획\n🎯 TP1 +${plan.tp1Pct}%: ₩${fmt(s.tp1)} · 1차 익절 참고 ${(plan.partialPct*100).toFixed(0)}%\n🎯 TP2 +${plan.tp2Pct}%: ₩${fmt(s.tp2)}\n🛑 변동성 SL -${plan.slPct}%: ₩${fmt(s.sl)}\n📎 Trail ${plan.trailPct}% · 최대 관찰 ${plan.horizonHours}h\n\n기술 근거: ${s.reasons.join(' · ')}\n패턴: ${(s.patternReasons||[]).join(' · ') || '확정 패턴 없음'}\n대세 근거: ${(s.marketRegimeReasons||[]).slice(0,4).join(' · ') || '—'}\n⚠️ 수동매매 검토 알림입니다. 실제 주문은 자동 실행하지 않습니다.`;
 }
 
 function formatProfitReview(s) {

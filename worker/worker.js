@@ -1,5 +1,5 @@
-const VERSION = 'v8.3.1';
-const STRATEGY_VERSION = 'krw-5m-v8.3.1-regime-quality-manual';
+const VERSION = 'v10.0.0';
+const STRATEGY_VERSION = 'krw-5m-v10.0.0-fibonacci-confluence-manual';
 const COINS = ['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const UPBIT_CANDLE_BASE = 'https://api.upbit.com/v1/candles/minutes';
 const UPBIT_DAY_BASE = 'https://api.upbit.com/v1/candles/days';
@@ -62,7 +62,7 @@ export default {
         pinConfigured: !!env.SCALPER_PIN,
         strategy: strategyConfig(env),
         coins: COINS,
-        externalContext: { publicMacro: true, macroProviders: ['U.S. Treasury','Federal Reserve Board','Cboe','BLS','EIA'], polymarket: true, cryptoPanicConfigured: !!env.CRYPTOPANIC_AUTH_TOKEN, manualEvents: true, regimeEngine: true, regimeQualityFilter: true, rangeBuyBlocked: true, antiChase: true, altRelativeStrength: true, hardSoftBtcCrash: true, adaptiveProfitReviews: true, manualOnly: true, autoTrading: false },
+        externalContext: { fibonacciEngine: true, publicMacro: true, macroProviders: ['U.S. Treasury','Federal Reserve Board','Cboe','BLS','EIA'], polymarket: true, cryptoPanicConfigured: !!env.CRYPTOPANIC_AUTH_TOKEN, manualEvents: true, regimeEngine: true, regimeQualityFilter: true, rangeBuyBlocked: true, antiChase: true, altRelativeStrength: true, hardSoftBtcCrash: true, adaptiveProfitReviews: true, manualOnly: true, autoTrading: false },
         note: '수동매매 전용입니다. Telegram은 BUY/SELL 검토 알림만 보내며 주문은 자동 실행하지 않습니다. /scan은 조회 전용입니다.'
       });
     }
@@ -345,10 +345,19 @@ async function fetchCandlesPage(symbol, unit = 5, count = 200, toMs = null) {
   ]).filter(x => Number.isFinite(x[0]));
 }
 
-async function recentClosed5m(symbol, asOf, limit = 180) {
-  const raw = await fetchCandlesPage(symbol, 5, Math.min(200, limit + 1), null);
+async function recentClosed5m(symbol, asOf, limit = 288) {
   const cutoff = Math.floor(asOf / FIVE_MIN) * FIVE_MIN;
-  return raw.filter(x => x[0] < cutoff).slice(-limit);
+  let out = [];
+  let to = null;
+  while (out.length < limit) {
+    const page = await fetchCandlesPage(symbol, 5, Math.min(200, limit - out.length + 1), to);
+    if (!page.length) break;
+    out = page.concat(out);
+    if (page.length < 200) break;
+    to = page[0][0];
+  }
+  const uniq = new Map(out.filter(x => x[0] < cutoff).map(x => [x[0], x]));
+  return [...uniq.values()].sort((a,b) => a[0]-b[0]).slice(-limit);
 }
 
 async function fetchDayCandlesPage(symbol, count = 200, toMs = null) {
@@ -464,6 +473,59 @@ function pivotPoints(k, side='low', width=2) {
   return out;
 }
 function near(a,b,tol=.005){ return Number.isFinite(a)&&Number.isFinite(b)&&b!==0&&Math.abs(a/b-1)<=tol; }
+
+function fibonacciFrame(candles, lookback=96, nearPct=.45) {
+  const k = (candles || []).slice(-lookback);
+  if (k.length < 20) return {ok:false, score:0, trend:'UNKNOWN', reason:'Fib 데이터 부족'};
+  const price = Number(k.at(-1)?.[4]) || 0;
+  const highs = k.map(x=>Number(x[2]));
+  const lows = k.map(x=>Number(x[3]));
+  const hi = Math.max(...highs), lo = Math.min(...lows), range = hi-lo;
+  if (!(price>0 && range>0)) return {ok:false, score:0, trend:'UNKNOWN', reason:'Fib 범위 부족'};
+  const hiIdx = highs.lastIndexOf(hi), loIdx = lows.lastIndexOf(lo);
+  const e20 = EMA(closes(k),20), e50 = EMA(closes(k),50);
+  const up = (e20 >= e50 && price >= e20) || hiIdx > loIdx;
+  const ratios=[.382,.5,.618,.786];
+  const retr = Object.fromEntries(ratios.map(r=>[String(r), up ? hi-range*r : lo+range*r]));
+  let nearest = null;
+  for (const r of ratios) { const level=retr[String(r)], dist=Math.abs(price/level-1)*100; if(!nearest||dist<nearest.dist) nearest={ratio:r,level,dist}; }
+  const atrPct = price ? ATR(k)/price*100 : 0;
+  const tolerance = Math.max(nearPct, atrPct*.22);
+  const nearRetr = nearest && nearest.dist <= tolerance;
+  const supportZone = up && nearRetr && nearest.ratio>=.5 && nearest.ratio<=.786;
+  const extRatios=[1,1.272,1.618,2.0];
+  const extensions = Object.fromEntries(extRatios.map(r=>[String(r), up ? hi+range*(r-1) : lo-range*(r-1)]));
+  let extHit=null;
+  if(up && price>=hi){ for(const r of extRatios.slice(1)) { if(price>=extensions[String(r)]) extHit=r; } }
+  const extensionLevel = up && price>=hi ? (price>=extensions['1.618']?'1.618':price>=extensions['1.272']?'1.272':'1.000') : null;
+  const overextended = !!extensionLevel && (extensionLevel==='1.618' || (extensionLevel==='1.272' && atrPct>0 && nearest?.dist>tolerance));
+  let score=0;
+  if (supportZone) score += nearest.ratio===.618 ? 8 : nearest.ratio===.5 ? 7 : 5;
+  else if (nearRetr && nearest.ratio===.382) score += 3;
+  if (up && price>e20 && e20>=e50) score += 2;
+  if (up && price<retr['0.786'] && price>lo) score -= 4;
+  if (overextended) score -= 7;
+  if (!up && price<e20) score -= 3;
+  return {ok:true,trend:up?'UP':'DOWN',high:hi,low:lo,range,highIndex:hiIdx,lowIndex:loIdx,retracement:retr,nearestRatio:nearest?.ratio??null,nearestLevel:nearest?.level??null,nearestDistPct:nearest?.dist??null,tolerancePct:tolerance,nearRetracement:!!nearRetr,supportZone:!!supportZone,extensions,extensionLevel,overextended,score:clamp(score,-10,10),atrPct};
+}
+
+function analyzeFibonacci(k5, asOf, cfg={}) {
+  if (cfg.fibonacciEngine === false) return {enabled:false,score:0,trend:'OFF',cluster:null,reason:'Fibonacci OFF'};
+  const lookback=cfg.fibonacciLookback||96, nearPct=cfg.fibonacciNearPct||.45;
+  const f5=fibonacciFrame(k5,lookback,nearPct);
+  const k15=aggregateClosedCandles(k5,FIFTEEN_MIN,asOf);
+  const k60=aggregateClosedCandles(k5,60*60*1000,asOf);
+  const f15=fibonacciFrame(k15,Math.max(20,Math.floor(lookback/3)),nearPct*.9);
+  const f60=fibonacciFrame(k60,Math.max(16,Math.floor(lookback/12)),nearPct*1.15);
+  const frames=[f5,f15,f60].filter(x=>x?.ok);
+  const clusterFrames=frames.filter(x=>x.nearRetracement&&x.nearestRatio>=.5&&x.nearestRatio<=.786);
+  const cluster=clusterFrames.length>=2;
+  const clusterRatios=clusterFrames.map(x=>x.nearestRatio);
+  const avgRatio=clusterRatios.length?clusterRatios.reduce((a,b)=>a+b,0)/clusterRatios.length:null;
+  let score=f5.score+(cluster?3:0);
+  if(f5.overextended) score-=2;
+  return {enabled:true,score:clamp(score,-10,10),trend:f5.trend,lookback,nearPct,frames:{m5:f5,m15:f15,h1:f60},cluster,clusterCount:clusterFrames.length,clusterRatio:avgRatio,reason:cluster?`Fib Cluster ${clusterFrames.length}개 TF`:f5.nearRetracement?`Fib ${f5.nearestRatio} 지지/저항 근접`:f5.extensionLevel?`Fib Extension ${f5.extensionLevel}`:'Fib 기준점 대기'};
+}
 
 function analyzePatterns(k5, asOf) {
   const k = k5.slice(-90);
@@ -691,6 +753,9 @@ function strategyConfig(env) {
     patternBuyMinScore: numEnv(env.PATTERN_BUY_MIN_SCORE, 2),
     patternSellScore: numEnv(env.PATTERN_SELL_SCORE, -4),
     regimeEngine: String(env.REGIME_ENGINE ?? 'true').toLowerCase() !== 'false',
+    fibonacciEngine: String(env.FIBONACCI_ENGINE ?? 'true').toLowerCase() !== 'false',
+    fibonacciLookback: clampInt(numEnv(env.FIBONACCI_LOOKBACK, 96), 40, 160),
+    fibonacciNearPct: clamp(numEnv(env.FIBONACCI_NEAR_PCT, 0.45), 0.15, 1.2),
     tradingFeePct: numEnv(env.TRADING_FEE_PERCENT, 0.05)
   };
 }
@@ -717,6 +782,7 @@ function evaluateSignal(symbol, k5, b5, asOf, cfg, external = null, marketRegime
   const atrPct = price ? ATR(k5) / price * 100 : 0;
   const slope5 = pct(e20, e20Prev), btcSlope = pct(be20, be20Prev);
   const pattern = analyzePatterns(k5, asOf);
+  const fibonacci = analyzeFibonacci(k5, asOf, cfg);
   const relR15 = r15 - br15;
   const extensionPct = e20 ? pct(price, e20) : 0;
   const extensionAtr = atrPct > 0 ? Math.max(0, extensionPct) / atrPct : 0;
@@ -754,16 +820,21 @@ function evaluateSignal(symbol, k5, b5, asOf, cfg, external = null, marketRegime
   const patternScore = Number(pattern.score) || 0;
   const contextScore = clamp(Number(external?.total) || 0, -20, 20);
   const regimeContribution = clamp((Number(mr.score)||0) / 10, -8, 8);
-  const adjustedScore = clamp(techScore + patternScore + contextScore + regimeContribution, 0, 100);
+  const fibScore = Number(fibonacci.score) || 0;
+  const adjustedScore = clamp(techScore + patternScore + contextScore + regimeContribution + fibScore, 0, 100);
   const contextBlocked = contextScore <= cfg.contextBlockThreshold || !!external?.severeRisk;
   const patternGate = !cfg.patternConfirmation || (pattern.bullishConfirmed && patternScore >= policy.minPattern && pattern.trend15 !== 'DOWN' && !pattern.bearishConfirmed);
   const regimeGate = policy.allowed && (!policy.require15Up || pattern.trend15 === 'UP');
+  const fibGate = !fibonacci.enabled || (!fibonacci.overextended && fibScore >= -2);
+  // v10 Fibonacci Confluence Gate: Fib는 단독 BUY가 아니라 추격/과열 필터와 보조 점수로만 사용합니다.
   // v8.3.1 Quality Gate: RANGE 차단 + 알트 상대강도 + 추격진입 방지.
   const qualityGate = altQualityGate && !antiChase;
   const hardTech = techScore >= policy.minScore && shortRegime === 'RISK_ON' && r >= 52 && r <= 72 && relR >= 5 && e9 > e20 && vr >= 1.15 && relRet > 0 && !hardCrash;
-  const hard = hardTech && patternGate && regimeGate && qualityGate && !contextBlocked;
+  const hard = hardTech && patternGate && regimeGate && qualityGate && fibGate && !contextBlocked;
   const signal = hard ? 'BUY' : (adjustedScore >= Math.max(60, cfg.minScore - 15) && !hardCrash ? 'WATCH' : 'IDLE');
   if (antiChase) reasons.push(`추격진입 대기 · EMA20 이격 ${rnd(extensionPct,2)}% / ${rnd(extensionAtr,1)} ATR`);
+  if (fibonacci.reason) reasons.push(`Fibonacci · ${fibonacci.reason}${fibonacci.score>=0?' +':''}${rnd(fibonacci.score,1)}`);
+  if (fibonacci.overextended) reasons.push('Fibonacci 과확장 · 추격 BUY 억제');
   if (!altQualityGate) reasons.push(`알트 상대강도 부족 · 15m RSI-BTC ${rnd(relR15)}p`);
   if (!policy.allowed) reasons.push(policy.label);
   const contextDataPenalty = clamp(Number(external?.confidencePenalty)||0, 0, 15);
@@ -788,6 +859,15 @@ function evaluateSignal(symbol, k5, b5, asOf, cfg, external = null, marketRegime
     patternBearish: pattern.bearishConfirmed,
     patternReasons: pattern.reasons,
     pattern,
+    fibonacci,
+    fibonacciScore: rnd(fibScore,1),
+    fibonacciCluster: !!fibonacci.cluster,
+    fibonacciNearestRatio: fibonacci.frames?.m5?.nearestRatio ?? null,
+    fibonacciNearestLevel: fibonacci.frames?.m5?.nearestLevel ?? null,
+    fibonacciExtension: fibonacci.frames?.m5?.extensionLevel ?? null,
+    fibonacciOverextended: !!fibonacci.overextended,
+    fibonacciTp1272: fibonacci.frames?.m5?.extensions?.['1.272'] ?? null,
+    fibonacciTp1618: fibonacci.frames?.m5?.extensions?.['1.618'] ?? null,
     contextScore: rnd(contextScore),
     context: external || null,
     contextBlocked,
@@ -822,6 +902,7 @@ function evaluateSignal(symbol, k5, b5, asOf, cfg, external = null, marketRegime
     btcSoftRisk: softBtcRisk,
     btcLegacyCrash: legacyCrash,
     antiChase,
+    fibGate,
     altQualityGate,
     rsi15Rel: rnd(relR15),
     ema20ExtensionPct: rnd(extensionPct,3),
@@ -1677,6 +1758,7 @@ function momentumUpgrade(r, altRegime, cfg) {
     && r.ret5 > 0.35
     && !r.btcCrash && !r.contextBlocked
     && r.altQualityGate && !r.antiChase
+    && !r.fibonacciOverextended && Number(r.fibonacciScore ?? 0) >= -2
     && r.regimePolicy?.allowed !== false
     && (r.patternBullish || r.patternTrend15 === 'UP')
     && r.score >= minScore;
@@ -1687,7 +1769,7 @@ function momentumUpgrade(r, altRegime, cfg) {
 async function scanAll(env, { notify = false, source = 'manual', asOf = Date.now() } = {}) {
   const cfg = strategyConfig(env);
   const startedAt = Date.now();
-  const [b5, bDaily] = await Promise.all([recentClosed5m('BTC', asOf, 180), recentClosedDays('BTC', asOf, 200)]);
+  const [b5, bDaily] = await Promise.all([recentClosed5m('BTC', asOf, 288), recentClosedDays('BTC', asOf, 200)]);
   const marketRegime = analyzeMarketRegime(bDaily);
   const expectedStart = Math.floor(asOf / FIVE_MIN) * FIVE_MIN - FIVE_MIN;
   const context = await getExternalContext(env, { force: false, asOf });
@@ -1696,7 +1778,7 @@ async function scanAll(env, { notify = false, source = 'manual', asOf = Date.now
   const results = [];
   for (const symbol of COINS) {
     try {
-      const k5 = await recentClosed5m(symbol, asOf, 180);
+      const k5 = await recentClosed5m(symbol, asOf, 288);
       results.push(evaluateSignal(symbol, k5, b5, asOf, cfg, contextForSymbol(context, symbol), marketRegime));
     } catch (e) {
       results.push({ symbol, market: marketOf(symbol), signal: 'ERROR', error: e instanceof Error ? e.message : String(e) });

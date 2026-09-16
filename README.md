@@ -1,29 +1,56 @@
-[README.md](https://github.com/user-attachments/files/32216527/README.md)
-# BTC ALT REGIME TRADER (Cloudflare Worker + GitHub Pages)
+# MASTER MARKET COMPASS V3 — btc-alt-scalper-v7 Overlay
 
-Upbit KRW 시세를 기준으로 BTC 대비 알트코인의 상대강도·절대모멘텀·패턴·시장국면을 종합해 **수동매매 검토용 Telegram 알림**을 보내는 시스템입니다. 자동 주문은 실행하지 않습니다.
+기존 `btc-alt-scalper-v7` 저장소의 GitHub Pages / Cloudflare Worker / KV / Telegram 인프라를 그대로 재사용하면서, 스캘퍼 화면과 단기 매매 엔진을 장기투자 의사결정 시스템으로 교체하는 버전입니다.
 
-## 구조
+## 교체 파일
 
-- `worker/worker.js` — Cloudflare Worker. Upbit 데이터 수집, 신호 계산(BUY/WATCH/IDLE, SELL/CAUTION), Telegram 알림, KV 기반 보유 포지션 추적을 담당합니다. Cloudflare Cron으로 5분마다 자동 실행됩니다 (브라우저를 안 열어둬도 동작).
-- `docs/index.html` — GitHub Pages로 배포되는 대시보드 화면. 실시간 신호 조회, 코인별 보유 체크, 백테스트/최적조건탐색/워크포워드 검증 도구를 포함합니다.
-- `worker/wrangler.toml` — Worker 설정(변수 등). 배포는 Cloudflare Workers Builds의 GitHub 연동 자동배포를 사용합니다 (Root directory: `worker`).
+```text
+docs/index.html
+worker/worker.js
+worker/wrangler.toml
+README.md
+```
 
-## 핵심 기능
+기존 저장소에 업로드할 때는 위 파일을 같은 경로에 교체하면 됩니다.
 
-- **대세 Regime**: BTC 일봉 기준 STRONG_BULL/BULL/RANGE/BEAR/CRASH 자동 판정.
-- **알트 국면(로테이션 vs 동반강세)**: 10개 알트의 RSI 상대강도 편차로 "알트가 BTC를 이기는 로테이션장"인지 "다 같이 오르는 동반강세장"인지 자동 분류. 동반강세장에서는 상대강도 대신 알트 자체의 절대모멘텀으로도 BUY 승격 가능(🚀 절대모멘텀형 / ⚖️ 상대강도형 구분 표시).
-- **보조지표 4종**: 볼린저밴드(변동성 압축/스퀴즈-돌파), VWAP(당일 거래량가중평균가 상회 여부), StochRSI(진입 타이밍), MACD 히스토그램(추세 가속도) — confidence/합산 점수를 보강합니다.
-- **패턴 분석**: 15분봉 기준 확정 패턴(더블바텀 등) 탐지.
-- **보유 코인 추적**: 화면에서 실제 매수한 코인만 체크(매수가 직접 입력 가능) → 그 코인에 한해 TP1(+5%, 50% 익절 제안)/TP2(+10%)/SELL(-5% 하락)/하락반전 경계 4종 알림을 각각 1회씩 발송.
-- **연구 도구**: 조건 최적 탐색, 워크포워드 검증, 비용 스트레스 테스트 (실전에 자동 반영되지 않으며, 값을 바꾸려면 `wrangler.toml`/Worker 코드를 수정 후 재배포해야 합니다).
+## 핵심 엔진
 
-## 문서
+- 한국주식 / 미국주식 / KRW 암호자산 통합 스캔
+- Quality / Growth / Base Valuation
+- 산업별 상대 밸류에이션
+- 경제적 해자 정량 Proxy
+- 최근 분기 실적 가속 / 둔화
+- `좋은 기업의 급락` 탐지
+- 투자논리(Thesis) Ledger
+- Thesis가 유지되는 동안 가격 하락만으로 SELL하지 않음
+- Buffett / Lynch / Druckenmiller / Graham / 파돌부부 렌즈
+- Cloudflare KV 보유종목·투자논리 저장
+- Telegram 알림
+- 자동 주문 없음
 
-- [`DEPLOY.md`](./DEPLOY.md) — 배포 체크리스트 (Secrets, KV, Cron 설정 등)
-- [`CHANGELOG.md`](./CHANGELOG.md) — 버전별 변경 이력
-- [`RESEARCH.md`](./RESEARCH.md) — 백테스트/전략 연구 메모
+## 기존 V7 인프라 재사용
 
-## 주의
+기존 `SCALPER_KV`, `SCALPER_PIN`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`를 그대로 사용합니다. 따라서 새 KV와 새 Telegram Bot을 만들 필요가 없습니다.
 
-과거 성과는 미래 수익을 보장하지 않습니다. 이 시스템은 주문을 자동 실행하지 않고 Telegram 알림만 제공합니다. Worker Secrets(SCALPER_PIN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)는 절대 저장소에 커밋하지 마세요.
+### 주의
+
+기존 V7의 KV에는 스캘퍼용 `positions` 데이터가 남아 있을 수 있습니다. V3는 `MMC_*_V3` 키를 사용하므로 기존 데이터와 충돌하지 않습니다.
+
+## 배포
+
+1. 기존 GitHub 저장소의 `docs/index.html`을 교체
+2. `worker/worker.js` 교체
+3. `worker/wrangler.toml` 교체
+4. Cloudflare Worker에 배포
+5. 기존 Secret이 다음 이름인지 확인
+   - `SCALPER_PIN`
+   - `TELEGRAM_BOT_TOKEN`
+   - `TELEGRAM_CHAT_ID`
+6. GitHub Pages 접속 후 Worker URL과 PIN 입력
+7. `연결 점검` → `Telegram 테스트` → `전체 재스캔` 순서로 확인
+
+## 데이터 주의
+
+주식 데이터는 Yahoo Finance 공개 엔드포인트를 사용합니다. 일부 펀더멘털 필드가 누락되면 `DATA LIMITED`로 표시합니다. 암호자산에는 기업 재무제표가 없으므로 시장구조 Proxy만 사용합니다.
+
+이 시스템의 점수는 확률이나 수익률 보장이 아니며, 투자 결정을 대신하지 않습니다.

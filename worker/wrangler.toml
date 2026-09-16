@@ -1,4 +1,4 @@
-# MASTER MARKET COMPASS V4
+# MASTER MARKET COMPASS V5 · FUTURE MOAT INVESTOR
 # 기존 btc-alt-scalper-v7 Worker/KV/Secrets 재사용
 name = "btc-alt-scalper-v7"
 main = "worker.js"
@@ -11,7 +11,7 @@ crons = ["0 * * * *"]
 binding = "SCALPER_KV"
 id = "b1d33dfeca5440dbba9b76b769c6bf95"
 
-# Secrets는 기존 값을 그대로 사용
+# 기존 Secrets 유지
 # SCALPER_PIN
 # TELEGRAM_BOT_TOKEN
 # TELEGRAM_CHAT_ID

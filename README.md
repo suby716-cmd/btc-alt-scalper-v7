@@ -19,3 +19,11 @@
 `김프 = (Upbit KRW 현재가 / (Binance USDT 현재가 × Upbit USDT/KRW) - 1) × 100`
 
 ※ 이 버전의 환산 기준은 공개시장에서 바로 얻을 수 있는 Upbit USDT/KRW를 사용합니다. Binance USDT 가격과 Upbit KRW 가격은 실시간으로 비교하고, 김프 데이터는 화면에서 15초 주기로 갱신합니다.
+
+
+## v10.2.3 connection-limit fix
+- Fixed `/market` Cloudflare outbound connection deadlock/cancellation.
+- Replaced per-symbol Binance parallel requests with one Binance all-tickers request.
+- `/market` now uses only 2 concurrent upstream requests (Upbit + Binance).
+- Added 7s upstream timeout and graceful Kimchi-premium fallback.
+- Restored detailed `/health` fields for monitoring.

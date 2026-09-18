@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0e17">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v10.1.0 · LIQUIDITY RADAR</title>
+<title>BTC ALT REGIME TRADER v10.1.1 · LIQUIDITY RADAR</title>
 <style>
 :root{--bg:#080c15;--panel:#11182a;--panel2:#151f34;--line:#263149;--text:#e9edf7;--muted:#8290aa;--green:#4ade80;--yellow:#facc15;--red:#fb7185;--blue:#38bdf8;--violet:#a78bfa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1440px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#0c1220;border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#121a2d}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}.dualgrid{display:grid;grid-template-columns:1.1fr .9fr;gap:10px}.badge{display:inline-block;padding:3px 7px;border:1px solid var(--line);border-radius:999px;font-size:11px}.badge.good{border-color:#276749}.badge.warn{border-color:#7c5b00}.badge.bad{border-color:#7f1d1d}.engine-score{font-size:25px;font-weight:800}.indicator-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:9px}.indicator{padding:9px;background:var(--panel2);border:1px solid var(--line);border-radius:9px}.indicator b{display:block;margin-top:3px}.tiny{font-size:11px;color:var(--muted)}
@@ -15,7 +15,7 @@
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v10.1.0 · LIQUIDITY RADAR</h1><div class="sub">Upbit KRW · Relative + Absolute Momentum · Fibonacci Confluence · BTC/ALT Regime · BB/VWAP/StochRSI/MACD · Cloudflare/Telegram</div></div>
+    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v10.1.1 · LIQUIDITY RADAR</h1><div class="sub">Upbit KRW · Relative + Absolute Momentum · Fibonacci Confluence · BTC/ALT Regime · BB/VWAP/StochRSI/MACD · Cloudflare/Telegram</div></div>
     <div class="status"><span class="dot" id="dot"></span><span id="status">연결 준비중</span></div>
   </div>
 
@@ -35,7 +35,7 @@
     <div class="ledger-head">
       <div>
         <b>💹 실시간 시장판 · 현재가 / 24시간 / 김프</b>
-        <div class="small">Upbit KRW 현재가 + 24시간 등락률 · Binance USDT 환산가 · USD/KRW로 계산한 김치프리미엄. 김프는 별도 공개 endpoint라 Telegram/PIN 연결과 독립적으로 표시됩니다.</div>
+        <div class="small">Upbit KRW 현재가 + 24시간 등락률을 직접 표시합니다. 이제 코인 가격은 Binance에 의존하지 않습니다.</div>
       </div>
       <div class="ledger-actions">
         <span class="small" id="marketFresh">대기중</span>
@@ -45,7 +45,7 @@
     <div class="metricgrid" id="marketSummary" style="margin-top:10px"></div>
     <div class="subpanel" style="overflow:auto">
       <table>
-        <thead><tr><th>코인</th><th>현재가(KRW)</th><th>24시간</th><th>Binance 환산가</th><th>김프</th></tr></thead>
+        <thead><tr><th>코인</th><th>현재가(KRW)</th><th>24시간</th><th>24시간 거래대금</th><th>김프</th></tr></thead>
         <tbody id="marketRows"></tbody>
       </table>
     </div>
@@ -69,7 +69,12 @@
         <tbody id="liquidityRows"></tbody>
       </table>
     </div>
-    <div class="note" id="liquidityExplain" style="margin-top:9px">
+    <div class="note" id="marketUpbitNote" style="margin-top:9px">
+      <b>가격 기준:</b> 현재가·24시간 등락률·24시간 거래대금은 모두 <b>Upbit KRW 실시간 데이터</b>입니다.
+      Binance 가격을 KRW로 환산해 표시하지 않으므로 Binance 연결 실패가 현재가 표시를 막지 않습니다.
+      김프는 글로벌 비교가격 소스가 필요하므로 현재 시장판에서는 비워두었습니다.
+    </div>
+<div class="note" id="liquidityExplain" style="margin-top:9px">
       <b>해석:</b> 6개 중 4개 이상이 같은 방향으로 개선되면 알트 확산 환경을 강하게 관찰하고, 3개가 개선되면 초기 확산 단계, 혼조면 BTC 중심 장세로 봅니다.
       Global Liquidity는 원시 Global M2가 아니라 공개 GMLCI를 사용하므로 <b>“유동성 지수”</b>로 표시합니다.
     </div>
@@ -238,23 +243,32 @@ function renderMarketRadar(d){
   if(!d)return;
   $('marketFresh').textContent=`${kst(d.generatedAt)} KST · ${d.cached?'cache':'live'}${(d.errors||[]).length?' · 일부 오류':''}`;
   const rows=d.rows||[];
-  const btc=rows.find(x=>x.symbol==='BTC'), avgPremium=rows.filter(x=>Number.isFinite(x.kimchiPremium)).reduce((a,x)=>a+x.kimchiPremium,0)/Math.max(1,rows.filter(x=>Number.isFinite(x.kimchiPremium)).length);
+  const btc=rows.find(x=>x.symbol==='BTC');
+  const premiums=rows.filter(x=>Number.isFinite(x.kimchiPremium));
+  const avgPremium=premiums.length ? premiums.reduce((a,x)=>a+x.kimchiPremium,0)/premiums.length : null;
+
   $('marketSummary').innerHTML=[
-    ['USD/KRW',Number.isFinite(Number(d.usdkrw))?'₩'+Number(d.usdkrw).toLocaleString('ko-KR',{maximumFractionDigits:2}):'—'],
-    ['BTC 김프',Number.isFinite(Number(btc?.kimchiPremium))?pctFmt(btc.kimchiPremium):'—'],
-    ['20종 평균 김프',Number.isFinite(avgPremium)?pctFmt(avgPremium):'—'],
-    ['BTC 24시간',Number.isFinite(Number(btc?.change24h))?pctFmt(btc.change24h):'—']
+    ['가격 소스','UPBIT KRW'],
+    ['BTC 현재가',Number.isFinite(Number(btc?.priceKrw))?money(btc.priceKrw):'—'],
+    ['BTC 24시간',Number.isFinite(Number(btc?.change24h))?pctFmt(btc.change24h):'—'],
+    ['평균 김프',Number.isFinite(avgPremium)?pctFmt(avgPremium):'별도 계산']
   ].map(x=>`<div class="metric"><span class="small">${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join('');
+
   $('marketRows').innerHTML=rows.map(x=>{
-    const pc=Number(x.change24h), kp=Number(x.kimchiPremium);
-    return `<tr><td><b>${esc(x.symbol)}</b> ${esc(x.name)}</td>
+    const pc=Number(x.change24h);
+    const vol=Number(x.volume24hKrw);
+    return `<tr>
+      <td><b>${esc(x.symbol)}</b> ${esc(x.name)}</td>
       <td>${money(x.priceKrw)}</td>
       <td class="${pc>0?'good':pc<0?'bad':'neutral'}">${Number.isFinite(pc)?pctFmt(pc):'—'}</td>
-      <td>${Number.isFinite(Number(x.priceUsdt))&&Number.isFinite(Number(x.usdkrw))?money(Number(x.priceUsdt)*Number(x.usdkrw)):'—'}</td>
-      <td class="${kp>3?'good':kp<0?'bad':'neutral'}">${Number.isFinite(kp)?pctFmt(kp):'—'}</td></tr>`;
+      <td>${Number.isFinite(vol)?money(vol):'—'}</td>
+      <td class="neutral">—</td>
+    </tr>`;
   }).join('');
+
   if((d.errors||[]).length) $('marketFresh').title=d.errors.join('\n');
 }
+
 async function loadMarketRadar(){
   try{
     const d=await fetch(workerBase()+'/market',{cache:'no-store'});

@@ -20,7 +20,14 @@ h1{font-size:25px;margin:0 0 5px}.brand p{margin:0;color:var(--m);font-size:13px
 .bottom{display:grid;grid-template-columns:1.25fr .9fr .7fr;gap:14px}.hold-table,.log,.settings{padding:0 12px 12px}.hold-row{display:grid;grid-template-columns:1fr .8fr .9fr .9fr .8fr .6fr;gap:8px;padding:9px;border-top:1px solid #edf2f8;font-size:11px}.hold-head{color:#6881a4;background:#f8fbff;border-top:0}.pill,.toggle{background:var(--g);color:#fff;border-radius:10px;padding:4px 7px;font-size:10px}.log-row{padding:8px 0;border-top:1px solid #edf2f8;font-size:11px}.setrow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #edf2f8;font-size:12px}
 footer{padding:13px 3px;color:#7188a7;font-size:11px;display:flex;justify-content:space-between}
 @media(max-width:1100px){.grid{grid-template-columns:1fr}.left{grid-row:auto}.top-cards{grid-template-columns:repeat(4,1fr)}.middle,.bottom{grid-template-columns:1fr}}@media(max-width:650px){.app{padding:8px}.top-cards{grid-template-columns:repeat(2,1fr)}.regime-grid,.score-grid{grid-template-columns:repeat(2,1fr)}}
-</style></head>
+</style>
+<style id="kimchi-premium-colors">
+.kimchi-positive{color:#e53935 !important;}
+.kimchi-negative{color:#1976d2 !important;}
+.kimchi-zero{color:inherit !important;}
+</style>
+
+</head>
 <body><div class="app">
 <header><div class="brand"><h1>⚡ BTC ALT REGIME TRADER <span style="font-size:16px;color:#4774a8">v10.2.4</span></h1>
 <p>Upbit KRW · Relative + Absolute Momentum · Fibonacci Confluence · BTC/ALT Regime · BB/VWAP/StochRSI/MACD · Cloudflare/Telegram</p></div>
@@ -163,4 +170,6 @@ function saveWorker(){worker=document.getElementById("workerUrl").value.trim().r
 async function testConnection(){try{await getJson("/v1/ticker?markets=KRW-BTC");status("정상 연결",true);log("INFO","Upbit KRW 연결 정상")}catch(e){status("연결 실패",false);log("ERR","연결 실패: "+e.message)}}
 async function telegramTest(){if(!worker){alert("Cloudflare Worker 주소를 먼저 저장하세요.");return}try{let r=await fetch(worker+"/telegram-test");let x=await r.json();log("INFO",x.message||"Telegram 테스트 요청")}catch(e){log("ERR","Telegram 테스트 실패")}}
 initRSSelectors();loadData();setInterval(loadData,15000);setInterval(()=>document.getElementById("clock").textContent=now(),1000);setInterval(draw,1000);
-</script></body></html>
+</script>
+<script>function fmtPremium(v){const n=Number(v);if(v===null||v===undefined||v===""||!Number.isFinite(n))return "--";const cls=n>0?"kimchi-positive":n<0?"kimchi-negative":"kimchi-zero";return `<span class="${cls}">${n>0?"+":""}${n.toFixed(2)}%</span>`;}</script>
+</body></html>

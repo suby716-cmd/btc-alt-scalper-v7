@@ -1,9 +1,6 @@
-const VERSION = 'v10.0.0';
-const STRATEGY_VERSION = 'krw-5m-v10.0.0-fibonacci-confluence-manual';
+const VERSION = 'v10.1.0';
+const STRATEGY_VERSION = 'krw-5m-v10.1.0-fibonacci-liquidity-manual';
 const COINS = ['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
-const MONITOR_COINS = ['BTC', ...COINS];
-const BINANCE_TICKER_URL = 'https://api.binance.com/api/v3/ticker/24hr';
-const UPBIT_TICKER_URL = 'https://api.upbit.com/v1/ticker';
 const UPBIT_CANDLE_BASE = 'https://api.upbit.com/v1/candles/minutes';
 const UPBIT_DAY_BASE = 'https://api.upbit.com/v1/candles/days';
 const POS_KEY = 'positions';
@@ -52,6 +49,15 @@ export default {
       const u = new URL(req.url);
     if (req.method === 'OPTIONS') return new Response('', { status: 204, headers: cors() });
 
+
+    if (req.method === 'GET' && u.pathname === '/market') {
+      return json(await getMarketRadar(env));
+    }
+
+    if (req.method === 'GET' && u.pathname === '/liquidity') {
+      return json(await getLiquidityRadar(env));
+    }
+
     if (req.method === 'GET' && u.pathname === '/health') {
       return json({
         ok: true,
@@ -65,21 +71,9 @@ export default {
         pinConfigured: !!env.SCALPER_PIN,
         strategy: strategyConfig(env),
         coins: COINS,
-        externalContext: { fibonacciEngine: true, publicMacro: true, macroProviders: ['U.S. Treasury','Federal Reserve Board','Cboe','BLS','EIA'], polymarket: true, cryptoPanicConfigured: !!env.CRYPTOPANIC_AUTH_TOKEN, manualEvents: true, regimeEngine: true, regimeQualityFilter: true, rangeBuyBlocked: true, antiChase: true, altRelativeStrength: true, hardSoftBtcCrash: true, adaptiveProfitReviews: true, manualOnly: true, autoTrading: false },
-        endpoints: { health: '/health', market: '/market', status: '/status', scan: '/scan', context: '/context', ledger: '/ledger' },
+        externalContext: { liquidityRadar: true, fibonacciEngine: true, publicMacro: true, macroProviders: ['U.S. Treasury','Federal Reserve Board','Cboe','BLS','EIA'], polymarket: true, cryptoPanicConfigured: !!env.CRYPTOPANIC_AUTH_TOKEN, manualEvents: true, regimeEngine: true, regimeQualityFilter: true, rangeBuyBlocked: true, antiChase: true, altRelativeStrength: true, hardSoftBtcCrash: true, adaptiveProfitReviews: true, manualOnly: true, autoTrading: false },
         note: '수동매매 전용입니다. Telegram은 BUY/SELL 검토 알림만 보내며 주문은 자동 실행하지 않습니다. /scan은 조회 전용입니다.'
       });
-    }
-
-    // 공개 시세 모니터: Upbit KRW 현재가/24시간 변동률 + Binance USDT 대비 김프를 제공합니다.
-    // 주문/보유정보/KV는 노출하지 않습니다.
-    if (req.method === 'GET' && u.pathname === '/market') {
-      try {
-        const market = await getMarketMonitor();
-        return json({ ok: true, version: VERSION, ...market });
-      } catch (e) {
-        return json({ ok: false, error: e instanceof Error ? e.message : String(e) }, 502);
-      }
     }
 
     if (!auth(req, env)) return json({ ok: false, error: 'unauthorized' }, 401);
@@ -331,44 +325,6 @@ function requireKV(env) {
 
 function requireTelegram(env) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) throw new Error('Telegram Secret 설정이 없습니다.');
-}
-
-async function getMarketMonitor() {
-  const upbitMarkets = MONITOR_COINS.map(s => marketOf(s)).join(',');
-  const upbitRes = await fetch(`${UPBIT_TICKER_URL}?markets=${encodeURIComponent(upbitMarkets)}`, { headers: { accept: 'application/json' } });
-  if (!upbitRes.ok) throw new Error(`Upbit ticker ${upbitRes.status}`);
-  const upbit = await upbitRes.json();
-  if (!Array.isArray(upbit)) throw new Error('Upbit ticker 응답 형식이 올바르지 않습니다.');
-
-  const symbols = MONITOR_COINS.map(s => `${s}USDT`);
-  const binanceUrl = `${BINANCE_TICKER_URL}?symbols=${encodeURIComponent(JSON.stringify(symbols))}`;
-  const binanceRes = await fetch(binanceUrl, { headers: { accept: 'application/json' } });
-  const binance = binanceRes.ok ? await binanceRes.json() : [];
-  const bMap = new Map(Array.isArray(binance) ? binance.map(x => [String(x.symbol), x]) : []);
-  const uMap = new Map(upbit.map(x => [String(x.market), x]));
-  const usdtKrw = Number(uMap.get('KRW-USDT')?.trade_price || 0);
-
-  const rows = MONITOR_COINS.map(symbol => {
-    const u = uMap.get(`KRW-${symbol}`) || {};
-    const b = bMap.get(`${symbol}USDT`) || {};
-    const price = Number(u.trade_price);
-    const change24h = Number.isFinite(Number(u.signed_change_rate)) ? Number(u.signed_change_rate) * 100 : null;
-    const binanceUsdt = Number(b.lastPrice);
-    const fairKrw = binanceUsdt > 0 && usdtKrw > 0 ? binanceUsdt * usdtKrw : null;
-    const premium = price > 0 && fairKrw > 0 ? (price / fairKrw - 1) * 100 : null;
-    return {
-      symbol,
-      market: `KRW-${symbol}`,
-      price: Number.isFinite(price) ? price : null,
-      change24h: Number.isFinite(change24h) ? rnd(change24h, 2) : null,
-      premium: Number.isFinite(premium) ? rnd(premium, 2) : null,
-      binanceUsdt: Number.isFinite(binanceUsdt) ? binanceUsdt : null,
-      fairKrw: Number.isFinite(fairKrw) ? fairKrw : null,
-      updatedAt: Number(u.timestamp) || Date.now()
-    };
-  });
-
-  return { market: 'UPBIT_KRW', reference: 'Binance USDT × Upbit USDT/KRW', usdtKrw: usdtKrw || null, rows, updatedAt: Date.now() };
 }
 
 function normalizeSymbol(value) {
@@ -1296,6 +1252,235 @@ async function getPredictionConfig(env) {
 
 function isoDate(ms) {
   return new Date(ms).toISOString().slice(0,10);
+}
+
+
+const LIQUIDITY_CACHE_KEY = 'liquidity-radar:v1';
+const LIQUIDITY_HISTORY_KEY = 'liquidity-radar-history:v1';
+const LIQUIDITY_CACHE_TTL = 5 * 60;
+
+function safeNum(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function clamp01(v) { return Math.max(0, Math.min(1, Number(v) || 0)); }
+
+async function fetchJsonPublic(url, timeoutMs = 8000) {
+  const r = await fetchWithTimeout(url, {
+    headers: { 'accept': 'application/json', 'user-agent': 'BTC-ALT-Scalper-Liquidity-Radar/1.0' }
+  }, timeoutMs);
+  if (!r.ok) throw new Error(`${url} -> HTTP ${r.status}`);
+  return await r.json();
+}
+
+function parseStablecoinTotal(payload) {
+  if (!payload) return null;
+  if (Array.isArray(payload)) {
+    const x = payload.at(-1);
+    return safeNum(x?.totalCirculatingUSD ?? x?.totalCirculatingUSD?.peggedUSD ?? x?.totalCirculatingUSD);
+  }
+  const c = payload.totalCirculatingUSD;
+  if (typeof c === 'number') return c;
+  if (c && typeof c === 'object') {
+    const vals = Object.values(c).map(Number).filter(Number.isFinite);
+    return vals.length ? vals.reduce((a,b)=>a+b,0) : null;
+  }
+  return safeNum(payload.totalCirculating);
+}
+
+function pctChange(now, prev) {
+  return Number.isFinite(now) && Number.isFinite(prev) && prev !== 0 ? (now / prev - 1) * 100 : null;
+}
+
+function signalState(v) {
+  if (v > 0.55) return 'UP';
+  if (v < 0.45) return 'DOWN';
+  return 'NEUTRAL';
+}
+
+function scoreLiquidity(parts) {
+  // Each component is -1 / 0 / +1. Display score is 0~100.
+  const vals = parts.map(x => Number(x.score) || 0);
+  const raw = vals.reduce((a,b)=>a+b,0);
+  return Math.round(50 + (raw / Math.max(1, vals.length)) * 50);
+}
+
+
+const MARKET_RADAR_COINS = [
+  ['BTC','비트코인','KRW-BTC','BTCUSDT'],['ETH','이더리움','KRW-ETH','ETHUSDT'],['SOL','솔라나','KRW-SOL','SOLUSDT'],
+  ['XRP','엑스알피','KRW-XRP','XRPUSDT'],['HBAR','헤데라','KRW-HBAR','HBARUSDT'],['ONDO','온도파이낸스','KRW-ONDO','ONDOUSDT'],
+  ['LINK','체인링크','KRW-LINK','LINKUSDT'],['AVAX','아발란체','KRW-AVAX','AVAXUSDT'],['DOGE','도지코인','KRW-DOGE','DOGEUSDT'],
+  ['SUI','수이','KRW-SUI','SUIUSDT'],['TAO','비트텐서','KRW-TAOUSDT','TAOUSDT'],['UNI','유니스왑','KRW-UNI','UNIUSDT'],
+  ['AAVE','에이브','KRW-AAVE','AAVEUSDT'],['NEAR','니어프로토콜','KRW-NEAR','NEARUSDT'],['ALGO','알고랜드','KRW-ALGO','ALGOUSDT'],
+  ['APT','앱토스','KRW-APT','APTUSDT'],['ICP','인터넷컴퓨터','KRW-ICP','ICPUSDT'],['XLM','스텔라루멘','KRW-XLM','XLMUSDT'],
+  ['ADA','에이다','KRW-ADA','ADAUSDT'],['GRT','그래프','KRW-GRT','GRTUSDT']
+];
+
+const MARKET_CACHE_KEY = 'market-radar:v1';
+const MARKET_CACHE_TTL = 15;
+
+async function getMarketRadar(env) {
+  const now = Date.now();
+  if (env.SCALPER_KV) {
+    try {
+      const c = await env.SCALPER_KV.get(MARKET_CACHE_KEY, 'json');
+      if (c?.generatedAt && now - Number(c.generatedAt) < MARKET_CACHE_TTL * 1000) return { ...c, cached:true };
+    } catch {}
+  }
+
+  const upbitMarkets = MARKET_RADAR_COINS.map(x=>x[2]).join(',');
+  const binanceSymbols = MARKET_RADAR_COINS.map(x=>x[3]);
+  const binanceUrl = 'https://api.binance.com/api/v3/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(binanceSymbols));
+  const errors = [];
+  let upbit = [], binance = [], fx = null;
+
+  await Promise.allSettled([
+    fetchJsonPublic(`https://api.upbit.com/v1/ticker?markets=${encodeURIComponent(upbitMarkets)}`)
+      .then(x=>{upbit=x}).catch(e=>errors.push('Upbit: '+e.message)),
+    fetchJsonPublic(binanceUrl)
+      .then(x=>{binance=x}).catch(e=>errors.push('Binance: '+e.message)),
+    fetchJsonPublic('https://open.er-api.com/v6/latest/USD')
+      .then(x=>{fx=safeNum(x?.rates?.KRW)}).catch(e=>errors.push('USD/KRW: '+e.message))
+  ]);
+
+  const uMap = new Map((upbit||[]).map(x=>[x.market,x]));
+  const bMap = new Map((binance||[]).map(x=>[x.symbol,x]));
+  const usdkrw = fx;
+  const rows = MARKET_RADAR_COINS.map(([symbol,name,upbitMarket,binanceSymbol])=>{
+    const u=uMap.get(upbitMarket), b=bMap.get(binanceSymbol);
+    const krw=safeNum(u?.trade_price);
+    const usdt=safeNum(b?.lastPrice);
+    const change24=safeNum(u?.signed_change_rate);
+    const globalKrw=Number.isFinite(usdt)&&Number.isFinite(usdkrw)?usdt*usdkrw:null;
+    const premium=Number.isFinite(krw)&&Number.isFinite(globalKrw)&&globalKrw>0?(krw/globalKrw-1)*100:null;
+    return {
+      symbol,name,market:upbitMarket,binance:binanceSymbol,
+      priceKrw:krw,priceUsdt:usdt,usdkrw,
+      change24h:change24==null?null:change24*100,
+      kimchiPremium:premium,
+      upbitTimestamp:safeNum(u?.timestamp),
+      volume24hKrw:safeNum(u?.acc_trade_price_24h)
+    };
+  });
+
+  const result={ok:true,generatedAt:now,usdkrw,rows,errors};
+  if(env.SCALPER_KV) {
+    try { await env.SCALPER_KV.put(MARKET_CACHE_KEY,JSON.stringify(result),{expirationTtl:60}); } catch {}
+  }
+  return result;
+}
+
+async function getLiquidityRadar(env) {
+  const now = Date.now();
+  if (env.SCALPER_KV) {
+    try {
+      const cached = await env.SCALPER_KV.get(LIQUIDITY_CACHE_KEY, 'json');
+      if (cached?.generatedAt && now - Number(cached.generatedAt) < LIQUIDITY_CACHE_TTL * 1000) {
+        return { ...cached, cached: true };
+      }
+    } catch {}
+  }
+
+  const previous = env.SCALPER_KV ? await env.SCALPER_KV.get(LIQUIDITY_HISTORY_KEY, 'json').catch(()=>null) : null;
+  const errors = [];
+
+  let xpower = null, cg = null, stable = null, ethbtc = null, upbit = null;
+  await Promise.allSettled([
+    fetchJsonPublic('https://www.xpowerflow.com/api/liquidity/latest.json').then(x=>{xpower=x}).catch(e=>errors.push('Global M2/Net Liquidity: '+e.message)),
+    fetchJsonPublic('https://api.coingecko.com/api/v3/global').then(x=>{cg=x?.data||x}).catch(e=>errors.push('BTC Dominance: '+e.message)),
+    fetchJsonPublic('https://stablecoins.llama.fi/stablecoincharts/all').then(x=>{stable=x}).catch(e=>errors.push('Stablecoin: '+e.message)),
+    fetchJsonPublic('https://api.binance.com/api/v3/ticker/price?symbol=ETHBTC').then(x=>{ethbtc=x}).catch(e=>errors.push('ETH/BTC: '+e.message)),
+    fetchJsonPublic('https://api.upbit.com/v1/ticker/all?quote_currencies=KRW').then(x=>{upbit=x}).catch(e=>errors.push('Upbit Alt Volume: '+e.message))
+  ]);
+
+  const globalM2 = safeNum(xpower?.signal?.gmlci);
+  const urli = safeNum(xpower?.signal?.urli);
+  const btcDom = safeNum(cg?.market_cap_percentage?.btc);
+  const stableTotal = parseStablecoinTotal(stable);
+  const ethBtc = safeNum(ethbtc?.price);
+
+  const altSymbols = new Set(COINS.map(s=>`KRW-${s}`));
+  let altVolKrw = null;
+  if (Array.isArray(upbit)) {
+    altVolKrw = upbit
+      .filter(x => altSymbols.has(x.market))
+      .map(x => safeNum(x.acc_trade_price_24h))
+      .filter(Number.isFinite)
+      .reduce((a,b)=>a+b,0);
+  }
+
+  const prevM2 = safeNum(previous?.globalM2);
+  const prevStable = safeNum(previous?.stableTotal);
+  const prevEthBtc = safeNum(previous?.ethBtc);
+  const prevAltVol = safeNum(previous?.altVolKrw);
+  const prevBtcDom = safeNum(previous?.btcDom);
+
+  const m2Delta = pctChange(globalM2, prevM2);
+  const stableDelta = pctChange(stableTotal, prevStable);
+  const ethBtcDelta = pctChange(ethBtc, prevEthBtc);
+  const altVolDelta = pctChange(altVolKrw, prevAltVol);
+  const btcDomDelta = Number.isFinite(btcDom) && Number.isFinite(prevBtcDom) ? btcDom - prevBtcDom : null;
+
+  // Global M2: XPOWER GMLCI is a public global-liquidity composite, not raw M2.
+  // It is intentionally labeled as a liquidity index in the UI.
+  const m2Score = globalM2 == null ? 0 : (globalM2 > 10 ? 1 : globalM2 < -10 ? -1 : 0);
+  const stableScore = stableDelta == null ? 0 : (stableDelta > 0.35 ? 1 : stableDelta < -0.35 ? -1 : 0);
+  const btcScore = 0; // populated below from the 24h market snapshot if available
+  const domScore = btcDomDelta == null ? 0 : (btcDomDelta < -0.15 ? 1 : btcDomDelta > 0.15 ? -1 : 0);
+  const ethScore = ethBtcDelta == null ? 0 : (ethBtcDelta > 0.25 ? 1 : ethBtcDelta < -0.25 ? -1 : 0);
+  const altScore = altVolDelta == null ? 0 : (altVolDelta > 8 ? 1 : altVolDelta < -8 ? -1 : 0);
+
+  let btc24h = null, totalCryptoCap = null;
+  if (cg) {
+    btc24h = safeNum(cg?.market_cap_change_percentage_24h_usd);
+    totalCryptoCap = safeNum(cg?.total_market_cap?.usd);
+  }
+  const btcSignalScore = btc24h == null ? 0 : (btc24h > 0.4 ? 1 : btc24h < -0.4 ? -1 : 0);
+
+  const parts = [
+    { id:'m2', label:'Global Liquidity', value:globalM2, unit:'GMLCI', score:m2Score, state:m2Score>0?'UP':m2Score<0?'DOWN':'NEUTRAL', change:m2Delta },
+    { id:'stable', label:'Stablecoin', value:stableTotal, unit:'USD', score:stableScore, state:stableScore>0?'UP':stableScore<0?'DOWN':'NEUTRAL', change:stableDelta },
+    { id:'btc', label:'BTC', value:btc24h, unit:'24h %', score:btcSignalScore, state:btcSignalScore>0?'UP':btcSignalScore<0?'DOWN':'NEUTRAL', change:btc24h },
+    { id:'dom', label:'BTC Dominance', value:btcDom, unit:'%', score:domScore, state:domScore>0?'DOWN':'UP', change:btcDomDelta },
+    { id:'ethbtc', label:'ETH/BTC', value:ethBtc, unit:'BTC', score:ethScore, state:ethScore>0?'UP':ethScore<0?'DOWN':'NEUTRAL', change:ethBtcDelta },
+    { id:'altvol', label:'Alt Volume', value:altVolKrw, unit:'KRW 24h', score:altScore, state:altScore>0?'UP':altScore<0?'DOWN':'NEUTRAL', change:altVolDelta }
+  ];
+
+  const score = scoreLiquidity(parts);
+  const positive = parts.filter(x=>x.score>0).length;
+  const negative = parts.filter(x=>x.score<0).length;
+  const regime = positive >= 4 ? 'ALT_EXPANSION' : positive >= 3 && negative <= 1 ? 'RISK_ON_BUILD' : negative >= 4 ? 'RISK_OFF' : 'MIXED';
+
+  const result = {
+    ok: true,
+    generatedAt: now,
+    cached: false,
+    score,
+    regime,
+    positive,
+    negative,
+    components: parts,
+    source: {
+      globalLiquidity: 'XPOWERFLOW GMLCI / URLI',
+      stablecoin: 'DefiLlama',
+      btcDominance: 'CoinGecko',
+      ethBtc: 'Binance public ticker',
+      altVolume: 'Upbit KRW 12-coin basket'
+    },
+    market: { totalCryptoCap, urli },
+    errors
+  };
+
+  if (env.SCALPER_KV) {
+    try {
+      await env.SCALPER_KV.put(LIQUIDITY_HISTORY_KEY, JSON.stringify({
+        generatedAt: now, globalM2, stableTotal, btcDom, ethBtc, altVolKrw, btc24h, totalCryptoCap
+      }), { expirationTtl: 60 * 24 * 60 * 60 });
+      await env.SCALPER_KV.put(LIQUIDITY_CACHE_KEY, JSON.stringify(result), { expirationTtl: LIQUIDITY_CACHE_TTL });
+    } catch {}
+  }
+
+  return result;
 }
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = MACRO_FETCH_TIMEOUT_MS) {

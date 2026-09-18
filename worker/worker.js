@@ -11,13 +11,18 @@ if(u.pathname==="/market"){
   const symbols=[...new Set(raw)].slice(0,30);
   if(!symbols.length)return new Response(JSON.stringify({ok:false,error:"symbols required"}),{status:400,headers:{...cors,"Content-Type":"application/json"}});
   const upMarkets=[...symbols.map(s=>"KRW-"+s),"KRW-USDT"].join(',');
-  const [ur,br]=await Promise.all([
-    fetch(UPBIT+"/v1/ticker?markets="+encodeURIComponent(upMarkets),{headers:{"Accept":"application/json"}}),
-    fetch(BINANCE+"/api/v3/ticker/24hr?symbols="+encodeURIComponent(JSON.stringify(symbols.map(s=>s+"USDT"))),{headers:{"Accept":"application/json"}})
-  ]);
+  const ur=await fetch(UPBIT+"/v1/ticker?markets="+encodeURIComponent(upMarkets),{headers:{"Accept":"application/json"}});
   if(!ur.ok) return new Response(JSON.stringify({ok:false,error:"Upbit ticker "+ur.status}),{status:502,headers:{...cors,"Content-Type":"application/json"}});
-  const up=await ur.json(); const bn=br.ok?await br.json():[];
-  const um=new Map(up.map(x=>[x.market,x])), bm=new Map((Array.isArray(bn)?bn:[]).map(x=>[x.symbol,x]));
+  // Binance bulk `symbols` fails the entire request if even one requested pair is unsupported.
+  // Fetch pairs independently so one unsupported altcoin cannot break every kimchi-premium value.
+  const bres=await Promise.allSettled(symbols.map(async s=>{
+    const r=await fetch(BINANCE+"/api/v3/ticker/24hr?symbol="+encodeURIComponent(s+"USDT"),{headers:{"Accept":"application/json"}});
+    if(!r.ok)return null;
+    const x=await r.json(); return x&&x.symbol?x:null;
+  }));
+  const up=await ur.json();
+  const bn=bres.filter(x=>x.status==="fulfilled"&&x.value).map(x=>x.value);
+  const um=new Map(up.map(x=>[x.market,x])), bm=new Map(bn.map(x=>[x.symbol,x]));
   const usdtKrw=Number(um.get("KRW-USDT")?.trade_price||0);
   const rows=symbols.map(symbol=>{const x=um.get("KRW-"+symbol)||{},b=bm.get(symbol+"USDT")||{};const price=Number(x.trade_price);const ch=Number(x.signed_change_rate)*100;const busdt=Number(b.lastPrice);const fair=busdt>0&&usdtKrw>0?busdt*usdtKrw:null;const premium=price>0&&fair>0?(price/fair-1)*100:null;return {symbol,price:Number.isFinite(price)?price:null,change24h:Number.isFinite(ch)?ch:null,premium:Number.isFinite(premium)?premium:null,binanceUsdt:Number.isFinite(busdt)?busdt:null,fairKrw:Number.isFinite(fair)?fair:null,updatedAt:Number(x.timestamp)||Date.now()};});
   return new Response(JSON.stringify({ok:true,market:"UPBIT_KRW",reference:"Binance USDT × Upbit USDT/KRW",usdtKrw:usdtKrw||null,rows,updatedAt:Date.now()}),{headers:{...cors,"Content-Type":"application/json","Cache-Control":"no-store"}});

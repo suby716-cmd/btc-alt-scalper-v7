@@ -27,3 +27,10 @@
 - `/market` now uses only 2 concurrent upstream requests (Upbit + Binance).
 - Added 7s upstream timeout and graceful Kimchi-premium fallback.
 - Restored detailed `/health` fields for monitoring.
+
+
+## v10.2.4
+- Kimchi premium: Binance price endpoint fallback chain; compact /ticker/price; sequential attempts to avoid Cloudflare connection-limit deadlocks.
+- /market diagnostics: kimchiPairs, binanceEndpoint, binanceStatus.
+- UI: null premium remains -- instead of 0.00%.
+- Relative-strength chart: up to 10 selectable coins, with optional empty slots and taller chart.

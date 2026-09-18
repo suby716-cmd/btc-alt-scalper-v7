@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>⚡ BTC ALT REGIME TRADER v10.2</title>
+<title>⚡ BTC ALT REGIME TRADER v10.2.2</title>
 <style>
 :root{--n:#102a56;--b:#2677e8;--l:#dfe9f5;--g:#08a66a;--r:#ff3b30;--o:#f5a623;--m:#6881a4}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#f7fbff,#fff,#f4f9ff);font-family:Arial,"Noto Sans KR",sans-serif;color:var(--n)}
@@ -15,7 +15,7 @@ h1{font-size:25px;margin:0 0 5px}.brand p{margin:0;color:var(--m);font-size:13px
 .toolbar{padding:12px;display:flex;gap:9px;flex-wrap:wrap}.toolbar input{flex:1;min-width:280px;padding:9px;border:1px solid #d8e5f2;border-radius:8px}.btn{padding:9px 13px;border:1px solid #d6e4f3;background:#fff;color:#274b7b;border-radius:8px;cursor:pointer}.primary{background:var(--b);color:#fff;border-color:var(--b)}.note{font-size:11px;color:var(--m);padding:0 13px 12px}
 .middle{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}.regime-grid,.score-grid{display:grid;gap:9px;padding:12px}.regime-grid{grid-template-columns:repeat(4,1fr)}.score-grid{grid-template-columns:repeat(4,1fr);padding-top:0}.regime,.score{border:1px solid #dce8f5;border-radius:9px;padding:11px;background:#fcfeff}.regime label,.score label{font-size:11px;color:#6680a2}.regime b{display:block;font-size:18px;margin:6px 0}.regime small{font-size:10px;color:#6881a4}.score{text-align:center}.score b{display:block;font-size:18px;color:var(--g);margin-top:5px}
 .signal-table{padding:0 12px 12px}.signal-row{display:grid;grid-template-columns:1fr .8fr 2.2fr 1.4fr .7fr;gap:8px;align-items:center;padding:9px;border-top:1px solid #edf2f8;font-size:11px}.signal-row.head{color:#6881a4;background:#f8fbff;border-top:0}.badge{padding:4px 8px;border-radius:5px;font-weight:bold}.buy{background:#d9f7eb;color:#07945f}.hold{background:#fff0c9;color:#a26a00}
-.chartbox,.monitor{padding:12px}.chart-title{font-size:14px;font-weight:bold;padding:4px 4px 10px}canvas{width:100%;height:285px;border:1px solid #edf2f8;border-radius:8px;background:#fff}
+.chartbox,.monitor{padding:12px}.chart-title{font-size:14px;font-weight:bold;padding:4px 4px 10px}canvas{width:100%;height:285px;border:1px solid #edf2f8;border-radius:8px;background:#fff}.rs-tools{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 4px 8px}.rs-tools select{border:1px solid #d8e5f2;border-radius:7px;padding:6px 8px;background:#fff;color:#274b7b;font-size:11px}.rs-legend{display:flex;gap:12px;flex-wrap:wrap;margin:0 4px 8px;font-size:11px;color:#526f97}.rs-legend span{display:inline-flex;align-items:center;gap:5px;font-weight:700}.rs-dot{width:9px;height:9px;border-radius:50%;display:inline-block}.rs-note{font-size:10px;color:#7188a7;margin:6px 4px 0}.live-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:#e7f8f1;color:#07895d;font-size:10px;font-weight:700}
 .baritem{margin-bottom:13px}.barlabel{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}.bar{height:9px;border-radius:20px;background:#edf3f8;overflow:hidden}.fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#2aa7f7,#7657e8)}
 .bottom{display:grid;grid-template-columns:1.25fr .9fr .7fr;gap:14px}.hold-table,.log,.settings{padding:0 12px 12px}.hold-row{display:grid;grid-template-columns:1fr .8fr .9fr .9fr .8fr .6fr;gap:8px;padding:9px;border-top:1px solid #edf2f8;font-size:11px}.hold-head{color:#6881a4;background:#f8fbff;border-top:0}.pill,.toggle{background:var(--g);color:#fff;border-radius:10px;padding:4px 7px;font-size:10px}.log-row{padding:8px 0;border-top:1px solid #edf2f8;font-size:11px}.setrow{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #edf2f8;font-size:12px}
 footer{padding:13px 3px;color:#7188a7;font-size:11px;display:flex;justify-content:space-between}
@@ -41,7 +41,7 @@ footer{padding:13px 3px;color:#7188a7;font-size:11px;display:flex;justify-conten
 <button class="btn primary" onclick="saveWorker()">설정 저장</button><button class="btn" onclick="testConnection()">연결 점검</button><button class="btn" onclick="loadData()">지금 조회</button>
 <button class="btn" onclick="telegramTest()">Telegram 테스트</button>
 <button class="btn" onclick="editCoins()">★ 코인 목록 편집</button></div>
-<div class="note">원하는 코인은 <b>★ 코인 목록 편집</b>에서 심볼을 쉼표로 입력하면 됩니다. 예: <b>BTC,ETH,ADA,NEAR,ARB</b></div><div class="note">가격과 24시간 등락률은 <b>Upbit KRW</b>만 사용합니다. BUY/SELL은 분석 신호이며 실제 매매는 수동입니다.</div></section>
+<div class="note">원하는 코인은 <b>★ 코인 목록 편집</b>에서 심볼을 쉼표로 입력하면 됩니다. 예: <b>BTC,ETH,ADA,NEAR,ARB</b></div><div class="note">현재가·24시간 변동률·5분 상대강도는 <b>Upbit 실시간 WebSocket</b>을 우선 사용합니다. 김프는 <b>Upbit KRW ↔ Binance USDT</b> 비교로 계산합니다. BUY/SELL은 분석 신호이며 실제 매매는 수동입니다.</div></section>
 <section class="middle"><section class="card"><h2>📊 BTC-ALT Regime Engine <small>(실시간 분석)</small></h2>
 <div class="regime-grid"><div class="regime"><label>BTC Regime</label><b id="btcRegime" class="green">상승장</b><small id="btcStrength">추세 강도: --</small></div>
 <div class="regime"><label>ALT Regime</label><b id="altRegime" class="green">상승장</b><small id="altStrength">추세 강도: --</small></div>
@@ -49,7 +49,7 @@ footer{padding:13px 3px;color:#7188a7;font-size:11px;display:flex;justify-conten
 <div class="regime"><label>🏆 오늘의 강세 TOP 3</label><b id="top3" style="font-size:13px;line-height:1.55">--</b></div></div>
 <div class="score-grid"><div class="score"><label>Relative Strength</label><b id="sRel">--</b></div><div class="score"><label>Absolute Momentum</label><b id="sAbs">--</b></div><div class="score"><label>Fibonacci Confluence</label><b id="sFib">--</b></div><div class="score"><label>Alt Season Radar</label><b id="sAlt">--</b></div></div>
 <div class="signal-table"><div class="signal-row head"><span>코인</span><span>종목명</span><span>신호 / 근거</span><span>목표가(1/2/3)</span><span>손절</span></div><div id="signals"></div></div></section>
-<section class="card"><div class="chartbox"><div class="chart-title">📈 BTC / ALT 상대강도 (5분봉) <span style="float:right;font-size:11px;color:#6680a2">BTC 기준 100</span></div><canvas id="chart"></canvas></div>
+<section class="card"><div class="chartbox"><div class="chart-title">📈 BTC / ALT 상대강도 (최근 5분) <span class="live-badge">● LIVE</span><span style="float:right;font-size:11px;color:#6680a2">첫 시점 = 100</span></div><div class="rs-tools"><span style="font-size:11px;color:#6680a2">비교 코인</span><select id="rs1"></select><select id="rs2"></select><select id="rs3"></select><button class="btn" style="padding:6px 9px;font-size:11px" onclick="resetRSChart()">↺ 기준 재설정</button></div><div class="rs-legend" id="rsLegend"></div><canvas id="chart"></canvas><div class="rs-note">그래프의 각 선 끝에 <b>코인명 + 심볼</b>을 직접 표시합니다. 100보다 높으면 시작 시점보다 강하고, 낮으면 약한 흐름입니다.</div></div>
 <div class="monitor"><h2 style="padding:0 0 12px;border:0">🔵 주요 지표 모니터링</h2>
 <div class="baritem"><div class="barlabel"><span>김프 평균</span><b id="mKp">--</b></div><div class="bar"><div class="fill" id="bKp" style="width:35%"></div></div></div>
 <div class="baritem"><div class="barlabel"><span>BTC Dominance</span><b id="mDom">Upbit 데이터 기준</b></div><div class="bar"><div class="fill" style="width:58%"></div></div></div>
@@ -59,16 +59,48 @@ footer{padding:13px 3px;color:#7188a7;font-size:11px;display:flex;justify-conten
 <section class="bottom"><section class="card"><h2>💼 보유 종목 & 거래 내역</h2><div class="hold-table"><div class="hold-row hold-head"><span>코인</span><span>보유수량</span><span>평균매수가</span><span>현재가</span><span>평가손익</span><span>수익률</span></div><div id="holdings"></div><div style="padding-top:10px"><button class="btn primary" onclick="addHolding()">+ 보유종목 추가</button></div></div></section>
 <section class="card"><h2>🔔 최근 알림 로그</h2><div class="log" id="logs"></div></section>
 <section class="card"><h2>⚙ 전략 설정</h2><div class="settings"><div class="setrow">상대강도 (BTC vs ALT)<span class="toggle">ON</span></div><div class="setrow">절대 모멘텀<span class="toggle">ON</span></div><div class="setrow">피보나치 컨플루언스<span class="toggle">ON</span></div><div class="setrow">BB / VWAP / StochRSI / MACD<span class="toggle">ON</span></div><div class="setrow">보유 종목 SELL 감시<span class="toggle">ON</span></div><div class="setrow">자동매매 <span style="background:#ffe5e4;color:#df3028;padding:4px 7px;border-radius:10px;font-size:10px">OFF</span></div></div></section></section>
-</main></div><footer><span>마지막 업데이트: <span id="updated">--</span> · Upbit KRW ✓</span><span>BTC ALT REGIME TRADER v10.2</span></footer>
+</main></div><footer><span>마지막 업데이트: <span id="updated">--</span> · Upbit KRW ✓</span><span>BTC ALT REGIME TRADER v10.2.2</span></footer>
 
 <script>
 const DEFAULT_COINS=[["BTC","비트코인"],["ETH","이더리움"],["SOL","솔라나"],["XRP","리플"],["HBAR","헤데라"],["ONDO","온도파이낸스"],["LINK","체인링크"],["AVAX","아발란체"],["DOGE","도지코인"],["SUI","수이"],["TAO","비트텐서"],["UNI","유니스왑"],["AAVE","에이브"],["ADA","에이다"],["NEAR","니어프로토콜"]];
 let COINS=JSON.parse(localStorage.getItem("btcAltCoins")||"null")||DEFAULT_COINS;
 let tickers={},candles={},holdings=JSON.parse(localStorage.getItem("btcAltHoldings")||"{}"),worker=localStorage.getItem("btcAltWorker")||"";
+let marketRowsData=[],liveWS=null,liveSeries={},liveConnected=false,rsCoins=["BTC","ETH","SOL"],rsColors=["#f2a400","#3478e5","#1cae8a"];
+
 document.getElementById("workerUrl").value=worker;
 const fmt=n=>Number(n||0).toLocaleString("ko-KR",{maximumFractionDigits:0}),pct=n=>(Number(n)>=0?"+":"")+Number(n||0).toFixed(2)+"%",now=()=>new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
 function api(path){return worker?worker+"/upbit?path="+encodeURIComponent(path):"https://api.upbit.com"+path}
 async function getJson(path){let r=await fetch(api(path),{cache:"no-store"});if(!r.ok)throw Error(r.status);return r.json()}
+async function getMarket(){
+  const syms=COINS.map(x=>x[0]).join(',');
+  const url=worker?worker+"/market?symbols="+encodeURIComponent(syms):"https://api.upbit.com/v1/ticker?markets="+encodeURIComponent(COINS.map(x=>"KRW-"+x[0]).join(','));
+  if(worker){const r=await fetch(url,{cache:"no-store"});if(!r.ok)throw Error(r.status);return r.json();}
+  const up=await (await fetch(url,{cache:"no-store"})).json();
+  return {rows:up.map(x=>({symbol:x.market.slice(4),price:x.trade_price,change24h:x.signed_change_rate*100,premium:null,binanceUsdt:null,fairKrw:null})),reference:'Upbit 직접 연결',usdtKrw:null,updatedAt:Date.now()};
+}
+function startUpbitWS(){
+  try{if(liveWS)liveWS.close()}catch(e){}
+  liveWS=new WebSocket('wss://api.upbit.com/websocket/v1');
+  liveWS.onopen=()=>{liveConnected=true;status('UPBIT 실시간 연결',true);liveWS.send(JSON.stringify([{ticket:'btc-alt-regime-live'},{type:'ticker',codes:COINS.map(x=>'KRW-'+x[0])},{format:'DEFAULT'}]));};
+  liveWS.onmessage=async e=>{try{const buf=await e.data.arrayBuffer();const d=JSON.parse(new TextDecoder().decode(buf));const s=String(d.code||'').replace('KRW-','');if(!s)return;const t=tickers['KRW-'+s]||{};tickers['KRW-'+s]={...t,trade_price:Number(d.trade_price),signed_change_rate:Number(d.signed_change_rate||0)};pushLive(s,Number(d.trade_price),Number(d.timestamp||Date.now()));render();}catch(err){}};
+  liveWS.onerror=()=>{liveConnected=false;};
+  liveWS.onclose=()=>{liveConnected=false;setTimeout(startUpbitWS,2000)};
+}
+function pushLive(s,p,t){
+  if(!Number.isFinite(p))return;
+  if(!liveSeries[s])liveSeries[s]=[];
+  liveSeries[s].push({t,v:p});
+  const cut=t-5*60*1000; liveSeries[s]=liveSeries[s].filter(x=>x.t>=cut);
+}
+function resetRSChart(){Object.keys(liveSeries).forEach(k=>liveSeries[k]=[]);draw();}
+function initRSSelectors(){
+  const opts=COINS.map(([s,k])=>`<option value="${s}">${s} · ${k}</option>`).join('');
+  ['rs1','rs2','rs3'].forEach((id,i)=>{const el=document.getElementById(id);el.innerHTML=opts;el.value=rsCoins[i]&&COINS.some(x=>x[0]===rsCoins[i])?rsCoins[i]:(COINS[i]?.[0]||'BTC');el.onchange=()=>{rsCoins=[document.getElementById('rs1').value,document.getElementById('rs2').value,document.getElementById('rs3').value];draw()}});
+  rsCoins=[document.getElementById('rs1').value,document.getElementById('rs2').value,document.getElementById('rs3').value];
+  renderRSLegend();
+}
+function renderRSLegend(){const el=document.getElementById('rsLegend');if(!el)return;el.innerHTML=rsCoins.map((s,i)=>{const k=(COINS.find(x=>x[0]===s)||[s,s])[1];return `<span><i class="rs-dot" style="background:${rsColors[i]}"></i>${k} (${s})</span>`}).join('');}
+
 function status(s,ok){document.getElementById("status").textContent=s;document.getElementById("dot").style.background=ok?"#08a66a":"#ff3b30"}
 async function editCoins(){
  let current=COINS.map(x=>x[0]).join(",");
@@ -86,24 +118,45 @@ async function editCoins(){
    localStorage.setItem("btcAltCoins",JSON.stringify(COINS));
    if(invalid.length) alert("저장 완료\n\n추가되지 않은 심볼: "+invalid.join(", ")+"\n(Upbit KRW 거래쌍이 없는 종목)");
    else alert("저장 완료: "+valid.join(", "));
-   loadData();
+   initRSSelectors();loadData();
  }catch(e){alert("Upbit 종목 목록을 확인하지 못했습니다.\n"+e.message)}
 }
-async function loadData(){status("연결 중",false);try{let m=COINS.map(x=>"KRW-"+x[0]).join(","),d=await getJson("/v1/ticker?markets="+m);tickers={};d.forEach(x=>tickers[x.market]=x);render();await indicators();status("정상 연결",true);document.getElementById("updated").textContent=new Date().toLocaleString("ko-KR");document.getElementById("clock").textContent=now()}catch(e){status("연결 실패",false);log("ERR","Upbit 연결 실패: "+e.message)}}
-function render(){let ks=COINS.map(([s,k])=>{let t=tickers["KRW-"+s]||{},p=+t.trade_price||0,ch=(+t.signed_change_rate||0)*100,kp=.58+(s.charCodeAt(0)%8)/100;return `<div class="coin-row"><div class="coin-name"><span class="star">★</span><span>${s}<span class="sub">${k}</span></span></div><div class="price">${fmt(p)}</div><div class="num ${ch>=0?"up":"down"}">${pct(ch)}</div><div class="kp">+${(s==="BTC"?.70:kp).toFixed(2)}%</div></div>`}).join("");document.getElementById("coins").innerHTML=ks;
-let a=COINS.map(([s])=>s==="BTC"?.70:.58+(s.charCodeAt(0)%8)/100);document.getElementById("avgKp").textContent="+"+(a.reduce((x,y)=>x+y,0)/a.length).toFixed(2)+"%";document.getElementById("maxKp").textContent="+"+Math.max(...a).toFixed(2)+"%";document.getElementById("minKp").textContent="+"+Math.min(...a).toFixed(2)+"%";
-let b=tickers["KRW-BTC"]||{},p=+b.trade_price||0,ch=(+b.signed_change_rate||0)*100;document.getElementById("btcPrice").textContent=fmt(p);document.getElementById("btc24").textContent=pct(ch);document.getElementById("btc24").className=ch>=0?"up":"down";document.getElementById("btc5m").textContent=(ch>=0?"+":"")+((ch||0)*.16).toFixed(2)+"%";document.getElementById("btc5mSub").textContent="("+fmt(p)+")";let rg=ch>1?"상승장":ch< -1?"하락장":"중립";document.getElementById("regime").textContent=rg;document.getElementById("regime").className=ch>1?"green":ch< -1?"red":"amber";document.getElementById("regimeSub").textContent="추세 강도 "+Math.min(99,Math.round(50+Math.abs(ch)*18));signals();hold()}
+async function loadData(){status('시장 데이터 갱신 중',false);try{let d=await getMarket();marketRowsData=d.rows||[];tickers={};marketRowsData.forEach(x=>{tickers['KRW-'+x.symbol]={trade_price:x.price,signed_change_rate:(Number(x.change24h)||0)/100}});render();await indicators();if(!liveWS||liveWS.readyState!==1)startUpbitWS();status(liveConnected?'UPBIT 실시간 + 김프 정상':'김프 데이터 정상',true);document.getElementById('updated').textContent=new Date().toLocaleString('ko-KR');document.getElementById('clock').textContent=now()}catch(e){status('연결 실패',false);log('ERR','시장 데이터 연결 실패: '+e.message)}}
+function render(){
+ let map=new Map((marketRowsData||[]).map(x=>[x.symbol,x]));
+ let ks=COINS.map(([s,k])=>{let t=tickers['KRW-'+s]||{},m=map.get(s)||{},p=+t.trade_price||0,ch=(+t.signed_change_rate||0)*100,kp=Number(m.premium);return `<div class="coin-row"><div class="coin-name"><span class="star">★</span><span>${s}<span class="sub">${k}</span></span></div><div class="price">${fmt(p)}</div><div class="num ${ch>=0?'up':'down'}">${pct(ch)}</div><div class="kp">${Number.isFinite(kp)?pct(kp):'--'}</div></div>`}).join('');
+ document.getElementById('coins').innerHTML=ks;
+ let a=marketRowsData.map(x=>Number(x.premium)).filter(Number.isFinite);
+ document.getElementById('avgKp').textContent=a.length?'+'+(a.reduce((x,y)=>x+y,0)/a.length).toFixed(2)+'%':'--';
+ document.getElementById('maxKp').textContent=a.length?'+'+Math.max(...a).toFixed(2)+'%':'--';
+ document.getElementById('minKp').textContent=a.length?'+'+Math.min(...a).toFixed(2)+'%':'--';
+ let b=tickers['KRW-BTC']||{},p=+b.trade_price||0,ch=(+b.signed_change_rate||0)*100;document.getElementById('btcPrice').textContent=fmt(p);document.getElementById('btc24').textContent=pct(ch);document.getElementById('btc24').className=ch>=0?'up':'down';
+ document.getElementById('btc5m').textContent=(ch>=0?'+':'')+((ch||0)*.16).toFixed(2)+'%';document.getElementById('btc5mSub').textContent='('+fmt(p)+')';let rg=ch>1?'상승장':ch<-1?'하락장':'중립';document.getElementById('regime').textContent=rg;document.getElementById('regime').className=ch>1?'green':ch<-1?'red':'amber';document.getElementById('regimeSub').textContent='추세 강도 '+Math.min(99,Math.round(50+Math.abs(ch)*18));signals();hold();draw();
+}
 function score(s){let ch=(+(tickers["KRW-"+s]?.signed_change_rate||0))*100;let rel=50+ch*7,abs=50+ch*8,fib=55+Math.abs(ch)%1*20,sc=Math.max(0,Math.min(100,rel*.3+abs*.35+fib*.2+15));return{sc,ch,conf:Math.min(95,Math.round(sc*.9+10))}}
 function signals(){let list=COINS.slice(1).map(([s,k])=>[s,k,score(s)]).sort((a,b)=>b[2].sc-a[2].sc).slice(0,5),x=list[0]?.[2];document.getElementById("bestScore").textContent=x?x.sc.toFixed(1):"--";document.getElementById("bestConf").textContent=x?x.conf+"%":"--";document.getElementById("top3").innerHTML=list.slice(0,3).map((z,i)=>`${i+1}. ${z[0]} <span class="green">${pct(z[2].ch)}</span>`).join("<br>");document.getElementById("signals").innerHTML=list.map(([s,k,v])=>{let p=+tickers["KRW-"+s]?.trade_price||0,buy=v.sc>=68;return `<div class="signal-row"><b>${s}</b><span>${k}</span><span><span class="badge ${buy?"buy":"hold"}">${buy?"매수":"관망"}</span> ${buy?"절대 모멘텀↑ · RSI↑ · Fib":"추세 확인 필요"}</span><span>${fmt(p*1.025)} / ${fmt(p*1.06)} / ${fmt(p*1.10)}</span><span>${fmt(p*.96)}</span></div>`}).join("");if(x){document.getElementById("sRel").textContent=Math.min(99,Math.round(50+x.ch*6));document.getElementById("sAbs").textContent=Math.min(99,Math.round(50+x.ch*7));document.getElementById("sFib").textContent=Math.min(99,Math.round(55+Math.abs(x.ch)*5));document.getElementById("sAlt").textContent=Math.min(99,Math.round(50+x.ch*4))}}
 async function loadC(s){try{candles[s]=(await getJson("/v1/candles/minutes/5?market=KRW-"+s+"&count=90")).reverse()}catch(e){}}
-async function indicators(){await Promise.all(COINS.slice(0,8).map(x=>x[0]).map(loadC));let a=(candles.BTC||[]).map(x=>+x.trade_price),r=RSI(a,14);document.getElementById("rsi").textContent=r.toFixed(1);let bc=(+tickers["KRW-BTC"]?.signed_change_rate||0)*100,ac=COINS.filter(x=>x[0]!=="BTC").map(x=>(+tickers["KRW-"+x[0]]?.signed_change_rate||0)*100),aa=ac.length?ac.reduce((x,y)=>x+y,0)/ac.length:0;document.getElementById("btcRegime").textContent=bc>.8?"상승장":bc<-.8?"하락장":"중립";document.getElementById("btcStrength").textContent="추세 강도: "+Math.round(50+Math.abs(bc)*18);document.getElementById("altRegime").textContent=aa>.8?"상승장":aa<-.8?"하락장":"중립";document.getElementById("altStrength").textContent="추세 강도: "+Math.round(50+Math.abs(aa)*15);document.getElementById("sentiment").textContent=aa>1?"긍정적":aa< -1?"부정적":"중립";document.getElementById("sentimentScore").textContent="시장 모멘텀: "+Math.round(50+aa*10);document.getElementById("mKp").textContent=document.getElementById("avgKp").textContent;document.getElementById("mBeta").textContent=(1+aa*.12).toFixed(2)+" / "+(1+aa*.18).toFixed(2)+" / "+(1+aa*.15).toFixed(2);document.getElementById("mLiq").textContent=aa>1?"확장":"중립";document.getElementById("mVol").textContent=Math.abs(bc).toFixed(2)+"%";draw()}
+async function indicators(){await Promise.all(COINS.slice(0,12).map(x=>x[0]).map(loadC));let a=(candles.BTC||[]).map(x=>+x.trade_price),r=RSI(a,14);document.getElementById("rsi").textContent=r.toFixed(1);let bc=(+tickers["KRW-BTC"]?.signed_change_rate||0)*100,ac=COINS.filter(x=>x[0]!=="BTC").map(x=>(+tickers["KRW-"+x[0]]?.signed_change_rate||0)*100),aa=ac.length?ac.reduce((x,y)=>x+y,0)/ac.length:0;document.getElementById("btcRegime").textContent=bc>.8?"상승장":bc<-.8?"하락장":"중립";document.getElementById("btcStrength").textContent="추세 강도: "+Math.round(50+Math.abs(bc)*18);document.getElementById("altRegime").textContent=aa>.8?"상승장":aa<-.8?"하락장":"중립";document.getElementById("altStrength").textContent="추세 강도: "+Math.round(50+Math.abs(aa)*15);document.getElementById("sentiment").textContent=aa>1?"긍정적":aa< -1?"부정적":"중립";document.getElementById("sentimentScore").textContent="시장 모멘텀: "+Math.round(50+aa*10);document.getElementById("mKp").textContent=document.getElementById("avgKp").textContent;document.getElementById("mBeta").textContent=(1+aa*.12).toFixed(2)+" / "+(1+aa*.18).toFixed(2)+" / "+(1+aa*.15).toFixed(2);document.getElementById("mLiq").textContent=aa>1?"확장":"중립";document.getElementById("mVol").textContent=Math.abs(bc).toFixed(2)+"%";draw()}
 function RSI(a,n){if(a.length<n+1)return 50;let g=0,l=0;for(let i=a.length-n;i<a.length;i++){let d=a[i]-a[i-1];d>0?g+=d:l-=d}return l?100-100/(1+g/l):100}
-function draw(){let c=document.getElementById("chart"),x=c.getContext("2d"),d=devicePixelRatio||1;c.width=c.clientWidth*d;c.height=c.clientHeight*d;x.scale(d,d);let W=c.clientWidth,H=c.clientHeight;x.clearRect(0,0,W,H);x.strokeStyle="#e8eff7";for(let i=0;i<6;i++){let y=25+i*(H-50)/5;x.beginPath();x.moveTo(45,y);x.lineTo(W-18,y);x.stroke()}let ss=["BTC","ETH","SOL"];ss.forEach(s=>{let a=(candles[s]||[]).map(z=>+z.trade_price);if(!a.length)return;a=a.map(v=>v/a[0]*100);let mn=Math.min(...a)-2,mx=Math.max(...a)+2;x.beginPath();a.forEach((v,i)=>{let px=45+i*(W-65)/(a.length-1),py=H-25-(v-mn)/(mx-mn)*(H-50);i?x.lineTo(px,py):x.moveTo(px,py)});x.strokeStyle=s==="BTC"?"#f2a400":s==="ETH"?"#3478e5":"#1cae8a";x.lineWidth=2;x.stroke()})}
+function draw(){
+ const c=document.getElementById('chart'),ctx=c.getContext('2d'),d=devicePixelRatio||1; if(!c.clientWidth)return; c.width=c.clientWidth*d;c.height=c.clientHeight*d;ctx.setTransform(d,0,0,d,0,0);const W=c.clientWidth,H=c.clientHeight;ctx.clearRect(0,0,W,H);
+ const padL=46,padR=78,padT=18,padB=24;
+ const series=rsCoins.map((s,i)=>{let a=(liveSeries[s]||[]).slice();if(a.length<2){const cc=(candles[s]||[]).map(z=>({t:Number(z.candle_date_time_utc||z.timestamp||0),v:+z.trade_price})).filter(z=>z.v);if(cc.length)a=cc.slice(-60)}return{s,i,a}});
+ const vals=[];series.forEach(q=>{if(!q.a.length)return;const b=q.a[0].v;q.norm=q.a.map(z=>({t:z.t,v:z.v/b*100}));q.norm.forEach(z=>vals.push(z.v));});
+ if(!vals.length){ctx.fillStyle='#7188a7';ctx.font='12px Arial';ctx.fillText('UPBIT 실시간 데이터를 기다리는 중…',padL,H/2);renderRSLegend();return;}
+ let mn=Math.min(...vals),mx=Math.max(...vals);if(mn===mx){mn-=.5;mx+=.5}const span=Math.max(.8,mx-mn),extra=span*.18;mn-=extra;mx+=extra;
+ ctx.font='10px Arial';ctx.textAlign='right';for(let i=0;i<=5;i++){const y=padT+i*(H-padT-padB)/5;ctx.strokeStyle='#e8eff7';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();const v=mx-(mx-mn)*i/5;ctx.fillStyle='#8095b1';ctx.fillText(v.toFixed(2),padL-6,y+3)}
+ const y100=padT+(mx-100)/(mx-mn)*(H-padT-padB);ctx.strokeStyle='#b9cbe0';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(padL,y100);ctx.lineTo(W-padR,y100);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#7188a7';ctx.fillText('100',padL-6,y100+3);
+ const t0=Math.min(...series.filter(q=>q.norm?.length).map(q=>q.norm[0].t)),t1=Math.max(...series.filter(q=>q.norm?.length).map(q=>q.norm.at(-1).t));
+ series.forEach(q=>{if(!q.norm||q.norm.length<2)return;ctx.strokeStyle=rsColors[q.i];ctx.lineWidth=2;ctx.beginPath();q.norm.forEach((p,j)=>{const x=padL+(p.t-t0)/Math.max(1,t1-t0)*(W-padL-padR);const y=padT+(mx-p.v)/(mx-mn)*(H-padT-padB);j?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();
+ const last=q.norm.at(-1),lx=padL+(last.t-t0)/Math.max(1,t1-t0)*(W-padL-padR),ly=padT+(mx-last.v)/(mx-mn)*(H-padT-padB);const name=(COINS.find(x=>x[0]===q.s)||[q.s,q.s])[1];ctx.fillStyle=rsColors[q.i];ctx.font='bold 11px Arial';ctx.textAlign='left';ctx.fillText(name+' ('+q.s+')',Math.min(W-padR+5,lx+6),Math.max(12,Math.min(H-8,ly-2)));});
+ renderRSLegend();
+}
 function hold(){let a=Object.entries(holdings).filter(([s,v])=>v.qty>0);document.getElementById("holdings").innerHTML=a.length?a.map(([s,v])=>{let p=+tickers["KRW-"+s]?.trade_price||v.avg,pnl=v.qty*(p-v.avg),rt=pnl/(v.qty*v.avg)*100;return `<div class="hold-row"><b>${s}</b><span>${Number(v.qty).toLocaleString()}</span><span>${fmt(v.avg)}</span><span>${fmt(p)}</span><b class="${pnl>=0?"green":"red"}">${pnl>=0?"+":""}${fmt(pnl)}</b><b class="${rt>=0?"green":"red"}">${pct(rt)}</b></div>`}).join(""):"<div style='padding:14px;color:#7a90ad;font-size:12px'>실제 매수 후 '+ 보유종목 추가'로 기록하세요.</div>"}
 function addHolding(){let s=prompt("코인 심볼 (예: ONDO)");if(!s)return;let q=+prompt("보유 수량","0"),a=+prompt("평균매수가(KRW)","0");s=s.toUpperCase();if(q>0&&a>0&&COINS.some(x=>x[0]===s)){holdings[s]={qty:q,avg:a};localStorage.setItem("btcAltHoldings",JSON.stringify(holdings));hold();log("BUY",`${s} ${q}개 @ ${fmt(a)}원 기록`)}}
 function log(t,m){let z=document.getElementById("logs"),c=t==="ERR"?"red":t==="BUY"?"green":"";z.innerHTML=`<div class="log-row"><span>${now()}</span> <b class="${c}">${t}</b> ${m}</div>`+z.innerHTML}
 function saveWorker(){worker=document.getElementById("workerUrl").value.trim().replace(/\/$/,"");localStorage.setItem("btcAltWorker",worker);testConnection()}
 async function testConnection(){try{await getJson("/v1/ticker?markets=KRW-BTC");status("정상 연결",true);log("INFO","Upbit KRW 연결 정상")}catch(e){status("연결 실패",false);log("ERR","연결 실패: "+e.message)}}
 async function telegramTest(){if(!worker){alert("Cloudflare Worker 주소를 먼저 저장하세요.");return}try{let r=await fetch(worker+"/telegram-test");let x=await r.json();log("INFO",x.message||"Telegram 테스트 요청")}catch(e){log("ERR","Telegram 테스트 실패")}}
-loadData();setInterval(loadData,60000);setInterval(()=>document.getElementById("clock").textContent=now(),1000);
+initRSSelectors();loadData();setInterval(loadData,15000);setInterval(()=>document.getElementById("clock").textContent=now(),1000);setInterval(draw,1000);
 </script></body></html>

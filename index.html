@@ -64,7 +64,8 @@ footer{padding:13px 3px;color:#7188a7;font-size:11px;display:flex;justify-conten
 <script>
 const DEFAULT_COINS=[["BTC","비트코인"],["ETH","이더리움"],["SOL","솔라나"],["XRP","리플"],["HBAR","헤데라"],["ONDO","온도파이낸스"],["LINK","체인링크"],["AVAX","아발란체"],["DOGE","도지코인"],["SUI","수이"],["TAO","비트텐서"],["UNI","유니스왑"],["AAVE","에이브"],["ADA","에이다"],["NEAR","니어프로토콜"]];
 let COINS=JSON.parse(localStorage.getItem("btcAltCoins")||"null")||DEFAULT_COINS;
-let tickers={},candles={},holdings=JSON.parse(localStorage.getItem("btcAltHoldings")||"{}"),worker=localStorage.getItem("btcAltWorker")||"";
+const DEFAULT_WORKER="https://btc-alt-scalper-v7.suby716.workers.dev";
+let tickers={},candles={},holdings=JSON.parse(localStorage.getItem("btcAltHoldings")||"{}"),worker=localStorage.getItem("btcAltWorker")||DEFAULT_WORKER;
 let marketRowsData=[],liveWS=null,liveSeries={},liveConnected=false,rsCoins=["BTC","ETH","SOL"],rsColors=["#f2a400","#3478e5","#1cae8a"];
 
 document.getElementById("workerUrl").value=worker;
@@ -81,8 +82,9 @@ async function getMarket(){
 function startUpbitWS(){
   try{if(liveWS)liveWS.close()}catch(e){}
   liveWS=new WebSocket('wss://api.upbit.com/websocket/v1');
+  liveWS.binaryType='arraybuffer';
   liveWS.onopen=()=>{liveConnected=true;status('UPBIT 실시간 연결',true);liveWS.send(JSON.stringify([{ticket:'btc-alt-regime-live'},{type:'ticker',codes:COINS.map(x=>'KRW-'+x[0])},{format:'DEFAULT'}]));};
-  liveWS.onmessage=async e=>{try{const buf=await e.data.arrayBuffer();const d=JSON.parse(new TextDecoder().decode(buf));const s=String(d.code||'').replace('KRW-','');if(!s)return;const t=tickers['KRW-'+s]||{};tickers['KRW-'+s]={...t,trade_price:Number(d.trade_price),signed_change_rate:Number(d.signed_change_rate||0)};pushLive(s,Number(d.trade_price),Number(d.timestamp||Date.now()));render();}catch(err){}};
+  liveWS.onmessage=async e=>{try{let txt;if(typeof e.data==='string')txt=e.data;else if(e.data instanceof ArrayBuffer)txt=new TextDecoder().decode(e.data);else if(e.data&&typeof e.data.arrayBuffer==='function')txt=new TextDecoder().decode(await e.data.arrayBuffer());else return;const d=JSON.parse(txt);const s=String(d.code||'').replace('KRW-','');if(!s)return;const t=tickers['KRW-'+s]||{};tickers['KRW-'+s]={...t,trade_price:Number(d.trade_price),signed_change_rate:Number(d.signed_change_rate||0)};pushLive(s,Number(d.trade_price),Number(d.timestamp||Date.now()));render();document.getElementById('updated').textContent=new Date().toLocaleString('ko-KR');}catch(err){console.warn('Upbit WS parse error',err)}};
   liveWS.onerror=()=>{liveConnected=false;};
   liveWS.onclose=()=>{liveConnected=false;setTimeout(startUpbitWS,2000)};
 }
@@ -121,7 +123,7 @@ async function editCoins(){
    initRSSelectors();loadData();
  }catch(e){alert("Upbit 종목 목록을 확인하지 못했습니다.\n"+e.message)}
 }
-async function loadData(){status('시장 데이터 갱신 중',false);try{let d=await getMarket();marketRowsData=d.rows||[];tickers={};marketRowsData.forEach(x=>{tickers['KRW-'+x.symbol]={trade_price:x.price,signed_change_rate:(Number(x.change24h)||0)/100}});render();await indicators();if(!liveWS||liveWS.readyState!==1)startUpbitWS();status(liveConnected?'UPBIT 실시간 + 김프 정상':'김프 데이터 정상',true);document.getElementById('updated').textContent=new Date().toLocaleString('ko-KR');document.getElementById('clock').textContent=now()}catch(e){status('연결 실패',false);log('ERR','시장 데이터 연결 실패: '+e.message)}}
+async function loadData(){status('시장 데이터 갱신 중',false);try{let d=await getMarket();marketRowsData=d.rows||[];marketRowsData.forEach(x=>{const key='KRW-'+x.symbol,prev=tickers[key]||{};tickers[key]={...prev,trade_price:(liveConnected&&Number.isFinite(Number(prev.trade_price)))?Number(prev.trade_price):Number(x.price),signed_change_rate:Number.isFinite(Number(x.change24h))?Number(x.change24h)/100:Number(prev.signed_change_rate||0)}});render();await indicators();if(!liveWS||liveWS.readyState!==1)startUpbitWS();status(liveConnected?'UPBIT 실시간 + 김프 정상':'김프 데이터 정상',true);document.getElementById('updated').textContent=new Date().toLocaleString('ko-KR');document.getElementById('clock').textContent=now()}catch(e){status('연결 실패',false);log('ERR','시장 데이터 연결 실패: '+e.message)}}
 function render(){
  let map=new Map((marketRowsData||[]).map(x=>[x.symbol,x]));
  let ks=COINS.map(([s,k])=>{let t=tickers['KRW-'+s]||{},m=map.get(s)||{},p=+t.trade_price||0,ch=(+t.signed_change_rate||0)*100,kp=Number(m.premium);return `<div class="coin-row"><div class="coin-name"><span class="star">★</span><span>${s}<span class="sub">${k}</span></span></div><div class="price">${fmt(p)}</div><div class="num ${ch>=0?'up':'down'}">${pct(ch)}</div><div class="kp">${Number.isFinite(kp)?pct(kp):'--'}</div></div>`}).join('');

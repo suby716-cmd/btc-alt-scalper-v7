@@ -28,3 +28,10 @@
 - 김프 = Upbit KRW / (Binance USDT × USD/KRW) - 1
 - 시장판은 PIN/Telegram 설정이 없어도 표시되며, 20초마다 갱신합니다.
 
+
+
+## v10.1.1 변경
+- 시장판의 코인 현재가/24시간 등락률/24시간 거래대금은 **Upbit KRW API만 사용**
+- Binance 코인 가격 호출 제거
+- Binance 연결 실패가 Upbit 현재가 표시를 방해하지 않음
+- 김프는 글로벌 비교가격이 필요한 기능이므로 Upbit-only 모드에서는 비워서 잘못된 수치를 표시하지 않음

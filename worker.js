@@ -1,4 +1,4 @@
-const VERSION = 'v10.1.0';
+const VERSION = 'v10.1.1';
 const STRATEGY_VERSION = 'krw-5m-v10.1.0-fibonacci-liquidity-manual';
 const COINS = ['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const UPBIT_CANDLE_BASE = 'https://api.upbit.com/v1/candles/minutes';
@@ -1307,66 +1307,96 @@ function scoreLiquidity(parts) {
 
 
 const MARKET_RADAR_COINS = [
-  ['BTC','비트코인','KRW-BTC','BTCUSDT'],['ETH','이더리움','KRW-ETH','ETHUSDT'],['SOL','솔라나','KRW-SOL','SOLUSDT'],
-  ['XRP','엑스알피','KRW-XRP','XRPUSDT'],['HBAR','헤데라','KRW-HBAR','HBARUSDT'],['ONDO','온도파이낸스','KRW-ONDO','ONDOUSDT'],
-  ['LINK','체인링크','KRW-LINK','LINKUSDT'],['AVAX','아발란체','KRW-AVAX','AVAXUSDT'],['DOGE','도지코인','KRW-DOGE','DOGEUSDT'],
-  ['SUI','수이','KRW-SUI','SUIUSDT'],['TAO','비트텐서','KRW-TAOUSDT','TAOUSDT'],['UNI','유니스왑','KRW-UNI','UNIUSDT'],
-  ['AAVE','에이브','KRW-AAVE','AAVEUSDT'],['NEAR','니어프로토콜','KRW-NEAR','NEARUSDT'],['ALGO','알고랜드','KRW-ALGO','ALGOUSDT'],
-  ['APT','앱토스','KRW-APT','APTUSDT'],['ICP','인터넷컴퓨터','KRW-ICP','ICPUSDT'],['XLM','스텔라루멘','KRW-XLM','XLMUSDT'],
-  ['ADA','에이다','KRW-ADA','ADAUSDT'],['GRT','그래프','KRW-GRT','GRTUSDT']
+  ['BTC','비트코인','KRW-BTC'],['ETH','이더리움','KRW-ETH'],['SOL','솔라나','KRW-SOL'],
+  ['XRP','엑스알피','KRW-XRP'],['HBAR','헤데라','KRW-HBAR'],['ONDO','온도파이낸스','KRW-ONDO'],
+  ['LINK','체인링크','KRW-LINK'],['AVAX','아발란체','KRW-AVAX'],['DOGE','도지코인','KRW-DOGE'],
+  ['SUI','수이','KRW-SUI'],['TAO','비트텐서','KRW-TAO'],['UNI','유니스왑','KRW-UNI'],
+  ['AAVE','에이브','KRW-AAVE'],['NEAR','니어프로토콜','KRW-NEAR'],['ALGO','알고랜드','KRW-ALGO'],
+  ['APT','앱토스','KRW-APT'],['ICP','인터넷컴퓨터','KRW-ICP'],['XLM','스텔라루멘','KRW-XLM'],
+  ['ADA','에이다','KRW-ADA'],['GRT','그래프','KRW-GRT']
 ];
 
-const MARKET_CACHE_KEY = 'market-radar:v1';
-const MARKET_CACHE_TTL = 15;
+const MARKET_CACHE_KEY = 'market-radar:upbit-v2';
+const MARKET_CACHE_TTL = 10;
 
 async function getMarketRadar(env) {
   const now = Date.now();
+
   if (env.SCALPER_KV) {
     try {
       const c = await env.SCALPER_KV.get(MARKET_CACHE_KEY, 'json');
-      if (c?.generatedAt && now - Number(c.generatedAt) < MARKET_CACHE_TTL * 1000) return { ...c, cached:true };
+      if (c?.generatedAt && now - Number(c.generatedAt) < MARKET_CACHE_TTL * 1000) {
+        return { ...c, cached:true };
+      }
     } catch {}
   }
 
-  const upbitMarkets = MARKET_RADAR_COINS.map(x=>x[2]).join(',');
-  const binanceSymbols = MARKET_RADAR_COINS.map(x=>x[3]);
-  const binanceUrl = 'https://api.binance.com/api/v3/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(binanceSymbols));
+  const markets = MARKET_RADAR_COINS.map(x=>x[2]).join(',');
   const errors = [];
-  let upbit = [], binance = [], fx = null;
+  let upbit = [];
 
-  await Promise.allSettled([
-    fetchJsonPublic(`https://api.upbit.com/v1/ticker?markets=${encodeURIComponent(upbitMarkets)}`)
-      .then(x=>{upbit=x}).catch(e=>errors.push('Upbit: '+e.message)),
-    fetchJsonPublic(binanceUrl)
-      .then(x=>{binance=x}).catch(e=>errors.push('Binance: '+e.message)),
-    fetchJsonPublic('https://open.er-api.com/v6/latest/USD')
-      .then(x=>{fx=safeNum(x?.rates?.KRW)}).catch(e=>errors.push('USD/KRW: '+e.message))
-  ]);
+  try {
+    upbit = await fetchJsonPublic(
+      `https://api.upbit.com/v1/ticker?markets=${encodeURIComponent(markets)}`
+    );
+  } catch (e) {
+    errors.push('Upbit: ' + e.message);
+  }
 
-  const uMap = new Map((upbit||[]).map(x=>[x.market,x]));
-  const bMap = new Map((binance||[]).map(x=>[x.symbol,x]));
-  const usdkrw = fx;
-  const rows = MARKET_RADAR_COINS.map(([symbol,name,upbitMarket,binanceSymbol])=>{
-    const u=uMap.get(upbitMarket), b=bMap.get(binanceSymbol);
-    const krw=safeNum(u?.trade_price);
-    const usdt=safeNum(b?.lastPrice);
-    const change24=safeNum(u?.signed_change_rate);
-    const globalKrw=Number.isFinite(usdt)&&Number.isFinite(usdkrw)?usdt*usdkrw:null;
-    const premium=Number.isFinite(krw)&&Number.isFinite(globalKrw)&&globalKrw>0?(krw/globalKrw-1)*100:null;
+  const uMap = new Map((Array.isArray(upbit) ? upbit : []).map(x=>[x.market,x]));
+
+  // 김프 계산용 USD/KRW만 가져옵니다. 코인 가격은 Binance에서 가져오지 않습니다.
+  let usdkrw = null;
+  try {
+    const fx = await fetchJsonPublic('https://open.er-api.com/v6/latest/USD');
+    usdkrw = safeNum(fx?.rates?.KRW);
+  } catch (e) {
+    errors.push('USD/KRW: ' + e.message);
+  }
+
+  const rows = MARKET_RADAR_COINS.map(([symbol,name,market])=>{
+    const u = uMap.get(market);
+    const krw = safeNum(u?.trade_price);
+    const change24 = safeNum(u?.signed_change_rate);
+    const volume24hKrw = safeNum(u?.acc_trade_price_24h);
+
+    // Upbit만 사용하므로 "김프"는 여기서 Binance 환산값을 만들지 않습니다.
+    // 김프를 실제로 계산하려면 외부 글로벌 가격 소스가 별도로 필요합니다.
     return {
-      symbol,name,market:upbitMarket,binance:binanceSymbol,
-      priceKrw:krw,priceUsdt:usdt,usdkrw,
-      change24h:change24==null?null:change24*100,
-      kimchiPremium:premium,
-      upbitTimestamp:safeNum(u?.timestamp),
-      volume24hKrw:safeNum(u?.acc_trade_price_24h)
+      symbol,
+      name,
+      market,
+      priceKrw: krw,
+      change24h: change24 == null ? null : change24 * 100,
+      volume24hKrw,
+      kimchiPremium: null,
+      source: 'UPBIT_KRW'
     };
   });
 
-  const result={ok:true,generatedAt:now,usdkrw,rows,errors};
-  if(env.SCALPER_KV) {
-    try { await env.SCALPER_KV.put(MARKET_CACHE_KEY,JSON.stringify(result),{expirationTtl:60}); } catch {}
+  const btc = rows.find(x=>x.symbol==='BTC');
+  const result = {
+    ok:true,
+    generatedAt:now,
+    cached:false,
+    source:'UPBIT_KRW',
+    usdkrw,
+    rows,
+    btcPriceKrw: btc?.priceKrw ?? null,
+    btcChange24h: btc?.change24h ?? null,
+    errors
+  };
+
+  if (env.SCALPER_KV) {
+    try {
+      await env.SCALPER_KV.put(
+        MARKET_CACHE_KEY,
+        JSON.stringify(result),
+        {expirationTtl:60}
+      );
+    } catch {}
   }
+
   return result;
 }
 

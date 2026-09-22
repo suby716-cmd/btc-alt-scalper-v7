@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v8.3.1</title>
+<title>BTC ALT REGIME TRADER v8.3.2</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1440px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
 
-.workspace{display:grid;grid-template-columns:430px minmax(0,1fr);gap:12px;align-items:start}
+.workspace{display:grid;grid-template-columns:460px minmax(0,1fr);gap:12px;align-items:start}
 .maincol{min-width:0}
 .market-sidebar{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:sticky;top:12px;max-height:calc(100vh - 30px);display:flex;flex-direction:column}
 .market-sidebar-head{padding:13px 14px;border-bottom:1px solid var(--line);background:#fff}
@@ -18,11 +18,11 @@
 .market-sidebar-sub{font-size:11px;color:var(--muted);margin-top:3px}
 .market-search{padding:10px;border-bottom:1px solid var(--line)}
 .market-search input{width:100%;background:#fff;border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:8px;outline:none}
-.market-table-head,.market-row{display:grid;grid-template-columns:minmax(145px,1.45fr) 105px 78px 70px minmax(92px,.8fr);gap:7px;align-items:center}
-.market-table-head{padding:8px 10px;background:#f8fafc;color:var(--muted);font-size:11px;border-bottom:1px solid var(--line);text-align:right}
+.market-table-head,.market-row{display:grid;grid-template-columns:minmax(110px,1fr) 80px 56px 56px 84px;gap:6px;align-items:center}
+.market-table-head{padding:7px 8px;background:#f8fafc;color:var(--muted);font-size:11px;border-bottom:1px solid var(--line);text-align:right}
 .market-table-head div:first-child{text-align:left}
 .market-list{overflow:auto}
-.market-row{padding:7px 10px;border-bottom:1px solid #edf0f3;cursor:pointer;min-height:48px}
+.market-row{padding:6px 8px;border-bottom:1px solid #edf0f3;cursor:pointer;min-height:48px}
 .market-row:hover{background:#f5f9ff}
 .market-row.active{background:#eaf3ff}
 .market-name{display:flex;align-items:center;gap:7px;min-width:0}
@@ -32,12 +32,12 @@
 .market-price,.market-change,.market-premium{text-align:right;font-size:12px;font-variant-numeric:tabular-nums}
 .market-price{font-weight:700}
 .market-change,.market-premium{font-weight:800}
-.market-spark{width:92px;height:34px;display:block;overflow:visible}.market-row{transition:background-color .2s ease,transform .35s ease}.market-row.active{transform:translateX(2px)}.market-spark svg{width:100%;height:100%;display:block}.market-spark path{fill:none;stroke-width:1.7;vector-effect:non-scaling-stroke}.market-spark .spark-grid{stroke:#e5e7eb;stroke-width:1}.market-spark .spark-label{font-size:8px;fill:#94a3b8}
+.market-spark{width:84px;height:30px;display:block;overflow:visible}.market-row{transition:background-color .2s ease,transform .35s ease}.market-row.active{transform:translateX(2px)}.market-spark svg{width:100%;height:100%;display:block}.market-spark path{fill:none;stroke-width:1.7;vector-effect:non-scaling-stroke}.market-spark .spark-grid{stroke:#e5e7eb;stroke-width:1}.market-spark .spark-label{font-size:8px;fill:#94a3b8}
 .m-up{color:#d93025}.m-down{color:#1976d2}.m-flat{color:var(--muted)}
 .market-footer{padding:9px 11px;border-top:1px solid var(--line);background:#fafbfc;font-size:10px;color:var(--muted)}
 .market-selected{padding:9px 11px;border-bottom:1px solid var(--line);background:#fff;font-size:11px}
 .market-selected b{font-size:13px}
-@media(max-width:1150px){.workspace{grid-template-columns:360px minmax(0,1fr)}.market-table-head,.market-row{grid-template-columns:minmax(125px,1.35fr) 90px 70px 64px minmax(82px,.8fr)}}
+@media(max-width:1150px){.workspace{grid-template-columns:370px minmax(0,1fr)}.market-table-head,.market-row{grid-template-columns:minmax(96px,1fr) 68px 50px 50px 66px;gap:5px}}
 @media(max-width:850px){.workspace{grid-template-columns:1fr}.market-sidebar{position:relative;top:auto;max-height:52vh}.maincol{min-width:0}}
 @media(max-width:1150px){.grid{grid-template-columns:repeat(4,1fr)}.controls,.btgrid{grid-template-columns:repeat(4,1fr)}.metricgrid{grid-template-columns:repeat(4,1fr)}.ledgergrid{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr}}@media(max-width:650px){.wrap{padding:11px}.grid{grid-template-columns:repeat(2,1fr)}.controls,.btgrid,.metricgrid,.ledgergrid{grid-template-columns:1fr 1fr}.title h1{font-size:21px}table{display:block;overflow:auto;font-size:12px}}
 </style>
@@ -45,7 +45,7 @@
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.1</h1><div class="sub">Upbit KRW · 일봉 Regime + 15분/5분 Pattern · Cloudflare 24시간 Cron · Telegram 수동매매 알림 전용</div></div>
+    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.2</h1><div class="sub">Upbit KRW · 실시간 24H 순위 + 미니차트 · 일봉/15분/5분 Regime + Pattern · Cloudflare Cron · Telegram 수동매매 알림</div></div>
     <div class="status"><span class="dot" id="dot"></span><span id="status">연결 준비중</span></div>
   </div>
 
@@ -53,11 +53,11 @@
     <aside class="market-sidebar">
       <div class="market-sidebar-head">
         <div class="market-sidebar-title">📈 실시간 코인 모니터</div>
-        <div class="market-sidebar-sub">현재가 · 24시간 변동 · 김프 · Upbit KRW</div>
+        <div class="market-sidebar-sub">현재가 · 24시간 변동 · 김프 · 24H 미니차트 · Upbit KRW</div>
       </div>
       <div class="market-search"><input id="marketSearch" placeholder="코인명 또는 심볼 검색"></div>
       <div class="market-selected" id="marketSelected">선택: <b>BTC 비트코인</b></div>
-      <div class="market-table-head"><div>코인</div><div>현재가</div><div>24시간</div><div>김프</div><div>24시간 흐름</div></div>
+      <div class="market-table-head"><div>코인</div><div>현재가</div><div>24H</div><div>김프</div><div>24H 차트</div></div>
       <div class="market-list" id="marketList"></div>
       <div class="market-footer">24시간 = Upbit 전일 종가 대비 signed change rate · <b>현재 목록은 24시간 상승률 순으로 실시간 재정렬</b> · 김프 = Upbit KRW ÷ (Binance USDT × USD/KRW) - 1. · 우측 그래프 = 최근 24시간 1시간봉</div>
     </aside>
@@ -121,47 +121,13 @@
     <div class="subpanel"><h3 style="margin-top:0">매도 완료 기록</h3><div id="closedLedger">매도 기록이 없습니다.</div></div>
     <div class="small" style="margin-top:8px">기존 버전에서 등록한 보유 코인은 수량/Regime 계획이 없을 수 있습니다. 그 경우 「수정」으로 수량을 확인하세요. 새 매수 등록부터는 당시 Regime과 동적 SL/TP/Trail 계획을 저장하고, Cron은 완료 5분봉 종가 기준 Peak를 추적합니다. TP1/TP2 도달 시 Telegram은 자동 주문이 아니라 부분익절/Runner 관리용 리뷰 알림을 1회 보내며, 실제 부분매도를 장부에 기록하면 남은 수량은 계속 관리됩니다. 장부 평가손익은 설정된 편도 수수료를 매수·가상매도 양쪽에 추정 반영합니다.</div>
   </div>
-
-  <div class="panel">
-    <b>📊 V8.3.1 Upbit KRW Regime Quality 백테스트</b>
-    <p class="small">v8.3.1은 BTC <b>완료 일봉 Regime</b>을 상위 필터로 두고 5분 기술조건·15분 구조·Pattern을 결합합니다. 90일 검증에서 손실이 컸던 <b>RANGE 신규 BUY를 차단</b>하고, 알트의 15분 BTC 상대강도/중기 EMA 품질과 Anti-Chase(과열 추격 방지)를 추가했습니다. STRONG_BULL/BULL의 작은 BTC Risk-Off는 즉시 SELL하지 않고 Hard Crash와 복수 약화를 구분합니다. TP/SL/Trail도 고정 1.2/2.2/0.8% 대신 <b>각 코인의 5분 ATR + 대세 Regime</b>에 따라 넓이와 보유시간을 바꿉니다. 백테스트는 완료봉에서 판정하고 다음 5분봉 시가에 진입하며 수수료·슬리피지를 반영합니다. <b>외부 거시/뉴스 점수는 과거 시점 복원이 불완전하여 백테스트에는 포함하지 않습니다.</b></p>
-    <div class="btgrid">
-      <select id="btCoin"><option value="ALL">ALL</option><option>ETH</option><option>SOL</option><option>XRP</option><option>HBAR</option><option>ONDO</option><option>LINK</option><option>AVAX</option><option>DOGE</option><option>SUI</option><option>TAO</option><option>UNI</option><option>AAVE</option></select>
-      <select id="btDays"><option value="7">최근 7일</option><option value="14" selected>최근 14일</option><option value="30">최근 30일</option><option value="60">최근 60일</option><option value="90">최근 90일</option></select>
-      <select id="btMode"><option value="regimeq" selected>v8.3.1 Regime Quality Filter</option><option value="regime">v8.3.0 Regime+Adaptive 비교</option><option value="adaptive">v8.2 ATR+SELL+Trail 비교</option><option value="live">v8.2 실전 SELL 동기형</option><option value="legacy">기존 고정 TP/SL</option></select>
-      <select id="btPattern"><option value="on" selected>Pattern ON</option><option value="off">Pattern OFF 비교</option></select><select id="btRegime"><option value="on" selected>v8.3 Regime ON</option><option value="off">Regime OFF 비교</option></select>
-      <input id="btFee" type="number" step="0.01" value="0.05" placeholder="편도 수수료 %">
-      <input id="btSlip" type="number" step="0.01" value="0.03" placeholder="편도 슬리피지 %">
-      <input id="btTP" type="number" step="0.1" value="1.2" placeholder="TP1 기준 %">
-      <input id="btTP2" type="number" step="0.1" value="2.2" placeholder="TP2 기준 %">
-      <input id="btSL" type="number" step="0.1" value="0.8" placeholder="SL 기준 %">
-      <input id="btThreshold" type="number" value="75" placeholder="Score threshold">
-      <input id="btAtrSL" type="number" step="0.1" value="1.6" placeholder="ATR SL 배수">
-      <input id="btAtrTP" type="number" step="0.1" value="2.5" placeholder="ATR TP 배수">
-      <input id="btTrail" type="number" step="0.1" value="1.1" placeholder="ATR Trail 배수">
-      <button class="btn" id="btRun">백테스트 실행</button>
-    </div>
-    <div class="small" style="margin-top:7px">권장 비교 순서: 같은 90일·같은 비용·Score 75에서 먼저 <b>v8.3.0 비교</b>, 다음 <b>v8.3.1 Regime Quality Filter</b>를 실행하세요. v8.3.1은 RANGE BUY 차단, 알트 상대강도 품질, Anti-Chase, Hard/Soft BTC 급락 분리를 적용합니다. 목표는 PF 1.0 돌파 여부를 검증하는 것입니다. 60~90일 ALL은 데이터 수집에 수분이 걸릴 수 있습니다.</div>
-    <div id="btMetrics" class="metricgrid" style="margin-top:10px"></div>
-    <div id="btModeStats" class="subpanel"></div><div id="btCoinStats" class="subpanel"></div><div id="btScoreStats" class="subpanel"></div><div id="btTimeStats" class="subpanel"></div><div id="btRegimeStats" class="subpanel"></div><div id="btRiskStats" class="subpanel"></div>
-    <div class="log" id="btLog" style="margin-top:10px">아직 실행하지 않았습니다. 첫 실행은 Upbit 과거 데이터를 페이지 단위로 받아오므로 시간이 걸릴 수 있으며, 같은 세션에서는 더 긴 기간의 캐시를 재사용합니다.</div>
-  </div>
-
-  <div class="panel">
-    <b>🧪 조건 탐색 + 워크포워드 + 비용 스트레스</b>
-    <p class="small">최적화는 연구 도구입니다. 최적값을 자동으로 실시간 Worker에 적용하지 않습니다. 실전 설정을 바꾸려면 worker/wrangler.toml의 값을 변경한 뒤 Worker를 재배포해야 합니다.</p>
-    <div class="controls"><button class="btn" id="optRun">최적 조건 탐색</button><button class="btn" id="wfRun">워크포워드 검증</button><button class="btn" id="stressRun">스트레스 테스트</button></div>
-    <div class="subpanel" id="optResult">결과 대기중</div><div class="subpanel" id="wfResult">워크포워드 결과 대기중</div><div class="subpanel" id="stressResult">스트레스 테스트 결과 대기중</div>
-  </div>
-
-  <div class="panel"><b>🏆 연구 후보 판정</b><div id="candidate" class="log" style="margin-top:8px">백테스트와 워크포워드 결과를 바탕으로 표시합니다.</div><div class="small" style="margin-top:8px">과거 성과는 미래 수익을 보장하지 않습니다. 이 시스템은 주문을 자동 실행하지 않고 Telegram 알림만 제공합니다.</div></div>
   <div class="panel"><b>운용 로그</b><div class="log" id="log">대기중</div></div>
 </main>
   </div>
 </div>
 
 <script>
-const VERSION='v8.3.1';
+const VERSION='v8.3.2';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -191,7 +157,10 @@ async function parseResponse(r){const text=await r.text();let d=null;try{d=text?
 async function call(path,body){const r=await fetch(workerBase()+path,{method:'POST',headers:Object.assign({'x-scalper-pin':P.value.trim()},body?{'content-type':'application/json'}:{}),body:body?JSON.stringify(body):undefined});return parseResponse(r)}
 async function health(){const r=await fetch(workerBase()+'/health',{cache:'no-store'});return parseResponse(r)}
 
-function applyConfig(d){if(!d?.strategy)return;SERVER_CFG={...SERVER_CFG,...d.strategy};$('btTP').value=SERVER_CFG.tp1Pct;$('btTP2').value=SERVER_CFG.tp2Pct;$('btSL').value=SERVER_CFG.stopLossPct;$('btThreshold').value=SERVER_CFG.minScore}
+function applyConfig(d){
+  if(!d?.strategy)return;
+  SERVER_CFG={...SERVER_CFG,...d.strategy};
+}
 function renderHealth(d){applyConfig(d);const ok=d.kv&&d.telegramConfigured&&d.pinConfigured;setConn(ok?'필수 설정 정상 · Cron 확인 필요':'설정 확인 필요',ok?'var(--yellow)':'var(--red)');const ext=d.externalContext||{};$('quality').innerHTML=`<b>${esc(d.version||'—')}</b> · ${esc(d.market||'—')} · ${esc(d.timeframe||'—')}<br>KV: <b class="${d.kv?'good':'bad'}">${d.kv?'연결됨':'없음'}</b> · Telegram: <b class="${d.telegramConfigured?'good':'bad'}">${d.telegramConfigured?'설정됨':'없음'}</b> · PIN: <b class="${d.pinConfigured?'good':'bad'}">${d.pinConfigured?'설정됨':'없음'}</b><br>Macro 공개원천: ${ext.publicMacro?'활성':'비활성'} · CryptoPanic: ${ext.cryptoPanicConfigured?'설정됨':'선택 미설정'}<br>Score ≥ ${d.strategy?.minScore??'—'} · Pattern ${d.strategy?.patternConfirmation?'ON':'OFF'} ≥ ${d.strategy?.patternBuyMinScore??'—'} · Regime ${d.strategy?.regimeEngine?'ON':'OFF'} · 동적 TP/SL 기준값 ${d.strategy?.tp1Pct??'—'}/${d.strategy?.tp2Pct??'—'}/${d.strategy?.stopLossPct??'—'}% · 수수료 ${d.strategy?.tradingFeePct??0.05}%`;$('healthNote').className='note '+(ok?'ok':'danger');$('healthNote').textContent=ok?'KV·Telegram·PIN 필수 설정은 정상입니다. 「Cron 상태」에서 최근 5~10분 내 실행 기록까지 확인되면 24시간 자동감시가 실제 동작 중입니다.':'KV/Telegram/PIN 중 빠진 설정이 있습니다. DEPLOY.md 순서대로 Cloudflare 설정을 확인하세요.'}
 
 function render(d){
@@ -579,31 +548,6 @@ function researchCandidates(base){
   }else for(const th of ths)out.push({...base,threshold:th,profile:'실전 SELL'});
   return out;
 }
-
-$('btRun').onclick=async()=>{try{const c=$('btCoin').value,opts=btOptions();if(c==='ALL'&&opts.days>=60)$('btLog').textContent='장기 ALL 백테스트는 데이터 수집량이 많아 수분이 걸릴 수 있습니다…';const out=await loadRuns(c,opts);renderDetails(out,opts);$('btLog').textContent=`완료 · ${opts.days}일 · ${c==='ALL'?'ALL(동시 1포지션)':c+'/KRW'} · ${modeLabel(opts.mode)} · Pattern ${opts.pattern==='off'?'OFF':'ON'} · Regime ${opts.regime==='off'?'OFF':'ON'} · Score ${opts.threshold} · 거래 ${LAST.stats.n}회`;$('candidate').textContent=judge(LAST.stats,null)}catch(e){$('btLog').textContent='오류: '+e.message}};
-
-$('optRun').onclick=async()=>{try{
-  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions(),b=await history('BTC',base.days),k=await history(c,base.days),daily=await historyDaily(base.days),{a,bm}=alignHistory(k,b);let best=null,rows=[];
-  for(const cfg of researchCandidates(base)){const q=stats(backtestAligned(c,a,bm,0,a.length,cfg,daily)),sc=quality(q);rows.push({cfg,q,sc});if(q.n>=8&&(!best||sc>best.sc))best={cfg,q,sc}}
-  if(!best){$('optResult').textContent='충분한 거래 표본이 없습니다.';return}
-  const thSummary=[75,80,85,90].map(th=>{const r=rows.filter(x=>x.cfg.threshold===th).sort((a,b)=>b.sc-a.sc)[0];return r?`${th}: ${r.q.n}회 / 기대 ${r.q.avg.toFixed(3)}% / PF ${r.q.pf===Infinity?'∞':r.q.pf.toFixed(2)}`:`${th}: —`}).join('<br>');
-  $('optResult').innerHTML=`<b>${c}/KRW ${modeLabel(base.mode)} 연구 후보</b><br>최우수: Score <b>${best.cfg.threshold}</b> · 프로필 <b>${best.cfg.profile}</b>${base.mode==='adaptive'?` · ATR SL ${best.cfg.atrSl} / TP ${best.cfg.atrTp} / Trail ${best.cfg.trail}`:''}<br>거래 ${best.q.n} · 승률 ${best.q.win.toFixed(1)}% · 기대값 ${best.q.avg.toFixed(3)}% · PF ${best.q.pf===Infinity?'∞':best.q.pf.toFixed(2)} · MDD ${best.q.mdd.toFixed(2)}% · 안정성 <b>${best.sc.toFixed(0)}/100</b><hr><b>Score 비교(각 Threshold의 최우수 프로필)</b><br>${thSummary}<br><span class="small">같은 구간에서 고른 최적값은 과적합될 수 있으므로 아래 워크포워드 검증을 반드시 확인하세요. 자동 실전 적용은 하지 않습니다.</span>`;
-}catch(e){$('optResult').textContent='오류: '+e.message}};
-
-$('wfRun').onclick=async()=>{try{
-  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions({days:Math.max(30,+$('btDays').value)}),b=await history('BTC',base.days),k=await history(c,base.days),daily=await historyDaily(base.days),{a,bm}=alignHistory(k,b),split=Math.floor(a.length*.65);let best=null;
-  for(const cfg of researchCandidates(base)){const q=stats(backtestAligned(c,a,bm,160,split,cfg,daily));if(q.n>=6&&(!best||quality(q)>quality(best.q)))best={cfg,q}}
-  if(!best){$('wfResult').textContent='학습구간 신호가 부족합니다.';return}
-  const test=stats(backtestAligned(c,a,bm,split,a.length,best.cfg,daily));
-  $('wfResult').innerHTML=`학습 65%에서 선택: Score <b>${best.cfg.threshold}</b> · ${best.cfg.profile}${base.mode==='adaptive'?` · ATR ${best.cfg.atrSl}/${best.cfg.atrTp}/${best.cfg.trail}`:''}<br>미래 35% 고정 검증: 거래 ${test.n} · 승률 ${test.win.toFixed(1)}% · 기대값 ${test.avg.toFixed(3)}% · 복리 ${test.net.toFixed(2)}% · PF ${test.pf===Infinity?'∞':test.pf.toFixed(2)} · MDD ${test.mdd.toFixed(2)}%<br><b>${judge(test,test)}</b>`;
-  $('candidate').textContent=judge(test,test);
-}catch(e){$('wfResult').textContent='워크포워드 오류: '+e.message}};
-
-$('stressRun').onclick=async()=>{try{
-  const c=$('btCoin').value==='ALL'?'ETH':$('btCoin').value,base=btOptions(),[btc,daily]=await Promise.all([history('BTC',base.days),historyDaily(base.days)]),q0=stats((await backtestOne(c,base,btc,daily)).trades),q1=stats((await backtestOne(c,{...base,fee:base.fee+.05,slip:base.slip+.05},btc,daily)).trades),q2=stats((await backtestOne(c,{...base,fee:base.fee+.10,slip:base.slip+.10,tp:Math.max(.2,base.tp-.2),sl:base.sl+.2},btc,daily)).trades);
-  $('stressResult').innerHTML=`기준: 기대값 ${q0.avg.toFixed(3)}% · 복리 ${q0.net.toFixed(2)}% · PF ${q0.pf===Infinity?'∞':q0.pf.toFixed(2)} · MDD ${q0.mdd.toFixed(2)}%<br>비용/슬리피지 +0.05%p: 기대값 ${q1.avg.toFixed(3)}% · 복리 ${q1.net.toFixed(2)}% · MDD ${q1.mdd.toFixed(2)}%<br>불리한 가정(+0.10%p, TP 기준 -0.2%p, SL 기준 +0.2%p): 기대값 ${q2.avg.toFixed(3)}% · 복리 ${q2.net.toFixed(2)}% · MDD ${q2.mdd.toFixed(2)}%`;
-}catch(e){$('stressResult').textContent='스트레스 테스트 오류: '+e.message}};
-
 
 /* =========================================================
    통합 실시간 코인 목록: 현재가 / 24시간 / 김프

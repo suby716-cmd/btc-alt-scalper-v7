@@ -1,5 +1,5 @@
-# BTC ALT REGIME TRADER — 최소 구조 (연결 정상화 우선)
-# PIN/KV/Telegram/Cron 기능은 /health, /market 연결이 확인된 뒤 다시 추가합니다.
+# BTC ALT REGIME TRADER — 단계별 복구 진행 중
+# 완료: /health, /upbit, /market · 진행 중: PIN 인증 · 예정: KV 포지션 → Telegram → Cron
 name = "btc-alt-scalper-v7"
 main = "worker.js"
 compatibility_date = "2026-09-16"
@@ -8,8 +8,8 @@ compatibility_date = "2026-09-16"
 binding = "SCALPER_KV"
 id = "b1d33dfeca5440dbba9b76b769c6bf95"
 
-# 아래 Secret들은 Cloudflare에 그대로 남겨두되, 지금 배포된 코드에서는 사용하지 않습니다.
-# PIN
+# PIN — 이번 단계부터 /pin-check에서 사용 (Cloudflare Secret 이름 그대로 PIN)
+# 아래는 아직 이 코드에서 쓰지 않는 Secret들 (다음 단계에서 재사용 예정)
 # SCALPER_PIN
 # TELEGRAM_BOT_TOKEN
 # TELEGRAM_CHAT_ID

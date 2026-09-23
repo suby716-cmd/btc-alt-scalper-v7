@@ -1,17 +1,14 @@
-# MASTER MARKET COMPASS V5 · FUTURE MOAT INVESTOR
-# 기존 btc-alt-scalper-v7 Worker/KV/Secrets 재사용
+# BTC ALT REGIME TRADER — 최소 구조 (연결 정상화 우선)
+# PIN/KV/Telegram/Cron 기능은 /health, /market 연결이 확인된 뒤 다시 추가합니다.
 name = "btc-alt-scalper-v7"
 main = "worker.js"
 compatibility_date = "2026-09-16"
-
-[triggers]
-crons = ["*/5 * * * *"]
 
 [[kv_namespaces]]
 binding = "SCALPER_KV"
 id = "b1d33dfeca5440dbba9b76b769c6bf95"
 
-# 기존 Secrets 유지
+# 아래 Secret들은 Cloudflare에 그대로 남겨두되, 지금 배포된 코드에서는 사용하지 않습니다.
 # PIN
 # SCALPER_PIN
 # TELEGRAM_BOT_TOKEN

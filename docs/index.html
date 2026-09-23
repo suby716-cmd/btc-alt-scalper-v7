@@ -242,7 +242,7 @@ function renderHealth(d){
   // 옵셔널 체이닝으로 안전하게 건너뛴다 (없으면 그냥 스킵, 에러로 죽지 않음).
   try{ applyConfig(d); }catch(e){ console.warn('applyConfig skip:', e.message); }
   const q=$('quality');
-  if(q) q.innerHTML=`<b>${esc(d.version||'—')}</b> · ${esc(d.market||'—')} · Worker 응답 정상`;
+  if(q) q.innerHTML=`<b>${esc(d.version||'—')}</b> · ${esc(d.market||'—')} · Worker 응답 정상 · PIN: <b class="${d.pinConfigured?'good':'bad'}">${d.pinConfigured?'설정됨':'없음'}</b>`;
   const note=$('healthNote');
   if(note){ note.className='note ok'; note.textContent='Worker(/health)가 정상 응답했습니다.'; }
 }
@@ -429,7 +429,35 @@ async function manualTrade(){try{let sym=prompt('지난 거래 코인을 입력�
 
 async function loadStatus(showLog=true){try{const d=await call('/status');applyHeldState(d);if(!d.ready){if(showLog)log(d.message||'저장된 Cron 결과가 없습니다.');return}render(d);applyHeldState(d);if(showLog)log(`Cron 상태 불러오기 완료 · 마지막 실행 ${kst(d.scannedAt)} KST`)}catch(e){if(showLog)log('오류: '+e.message)}}
 
-$('save').onclick=()=>{localStorage.setItem('v8_worker',W.value.trim());localStorage.setItem('v8_pin',P.value.trim());log('v8 연결 설정을 이 브라우저에 저장했습니다.')};
+async function checkPin(){
+  const r=await fetchWithTimeout(workerBase()+'/pin-check',{
+    method:'POST',
+    headers:{'x-scalper-pin':(P?.value||'').trim()}
+  },8000);
+  return parseResponse(r);
+}
+$('save').onclick=async()=>{
+  localStorage.setItem('v8_worker',W.value.trim());
+  localStorage.setItem('v8_pin',P.value.trim());
+  if(!P.value.trim()){
+    log('v8 연결 설정을 저장했습니다. (PIN 미입력)');
+    return;
+  }
+  try{
+    const d=await checkPin();
+    if(d.error==='PIN_NOT_CONFIGURED'){
+      log('설정을 저장했습니다. 단, Cloudflare Worker에 PIN Secret이 설정되어 있지 않습니다.');
+    }else if(d.valid){
+      log('설정을 저장했습니다. PIN이 Worker와 일치합니다. ✅');
+      setConn('Worker 연결됨 · PIN 확인됨','var(--green)');
+    }else{
+      log('설정을 저장했습니다. 단, PIN이 Worker와 일치하지 않습니다. ⚠️');
+      setConn('Worker 연결됨 · PIN 불일치','var(--yellow)');
+    }
+  }catch(e){
+    log('설정을 저장했지만 PIN 확인 중 오류: '+(e?.message||e));
+  }
+};
 $('health').onclick=async()=>{
   setConn('Worker 점검 중…','var(--yellow)');
   try{

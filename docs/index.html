@@ -843,7 +843,7 @@ async function loadMarketCharts(){
   // Upbit 1시간봉 24개 = 최근 약 24시간. 초기 로딩/주기 갱신은 1회씩 순차 호출해 호출량을 완화합니다.
   for(const c of MARKET_COINS){
     try{
-      const url='https://api.upbit.com/v1/candles/minutes/60?market='+encodeURIComponent(c[2])+'&count=24';
+      const url=workerBase()+'/upbit?path='+encodeURIComponent('/v1/candles/minutes/60?market='+c[2]+'&count=24');
       const r=await fetch(url,{cache:'no-store'});
       if(!r.ok)throw Error('Candle '+r.status);
       const rows=await r.json();
@@ -881,7 +881,7 @@ async function loadRSCandles(){
   for(const sym of targets){
     try{
       const market=sym==='BTC'?'KRW-BTC':'KRW-'+sym;
-      const url='https://api.upbit.com/v1/candles/minutes/5?market='+encodeURIComponent(market)+'&count=24';
+      const url=workerBase()+'/upbit?path='+encodeURIComponent('/v1/candles/minutes/5?market='+market+'&count=24');
       const r=await fetch(url,{cache:'no-store'});
       if(!r.ok)throw Error('Candle '+r.status);
       const rows=await r.json();
@@ -937,7 +937,7 @@ function drawRSChart(){
 async function loadMarketUpbit(){
   try{
     const markets=MARKET_COINS.map(c=>c[2]).join(',');
-    const r=await fetch('https://api.upbit.com/v1/ticker?markets='+encodeURIComponent(markets),{cache:'no-store'});
+    const r=await fetch(workerBase()+'/upbit?path='+encodeURIComponent('/v1/ticker?markets='+markets),{cache:'no-store'});
     if(!r.ok)throw Error('Upbit '+r.status);
     const rows=await r.json();
     rows.forEach(x=>{const c=MARKET_COINS.find(v=>v[2]===x.market);if(!c)return;MARKET_DATA[c[0]]={...(MARKET_DATA[c[0]]||{}),price:+x.trade_price,change24:+x.signed_change_rate*100,changePrice:+x.signed_change_price,volume24:+x.acc_trade_volume_24h,updated:+x.timestamp}});

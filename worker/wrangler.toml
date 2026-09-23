@@ -5,13 +5,14 @@ main = "worker.js"
 compatibility_date = "2026-09-16"
 
 [triggers]
-crons = ["0 * * * *"]
+crons = ["*/5 * * * *"]
 
 [[kv_namespaces]]
 binding = "SCALPER_KV"
 id = "b1d33dfeca5440dbba9b76b769c6bf95"
 
 # 기존 Secrets 유지
+# PIN
 # SCALPER_PIN
 # TELEGRAM_BOT_TOKEN
 # TELEGRAM_CHAT_ID

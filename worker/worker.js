@@ -1,9 +1,7 @@
-// worker/worker.js — BTC ALT REGIME TRADER v10.4.0-minimal
+// worker/worker.js — BTC ALT REGIME TRADER v10.5.0-minimal+pin
 //
-// 지금 단계 목표: GitHub Pages ↔ Worker 연결을 확실히 정상화하는 것.
-// 그래서 일부러 엔드포인트를 최소화했습니다: /health, /upbit, /market 세 개만 있습니다.
-// PIN 인증, KV(포지션/장부), Telegram 알림, Cron 자동감시는
-// 이 세 개가 안정적으로 붙는 걸 확인한 뒤 하나씩 다시 붙일 예정입니다.
+// 단계별 복구 진행 중: /health, /upbit, /market (완료) → PIN 인증 (이번 단계) → KV 포지션 → Telegram → Cron
+// KV(포지션/장부), Telegram 알림, Cron 자동감시는 다음 단계에서 하나씩 다시 붙일 예정입니다.
 //
 // 이 파일이 실제로 배포되는 원본입니다 (worker/wrangler.toml의 main="worker.js" 기준).
 // 저장소 루트의 worker.js는 사용되지 않는 파일이니 참고만 하세요.
@@ -12,8 +10,8 @@ const UPBIT = "https://api.upbit.com";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, x-scalper-pin",
 };
 
 function json(body, status = 200) {
@@ -21,6 +19,13 @@ function json(body, status = 200) {
     status,
     headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
+}
+
+// PIN은 Cloudflare Secret "PIN"과 비교합니다.
+// (참고: SCALPER_PIN이라는 예전 Secret도 남아있는데, 이번 최소 구조에서는 PIN만 사용합니다.)
+function requirePin(req, env) {
+  const pin = req.headers.get("x-scalper-pin") || "";
+  return !!env.PIN && pin === env.PIN;
 }
 
 async function fetchJson(url, ms = 5000) {
@@ -51,10 +56,20 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.4.0-minimal",
+        version: "v10.5.0-minimal+pin",
         service: "BTC ALT REGIME TRADER (minimal)",
         market: "Upbit KRW",
+        pinConfigured: !!env.PIN,
       });
+    }
+
+    // PIN 검증 전용: 화면에 입력한 PIN이 Cloudflare Secret과 일치하는지만 확인.
+    // 아직 포지션/장부 등 실제로 PIN이 지켜야 할 쓰기 작업은 없고, 다음 단계에서 이 함수(requirePin)를 재사용합니다.
+    if (u.pathname === "/pin-check") {
+      if (req.method !== "POST") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405);
+      if (!env.PIN) return json({ ok: false, error: "PIN_NOT_CONFIGURED", valid: false }, 200);
+      const valid = requirePin(req, env);
+      return json({ ok: true, valid });
     }
 
     // Upbit 프록시 (브라우저 직접 호출은 CORS로 막히므로 반드시 이 경로를 거쳐야 함)
@@ -82,7 +97,7 @@ export default {
 
       const ur = await fetchJson(UPBIT + "/v1/ticker?markets=" + encodeURIComponent(upMarkets.join(",")), 5000);
       if (!ur.ok || !Array.isArray(ur.body)) {
-        return json({ ok: false, version: "v10.4.0-minimal", error: "UPBIT_FAILED", status: ur.status, detail: ur.error || null }, 502);
+        return json({ ok: false, version: "v10.5.0-minimal+pin", error: "UPBIT_FAILED", status: ur.status, detail: ur.error || null }, 502);
       }
       const up = ur.body;
       const um = new Map(up.map((x) => [x.market, x]));
@@ -129,7 +144,7 @@ export default {
       const priced = rows.filter((r) => Number.isFinite(r.premium)).length;
       return json({
         ok: true,
-        version: "v10.4.0-minimal",
+        version: "v10.5.0-minimal+pin",
         market: "UPBIT_KRW",
         reference: (referenceSource || "NONE") + " × Upbit USDT/KRW",
         referenceSource,

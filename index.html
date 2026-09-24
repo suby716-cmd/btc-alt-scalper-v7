@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v8.3.5</title>
+<title>BTC ALT REGIME TRADER v8.3.7</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -18,6 +18,7 @@
 .engine-indicators{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:9px}.indicator-card{text-align:center}.indicator-card div{font-size:11px;color:var(--muted)}.indicator-card b{display:block;font-size:21px;color:var(--green);margin-top:2px}
 .regime-section-head{display:flex;justify-content:space-between;align-items:center;margin-top:12px}.regime-table-wrap{overflow:auto}.regime-table{min-width:760px}
 .badge{display:inline-block;padding:2px 6px;border-radius:999px;border:1px solid var(--line);font-size:11px}.badge.buy{background:#e9f8ef;border-color:#b7e3c5;color:var(--green)}.badge.watch{background:#fff7e6;color:var(--yellow)}
+.badge.sell{background:#fff0f0;color:#c62828;border-color:#ffc9c9}
 .rs-title{font-size:17px;font-weight:800}.rs-title span{font-size:11px;color:var(--muted);font-weight:500}.live-dot{float:right;color:var(--green)!important;font-size:11px!important}
 .rs-controls{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.rs-controls select{padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
 .rs-note{margin-top:8px}.rs-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:11px;color:var(--muted)}.rs-chart{width:100%;height:390px;margin-top:7px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff}
@@ -66,12 +67,15 @@
 .rs-toolbar{display:flex;gap:7px;align-items:center;margin-top:8px;flex-wrap:wrap}
 .rs-toolbar button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 8px;font-size:11px;cursor:pointer}
 
+.macro-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
+.macro-strip .metric{padding:12px 14px}.macro-strip .value{font-size:20px;font-weight:800;margin-top:5px}.macro-strip .small{margin-top:4px}
+@media(max-width:900px){.macro-strip{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.5</h1><div class="sub">Upbit KRW · 실시간 24H 순위 + 미니차트 · 일봉/15분/5분 Regime + Pattern · Cloudflare Cron · Telegram 수동매매 알림</div></div>
+    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.7</h1><div class="sub">Upbit KRW · 실시간 24H 순위 + 미니차트 · 일봉/15분/5분 Regime + Pattern · Cloudflare Cron · Telegram 수동매매 알림</div></div>
     <div class="status"><span class="dot" id="dot"></span><span id="status">연결 준비중</span></div>
   </div>
 
@@ -99,16 +103,21 @@
   </div>
 
   <div class="panel">
-    <div class="controls">
+    <div class="macro-strip">
+  <div class="metric card"><div class="label">BTC 도미넌스</div><div class="value" id="btcDom">—</div><div class="small" id="btcDomSub">전체 시총 대비 BTC</div></div>
+  <div class="metric card"><div class="label">Mayer Multiple</div><div class="value" id="mayer">—</div><div class="small" id="mayerSub">BTC ÷ 200일 이동평균</div></div>
+  <div class="metric card"><div class="label">공포·탐욕 지수</div><div class="value" id="fearGreed">—</div><div class="small" id="fearGreedSub">0 공포 · 100 탐욕</div></div>
+</div>
+<div class="controls">
       <input id="worker" placeholder="Cloudflare Worker URL (https://...workers.dev)">
       <input id="pin" type="password" placeholder="Worker PIN">
       <button class="btn primary" id="save">설정 저장</button>
       <button class="btn" id="health">연결 점검</button>
-      <button class="btn" id="statusBtn">Cron 상태</button>
+      <button class="btn" id="statusBtn">Regime 재분석</button>
       <button class="btn" id="scan">지금 조회(알림X)</button>
       <button class="btn" id="test">Telegram 테스트</button>
     </div>
-    <div class="small" style="margin-top:7px">자동 BUY/SELL Telegram은 브라우저가 아니라 Cloudflare Cron이 5분마다 실행합니다. 브라우저를 닫거나 PC를 꺼도 계속 감시합니다. 수동 「지금 조회」는 Telegram을 발송하지 않습니다.</div>
+    <div class="small" style="margin-top:7px">현재 화면의 Regime은 브라우저에서 실시간 계산합니다. 「Regime 재분석」/「지금 조회」는 Telegram을 발송하지 않습니다. Cloudflare Cron 자동감시는 별도 백엔드 복구 대상입니다.</div>
   </div>
 
 
@@ -187,7 +196,7 @@
 </div>
 
 <script>
-const VERSION='v8.3.5';
+const VERSION='v8.3.7';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -302,26 +311,42 @@ function renderRegimeEngine(d){
   const r=(d.results||[]).filter(x=>x&&x.symbol);
   const mr=d.marketRegime||{};
   const ar=d.altRegime||{};
-
-  const valid=r.filter(x=>Number.isFinite(Number(x.score)));
+  const valid=r.filter(x=>Number.isFinite(Number(x.adjustedScore??x.score)));
   const avg=(arr,fn)=>{
     const v=arr.map(fn).filter(Number.isFinite);
     return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;
   };
+  const clamp100=x=>Math.max(0,Math.min(100,x));
 
+  // Relative Strength:
+  // BTC 대비 RSI 차이(relR) + 최근 5분 상대수익률(relRet)을 합성.
+  const relRMean=avg(valid,x=>Number(x.relR));
+  const relRetMean=avg(valid,x=>Number(x.relRet));
+  const relScore=(relRMean==null||relRetMean==null)?null:
+    clamp100(50 + relRMean*1.8 + relRetMean*8);
+
+  // Absolute Momentum: 기존 raw score의 평균을 0~100으로 표시.
   const absMom=avg(valid,x=>Number(x.adjustedScore??x.score));
-  const relMean=avg(valid,x=>Number(x.rsiRel));
-  const fibMean=avg(valid,x=>Number(x.fibonacciScore));
-  const relScore=relMean==null?null:Math.max(0,Math.min(100,50+relMean*4));
-  const fibScore=fibMean==null?null:Math.max(0,Math.min(100,50+fibMean*8));
-  const radar=(absMom==null||relScore==null)?null:Math.max(0,Math.min(100,(absMom*.55)+(relScore*.45)));
+
+  // Fibonacci/Pattern confluence: -8~+8 패턴 점수를 0~100으로 정규화.
+  const patMean=avg(valid,x=>Number(x.patternScore));
+  const fibScore=patMean==null?null:clamp100(50 + patMean*6.25);
+
+  // Alt Season Radar:
+  // BTC보다 최근 5분 강한 알트 비율 + 상승 추세 breadth + 상대강도.
+  const outperform=valid.length?valid.filter(x=>Number(x.relRet)>0).length/valid.length*100:null;
+  const trendBreadth=valid.length?valid.filter(x=>Number(x.e20)>Number(x.e50)).length/valid.length*100:null;
+  const radar=(outperform==null||trendBreadth==null||relScore==null)?null:
+    clamp100(outperform*.50 + trendBreadth*.25 + relScore*.25);
 
   $('engineBtcState').textContent=regimeText(mr.state);
   $('engineBtcStrength').textContent=`추세 강도: ${stateStrength(mr)}`;
   $('engineAltState').textContent=regimeText(ar.state);
   $('engineAltStrength').textContent=`추세 강도: ${stateStrength({score:ar.mean})}`;
-  $('engineSentiment').textContent=absMom==null?'—':absMom>=65?'긍정적':absMom<=35?'부정적':'중립';
-  $('engineSentimentSmall').textContent=`시장 모멘텀: ${absMom==null?'—':Math.round(absMom)}`;
+
+  const sentimentBase=radar==null?absMom:(radar*.6+(absMom??50)*.4);
+  $('engineSentiment').textContent=sentimentBase==null?'—':sentimentBase>=60?'긍정적':sentimentBase<=40?'부정적':'중립';
+  $('engineSentimentSmall').textContent=`시장 모멘텀: ${sentimentBase==null?'—':Math.round(sentimentBase)}`;
   $('engineRS').textContent=relScore==null?'—':Math.round(relScore);
   $('engineAM').textContent=absMom==null?'—':Math.round(absMom);
   $('engineFib').textContent=fibScore==null?'—':Math.round(fibScore);
@@ -335,29 +360,42 @@ function renderRegimeEngine(d){
     ? top3.map(([sym,x],i)=>`<div><b>${i+1}. ${sym}</b> <span class="${marketCls(x.change24)}">${marketPct(x.change24)}</span></div>`).join('')
     : '<span class="small">시장 데이터 대기중…</span>';
 
-  const best=valid
-    .sort((a,b)=>Number(b.adjustedScore??b.score)-Number(a.adjustedScore??a.score))
-    .filter(x=>x.signal==='BUY'||x.signal==='WATCH')
-    .slice(0,5);
+  // 항상 최대 5개를 보여준다. BUY/WATCH만 필터링하지 않고,
+  // 시장 상태와 상대강도를 이용해 BUY / WATCH / SELL을 모두 분류한다.
+  const classify=x=>{
+    const sc=Number(x.adjustedScore??x.score)||0;
+    const rel=Number(x.relRet)||0;
+    const rr=Number(x.relR)||0;
+    const bearish=!!x.patternBearish || Number(x.patternScore)<=-3;
+    if(x.buy || (sc>=60 && rel>0 && rr>0 && !bearish && x.regime==='RISK_ON')) return 'BUY';
+    if(bearish || (sc<=25 && rel<0 && rr<0) || (x.regime==='RISK_OFF' && rel<-.15)) return 'SELL';
+    return 'WATCH';
+  };
+  const ranked=valid.map(x=>{
+    const signal=classify(x);
+    const sc=Number(x.adjustedScore??x.score)||0;
+    const rel=Math.abs(Number(x.relRet)||0);
+    const action=signal==='BUY'?100+sc:signal==='SELL'?100+(100-sc):50+rel*10;
+    return {...x,displaySignal:signal,actionRank:action};
+  }).sort((a,b)=>b.actionRank-a.actionRank).slice(0,5);
 
-  $('engineRows').innerHTML=best.length?best.map(x=>{
-    const p=Number(x.price);
-    const tp1=Number(x.tp1),tp2=Number(x.tp2);
-    const tp3=Number(x.fibonacciTp1618)||Number.isFinite(tp2)?Number(x.fibonacciTp1618)||tp2:null;
+  $('engineRows').innerHTML=ranked.length?ranked.map(x=>{
+    const p=Number(x.price),tp1=Number(x.tp1),tp2=Number(x.tp2);
+    const tp3=Number(x.fibonacciTp1618);
     const sl=Number(x.sl);
-    const reason=engineSignalReason(x);
-    const sig=x.signal==='BUY'?'매수':x.signal==='WATCH'?'관망':'—';
-    const cls=x.signal==='BUY'?'buy':'watch';
+    const sig=x.displaySignal==='BUY'?'매수':x.displaySignal==='SELL'?'매도':'관망';
+    const cls=x.displaySignal==='BUY'?'buy':x.displaySignal==='SELL'?'sell':'watch';
+    const reason=x.displaySignal==='SELL'
+      ? ([x.patternBearish?'하락 패턴':'',Number(x.relRet)<0?`BTC 대비 ${Number(x.relRet).toFixed(2)}%`:'',`Score ${Math.round(Number(x.adjustedScore??x.score)||0)}`].filter(Boolean).join(' · '))
+      : engineSignalReason({...x,signal:x.displaySignal});
     return `<tr>
       <td><b>${esc(x.symbol)}</b></td>
-      <td>${esc(x.symbol==='XRP'?'엑스알피(리플)':(
-        {ETH:'이더리움',SOL:'솔라나',XRP:'엑스알피(리플)',HBAR:'헤데라',ONDO:'온도파이낸스',LINK:'체인링크',AVAX:'아발란체',DOGE:'도지코인',SUI:'수이',TAO:'비트텐서',UNI:'유니스왑',AAVE:'에이브'}[x.symbol]||x.symbol
-      ))}</td>
+      <td>${esc(({ETH:'이더리움',SOL:'솔라나',XRP:'엑스알피(리플)',HBAR:'헤데라',ONDO:'온도파이낸스',LINK:'체인링크',AVAX:'아발란체',DOGE:'도지코인',SUI:'수이',TAO:'비트텐서',UNI:'유니스왑',AAVE:'에이브'}[x.symbol]||x.symbol))}</td>
       <td><span class="badge ${cls}">${sig}</span> ${esc(reason)}</td>
-      <td>${Number.isFinite(tp1)?`${marketPrice(tp1)} / ${Number.isFinite(tp2)?marketPrice(tp2):'—'} / ${Number.isFinite(tp3)?marketPrice(tp3):'—'}`:'—'}</td>
+      <td>${x.displaySignal==='SELL'?'—':(Number.isFinite(tp1)?`${marketPrice(tp1)} / ${Number.isFinite(tp2)?marketPrice(tp2):'—'} / ${Number.isFinite(tp3)?marketPrice(tp3):'—'}`:'—')}</td>
       <td>${Number.isFinite(sl)?marketPrice(sl):'—'}</td>
     </tr>`;
-  }).join(''):'<tr><td colspan="5" class="small">현재 조건에 맞는 신호가 없습니다.</td></tr>';
+  }).join(''):'<tr><td colspan="5" class="small">분석 가능한 코인 데이터가 없습니다.</td></tr>';
 
   drawRSChart();
 }
@@ -367,7 +405,7 @@ function render(d){
   const ranked=r.filter(x=>Number.isFinite(Number(x.score))).sort((a,b)=>b.confidence-a.confidence||Number(b.adjustedScore||b.score)-Number(a.adjustedScore||a.score));
   const top=ranked[0];
 
-  $('btc').textContent=money(d.btcPrice);
+  const liveBtc=Number(MARKET_DATA?.BTC?.price); $('btc').textContent=money(Number.isFinite(liveBtc)?liveBtc:d.btcPrice);
   $('brsi').textContent=fmtNum(d.btcRsi,1);
   $('bret').textContent=pctFmt(d.btcRet5);
   $('candle').textContent=kst(d.candleStart);
@@ -375,8 +413,8 @@ function render(d){
   $('regime').textContent=mr.state?regimeText(mr.state):'—';
 
   if(top){
-    $('top').textContent=top.adjustedScore??top.score;
-    $('conf').textContent=top.confidence;
+    $('top').textContent=fmtNum(top.adjustedScore??top.score,1);
+    $('conf').textContent=Math.round(Number(top.confidence)||0);
   }
 
   renderRegimeEngine(d);
@@ -1106,7 +1144,32 @@ setInterval(loadMarketFx,600000);
 setInterval(loadMarketCharts,600000);
 setInterval(loadRSCandles,60000);
 
+function fearGreedKo(cls){
+  return ({'Extreme Fear':'극단적 공포','Fear':'공포','Neutral':'중립','Greed':'탐욕','Extreme Greed':'극단적 탐욕'})[cls]||cls||'—';
+}
+async function loadMacroMetrics(){
+  try{
+    const d=await call('/macro',{});
+    if(Number.isFinite(Number(d.btcDominance))){
+      $('btcDom').textContent=Number(d.btcDominance).toFixed(2)+'%';
+      $('btcDomSub').textContent='전체 암호화폐 시총 대비 BTC · Alternative.me';
+    }else $('btcDomSub').textContent='도미넌스 데이터 일시 미수신';
+    if(Number.isFinite(Number(d.mayerMultiple))){
+      const mm=Number(d.mayerMultiple),pct=(mm-1)*100;
+      $('mayer').textContent=mm.toFixed(3)+'×';
+      $('mayerSub').textContent=`200일선 대비 ${pct>=0?'+':''}${pct.toFixed(1)}% · Bitcoin.com`;
+    }else $('mayerSub').textContent='Mayer 데이터 일시 미수신';
+    if(Number.isFinite(Number(d.fearGreed))){
+      $('fearGreed').textContent=`${Math.round(Number(d.fearGreed))} · ${fearGreedKo(d.fearGreedClass)}`;
+      $('fearGreedSub').textContent='0 극단적 공포 · 100 극단적 탐욕 · Alternative.me';
+    }else $('fearGreedSub').textContent='공포·탐욕 데이터 일시 미수신';
+  }catch(e){
+    $('btcDomSub').textContent=$('mayerSub').textContent=$('fearGreedSub').textContent='거시지표 연결 실패';
+    console.warn('macro metrics:',e);
+  }
+}
 async function bootApp(){
+  loadMacroMetrics();
   // 최소 구조 단계: /health 와 /market 연결 여부만 확인한다.
   // /scan, PIN, KV, Telegram 등은 다음 단계에서 다시 연결한다.
   setConn('연결 확인 중…','var(--yellow)');

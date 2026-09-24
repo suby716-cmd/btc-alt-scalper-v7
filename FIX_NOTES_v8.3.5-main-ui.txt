@@ -1,0 +1,8 @@
+Fixes:
+1. Restored /candles bridge in worker/worker.js.
+2. Main BTC/ALT Regime Engine now performs live analysis in the browser using the existing v8.3.5 engine.
+3. NEAR/other mini-chart line color follows displayed 24H sign: positive red, negative blue.
+4. Relative-strength chart widened/tallened.
+5. Each of 10 RS slots has a show/hide checkbox, persisted in localStorage.
+6. Added Show All / Hide All.
+Note: legacy Cloudflare Cron/KV/Telegram backend routes are NOT restored by this patch.

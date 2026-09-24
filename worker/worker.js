@@ -72,6 +72,31 @@ export default {
       return json({ ok: true, valid });
     }
 
+
+    // v8.3.5 Regime Engine candle bridge.
+    // Returns the legacy compact format: [timestamp, open, high, low, close, volume]
+    if (u.pathname === "/candles") {
+      if (req.method !== "POST") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405);
+      if (env.PIN && !requirePin(req, env)) return json({ ok: false, error: "UNAUTHORIZED" }, 401);
+      let body = {};
+      try { body = await req.json(); } catch {}
+      const symbol = String(body.symbol || "BTC").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const frame = String(body.frame || "5m").toLowerCase();
+      const count = Math.max(1, Math.min(200, Number(body.count) || 200));
+      const to = Number(body.to);
+      const path = frame === "day"
+        ? `/v1/candles/days?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`
+        : `/v1/candles/minutes/5?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`;
+      const r = await fetchJson(UPBIT + path, 7000);
+      if (!r.ok || !Array.isArray(r.body)) return json({ ok:false, error:"CANDLES_FAILED", status:r.status }, 502);
+      const candles = r.body.slice().reverse().map(x => [
+        Date.parse(x.candle_date_time_utc + "Z"),
+        Number(x.opening_price), Number(x.high_price), Number(x.low_price),
+        Number(x.trade_price), Number(x.candle_acc_trade_volume)
+      ]);
+      return json({ ok:true, symbol, frame, candles });
+    }
+
     // Upbit 프록시 (브라우저 직접 호출은 CORS로 막히므로 반드시 이 경로를 거쳐야 함)
     if (u.pathname === "/upbit") {
       const path = u.searchParams.get("path");

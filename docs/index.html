@@ -25,16 +25,16 @@
 
 .workspace{display:grid;grid-template-columns:460px minmax(0,1fr);gap:12px;align-items:start}
 .maincol{min-width:0}
-.market-sidebar{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:sticky;top:12px;max-height:calc(100vh - 30px);display:flex;flex-direction:column}
+.market-sidebar{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:visible;position:relative;top:auto;max-height:none;height:auto;display:flex;flex-direction:column}
 .market-sidebar-head{padding:13px 14px;border-bottom:1px solid var(--line);background:#fff}
 .market-sidebar-title{font-weight:800;font-size:15px}
 .market-sidebar-sub{font-size:11px;color:var(--muted);margin-top:3px}
 .market-search{padding:10px;border-bottom:1px solid var(--line)}
 .market-search input{width:100%;background:#fff;border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:8px;outline:none}
-.market-table-head,.market-row{display:grid;grid-template-columns:minmax(110px,1fr) 80px 56px 56px 84px;gap:6px;align-items:center}
+.market-table-head,.market-row{display:grid;grid-template-columns:132px 72px 56px 56px 84px;gap:4px;align-items:center}
 .market-table-head{padding:7px 8px;background:#f8fafc;color:var(--muted);font-size:11px;border-bottom:1px solid var(--line);text-align:right}
 .market-table-head div:first-child{text-align:left}
-.market-list{overflow:auto}
+.market-list{overflow:visible;max-height:none;height:auto}
 .market-row{padding:6px 8px;border-bottom:1px solid #edf0f3;cursor:pointer;min-height:48px}
 .market-row:hover{background:#f5f9ff}
 .market-row.active{background:#eaf3ff}
@@ -50,9 +50,16 @@
 .market-footer{padding:9px 11px;border-top:1px solid var(--line);background:#fafbfc;font-size:10px;color:var(--muted)}
 .market-selected{padding:9px 11px;border-bottom:1px solid var(--line);background:#fff;font-size:11px}
 .market-selected b{font-size:13px}
-@media(max-width:1150px){.workspace{grid-template-columns:370px minmax(0,1fr)}.market-table-head,.market-row{grid-template-columns:minmax(96px,1fr) 68px 50px 50px 66px;gap:5px}}
-@media(max-width:850px){.workspace{grid-template-columns:1fr}.market-sidebar{position:relative;top:auto;max-height:52vh}.maincol{min-width:0}}
+@media(max-width:1150px){.workspace{grid-template-columns:370px minmax(0,1fr)}.market-table-head,.market-row{grid-template-columns:112px 68px 50px 50px 66px;gap:4px}}
+@media(max-width:850px){.workspace{grid-template-columns:1fr}.market-sidebar{position:relative;top:auto;max-height:none;height:auto;overflow:visible}.market-list{overflow:visible;max-height:none;height:auto}.maincol{min-width:0}}
 @media(max-width:1150px){.grid{grid-template-columns:repeat(4,1fr)}.controls,.btgrid{grid-template-columns:repeat(4,1fr)}.metricgrid{grid-template-columns:repeat(4,1fr)}.ledgergrid{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr}}@media(max-width:650px){.wrap{padding:11px}.grid{grid-template-columns:repeat(2,1fr)}.controls,.btgrid,.metricgrid,.ledgergrid{grid-template-columns:1fr 1fr}.title h1{font-size:21px}table{display:block;overflow:auto;font-size:12px}}
+
+.market-manage{padding:8px 10px;border-bottom:1px solid var(--line);background:#fff;display:flex;gap:6px}
+.market-manage input{min-width:0;flex:1;border:1px solid var(--line);border-radius:7px;padding:7px 8px;font-size:11px}
+.market-manage button{border:1px solid var(--line);background:#f8fafc;border-radius:7px;padding:6px 8px;font-size:11px;cursor:pointer}
+.market-remove{border:0;background:transparent;color:#94a3b8;cursor:pointer;font-size:15px;line-height:1;padding:2px}
+.market-remove:hover{color:var(--red)}
+
 </style>
 </head>
 <body>
@@ -68,7 +75,7 @@
         <div class="market-sidebar-title">📈 실시간 코인 모니터</div>
         <div class="market-sidebar-sub">현재가 · 24시간 변동 · 김프 · 24H 미니차트 · Upbit KRW</div>
       </div>
-      <div class="market-search"><input id="marketSearch" placeholder="코인명 또는 심볼 검색"></div>
+      <div class="market-search"><input id="marketSearch" placeholder="코인명 또는 심볼 검색"></div><div class="market-manage"><input id="marketAddSymbol" placeholder="심볼 추가 예: ARB"><button id="marketAddBtn">+ 추가</button><button id="marketResetBtn">기본값</button></div>
       <div class="market-selected" id="marketSelected">선택: <b>BTC 비트코인</b></div>
       <div class="market-table-head"><div>코인</div><div>현재가</div><div>24H</div><div>김프</div><div>24H 차트</div></div>
       <div class="market-list" id="marketList"></div>
@@ -157,6 +164,12 @@
         <select id="rsCoin2"></select>
         <select id="rsCoin3"></select>
         <select id="rsCoin4"></select>
+        <select id="rsCoin5"></select>
+        <select id="rsCoin6"></select>
+        <select id="rsCoin7"></select>
+        <select id="rsCoin8"></select>
+        <select id="rsCoin9"></select>
+        <select id="rsCoin10"></select>
       </div>
       <div class="small rs-note">첫 시점 = 100 · 각 코인의 최근 5분 수익률 흐름을 BTC와 같은 기준으로 비교합니다.</div>
       <div class="rs-legend" id="rsLegend"></div>
@@ -787,13 +800,36 @@ function researchCandidates(base){
    - Binance: USDT 가격
    - USD/KRW: 공개 환율
 ========================================================= */
-const MARKET_COINS=[
+const DEFAULT_MARKET_COINS=[
   ['BTC','비트코인','KRW-BTC'],['ETH','이더리움','KRW-ETH'],['SOL','솔라나','KRW-SOL'],['XRP','엑스알피','KRW-XRP'],
   ['HBAR','헤데라','KRW-HBAR'],['ONDO','온도파이낸스','KRW-ONDO'],['LINK','체인링크','KRW-LINK'],['AVAX','아발란체','KRW-AVAX'],
   ['DOGE','도지코인','KRW-DOGE'],['SUI','수이','KRW-SUI'],['TAO','비트텐서','KRW-TAO'],['UNI','유니스왑','KRW-UNI'],
   ['AAVE','에이브','KRW-AAVE'],['NEAR','니어프로토콜','KRW-NEAR'],['ALGO','알고랜드','KRW-ALGO'],['APT','앱토스','KRW-APT'],
   ['ICP','인터넷컴퓨터','KRW-ICP'],['XLM','스텔라루멘','KRW-XLM'],['ADA','에이다','KRW-ADA'],['GRT','그래프','KRW-GRT']
 ];
+let MARKET_COINS=(()=>{
+  try{
+    const saved=JSON.parse(localStorage.getItem('marketCoinsV1')||'null');
+    if(Array.isArray(saved)&&saved.length)return saved;
+  }catch(e){}
+  return DEFAULT_MARKET_COINS.map(x=>x.slice());
+})();
+const COIN_NAME_MAP=Object.fromEntries(DEFAULT_MARKET_COINS.map(x=>[x[0],x[1]]));
+function saveMarketCoins(){localStorage.setItem('marketCoinsV1',JSON.stringify(MARKET_COINS));}
+function addMarketCoin(){
+  let sym=($('marketAddSymbol')?.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'').trim();
+  if(!sym)return;
+  if(MARKET_COINS.some(x=>x[0]===sym)){ $('marketAddSymbol').value=''; return; }
+  MARKET_COINS.push([sym,COIN_NAME_MAP[sym]||sym,'KRW-'+sym]); saveMarketCoins();
+  $('marketAddSymbol').value=''; renderMarketList(); initRSControls(true); loadMarketUpbit(); loadMarketCharts();
+}
+function removeMarketCoin(sym){
+  if(sym==='BTC'){alert('BTC는 기준 코인이라 삭제하지 않습니다.');return;}
+  MARKET_COINS=MARKET_COINS.filter(x=>x[0]!==sym); saveMarketCoins();
+  if(marketSelected===sym)marketSelected='BTC';
+  renderMarketList(); updateMarketSelected(); initRSControls(true);
+}
+
 const MARKET_DATA={};
 let marketSelected='BTC';
 let marketUsdKrw=null;
@@ -856,13 +892,14 @@ function renderMarketList(){
   $('marketList').innerHTML=list.map(c=>{
     const d=MARKET_DATA[c[0]]||{};
     return `<div class="market-row ${marketSelected===c[0]?'active':''}" data-market-symbol="${c[0]}">
-      <div class="market-name"><span class="market-star">★</span><div><div class="market-symbol">${c[0]}</div><div class="market-korean">${c[1]}</div></div></div>
+      <div class="market-name"><span class="market-star">★</span><div><div class="market-symbol">${c[0]}</div><div class="market-korean">${c[1]}</div></div><button class="market-remove" data-remove-symbol="${c[0]}" title="목록에서 삭제">×</button></div>
       <div class="market-price">${marketPrice(d.price)}</div>
       <div class="market-change ${marketCls(d.change24)}">${marketPct(d.change24)}</div>
       <div class="market-premium ${marketCls(d.premium)}">${marketPct(d.premium)}</div>
       ${marketSpark(c[0])}
     </div>`;
   }).join('');
+  document.querySelectorAll('[data-remove-symbol]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();removeMarketCoin(btn.dataset.removeSymbol);});
   document.querySelectorAll('[data-market-symbol]').forEach(el=>el.onclick=()=>{
     marketSelected=el.dataset.marketSymbol;
     updateMarketSelected();
@@ -893,82 +930,60 @@ async function loadMarketCharts(){
   renderMarketList();
 }
 
-const RS_SYMBOLS=['BTC','ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE','ADA','NEAR','XLM'];
-const RS_LABELS={
-  BTC:'BTC',ETH:'ETH',SOL:'SOL',XRP:'XRP',HBAR:'HBAR',ONDO:'ONDO',LINK:'LINK',
-  AVAX:'AVAX',DOGE:'DOGE',SUI:'SUI',TAO:'TAO',UNI:'UNI',AAVE:'AAVE',ADA:'ADA',NEAR:'NEAR',XLM:'XLM'
-};
+function rsSymbols(){return [...new Set(['BTC',...MARKET_COINS.map(c=>c[0])])];}
 let rsSeries={};
+const RS_PALETTE=['#1976d2','#d93025','#0f9d58','#7c3aed','#f59e0b','#0891b2','#db2777','#65a30d','#ea580c','#475569'];
 
-function initRSControls(){
-  ['rsCoin1','rsCoin2','rsCoin3','rsCoin4'].forEach((id,i)=>{
-    const el=$(id);
-    if(!el)return;
-    el.innerHTML=RS_SYMBOLS.map(sym=>`<option value="${sym}">${sym}</option>`).join('');
-    el.value=['BTC','ETH','ADA','HBAR'][i]||RS_SYMBOLS[0];
-    el.addEventListener('change',drawRSChart);
-  });
+function initRSControls(preserve=false){
+  const defaults=['BTC','ETH','SOL','XRP','HBAR','ONDO','LINK','UNI','AAVE','NEAR'];
+  const symbols=rsSymbols();
+  for(let i=1;i<=10;i++){
+    const el=$('rsCoin'+i); if(!el)continue;
+    const old=preserve?el.value:'';
+    el.innerHTML=symbols.map(sym=>`<option value="${sym}">${sym} · ${COIN_NAME_MAP[sym]||sym}</option>`).join('');
+    el.value=symbols.includes(old)?old:(symbols.includes(defaults[i-1])?defaults[i-1]:symbols[(i-1)%symbols.length]);
+    if(!el.dataset.bound){el.addEventListener('change',()=>loadRSCandles());el.dataset.bound='1';}
+  }
 }
 async function loadRSCandles(){
-  const targets=[...new Set(['BTC','ETH','ADA','HBAR',
-    $('rsCoin1')?.value,$('rsCoin2')?.value,$('rsCoin3')?.value,$('rsCoin4')?.value
-  ].filter(Boolean))];
+  const targets=[...new Set(Array.from({length:10},(_,i)=>$('rsCoin'+(i+1))?.value).filter(Boolean))];
   const out={};
   for(const sym of targets){
     try{
-      const market=sym==='BTC'?'KRW-BTC':'KRW-'+sym;
-      const url=workerBase()+'/upbit?path='+encodeURIComponent('/v1/candles/minutes/5?market='+market+'&count=24');
-      const r=await fetch(url,{cache:'no-store'});
-      if(!r.ok)throw Error('Candle '+r.status);
+      const url=workerBase()+'/upbit?path='+encodeURIComponent('/v1/candles/minutes/5?market=KRW-'+sym+'&count=24');
+      const r=await fetch(url,{cache:'no-store'}); if(!r.ok)throw Error('Candle '+r.status);
       const rows=await r.json();
       const closes=rows.slice().reverse().map(x=>Number(x.trade_price)).filter(Number.isFinite);
-      if(closes.length>=2){
-        const base=closes[0];
-        out[sym]=closes.map(v=>base?((v/base)-1)*100:0);
-      }
+      if(closes.length>=2){const base=closes[0];out[sym]=closes.map(v=>base?((v/base)-1)*100:0);}
       await sparkWait(120);
-    }catch(e){
-      console.warn('RS chart '+sym+':',e.message);
-    }
+    }catch(e){console.warn('RS chart '+sym+':',e.message);}
   }
-  rsSeries=out;
-  drawRSChart();
+  rsSeries=out; drawRSChart();
 }
 function drawRSChart(){
   const c=$('rsChart'); if(!c)return;
-  const rect=c.getBoundingClientRect();
-  const dpr=window.devicePixelRatio||1;
+  const rect=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
   const w=Math.max(300,Math.floor(rect.width||520)),h=Math.max(220,Math.floor(rect.height||260));
   c.width=Math.floor(w*dpr);c.height=Math.floor(h*dpr);
   const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
-  const syms=['rsCoin1','rsCoin2','rsCoin3','rsCoin4'].map(id=>$(id)?.value).filter(Boolean);
-  if(!syms.length || !Object.keys(rsSeries).length){
-    ctx.fillStyle='#64748b';ctx.font='12px Arial';ctx.fillText('상대강도 차트 대기중…',16,28);return;
-  }
-  const left=42,right=12,top=16,bottom=28;
-  const all=syms.flatMap(sym=>rsSeries[sym]||[]);
-  const min=Math.min(0,...all),max=Math.max(0,...all);
-  const range=(max-min)||1;
+  const syms=Array.from({length:10},(_,i)=>$('rsCoin'+(i+1))?.value).filter(Boolean);
+  if(!syms.length||!Object.keys(rsSeries).length){ctx.fillStyle='#64748b';ctx.font='12px Arial';ctx.fillText('상대강도 차트 대기중…',16,28);return;}
+  const left=42,right=92,top=16,bottom=28;
+  const all=syms.flatMap(sym=>rsSeries[sym]||[]),min=Math.min(0,...all),max=Math.max(0,...all),range=(max-min)||1;
   ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;
   [0,.25,.5,.75,1].forEach(t=>{const y=top+(h-top-bottom)*t;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();});
   ctx.fillStyle='#94a3b8';ctx.font='10px Arial';
-  for(let i=0;i<=4;i++){
-    const v=max-range*(i/4),y=top+(h-top-bottom)*(i/4)+3;
-    ctx.fillText((v>=0?'+':'')+v.toFixed(2)+'%',4,y);
-  }
-  const palette=['#1976d2','#d93025','#0f9d58','#7c3aed'];
+  for(let i=0;i<=4;i++){const v=max-range*(i/4),y=top+(h-top-bottom)*(i/4)+3;ctx.fillText((v>=0?'+':'')+v.toFixed(2)+'%',4,y);}
   syms.forEach((sym,idx)=>{
     const vals=rsSeries[sym];if(!vals||vals.length<2)return;
-    ctx.strokeStyle=palette[idx%palette.length];ctx.lineWidth=1.8;ctx.beginPath();
-    vals.forEach((v,i)=>{
-      const x=left+(i/(vals.length-1))*(w-left-right);
-      const y=top+(max-v)/range*(h-top-bottom);
-      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-    });ctx.stroke();
+    const color=RS_PALETTE[idx%RS_PALETTE.length];ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.beginPath();
+    let lastX=left,lastY=top;
+    vals.forEach((v,i)=>{const x=left+(i/(vals.length-1))*(w-left-right),y=top+(max-v)/range*(h-top-bottom);lastX=x;lastY=y;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();
+    ctx.fillStyle=color;ctx.font='bold 10px Arial';ctx.textBaseline='middle';
+    ctx.fillText(`${sym} ${COIN_NAME_MAP[sym]||''}`.trim(),Math.min(lastX+5,w-right+4),lastY);
   });
-  $('rsLegend').innerHTML=syms.map((sym,i)=>`<span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${['#1976d2','#d93025','#0f9d58','#7c3aed'][i%4]};margin-right:4px"></i>${sym}</span>`).join('');
+  $('rsLegend').innerHTML=syms.map((sym,i)=>`<span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${RS_PALETTE[i%RS_PALETTE.length]};margin-right:4px"></i>${sym}</span>`).join('');
 }
-
 
 async function loadMarketUpbit(){
   try{
@@ -1003,6 +1018,10 @@ function calcMarketPremium(){
 }
 async function refreshMarket(){await Promise.allSettled([loadMarketUpbit(),loadMarketBinance(),loadMarketFx()]);calcMarketPremium()}
 $('marketSearch')?.addEventListener('input',renderMarketList);
+$('marketAddBtn')?.addEventListener('click',addMarketCoin);
+$('marketAddSymbol')?.addEventListener('keydown',e=>{if(e.key==='Enter')addMarketCoin();});
+$('marketResetBtn')?.addEventListener('click',()=>{MARKET_COINS=DEFAULT_MARKET_COINS.map(x=>x.slice());saveMarketCoins();renderMarketList();updateMarketSelected();initRSControls(true);refreshMarket();});
+
 refreshMarket();
 loadMarketCharts();
 initRSControls();

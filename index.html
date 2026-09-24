@@ -245,12 +245,24 @@ async function health(){
 async function call(path,body){
   const headers={'x-scalper-pin':(P?.value||'').trim()};
   if(body) headers['content-type']='application/json';
-  const r=await fetchWithTimeout(workerBase()+path,{
+  const url=workerBase()+path;
+  const r=await fetchWithTimeout(url,{
     method:'POST',
     headers,
     body:body?JSON.stringify(body):undefined
   },20000);
-  return parseResponse(r);
+  const text=await r.text();
+  let d={};
+  try{ d=text?JSON.parse(text):{}; }
+  catch{
+    const head=text.replace(/\s+/g,' ').slice(0,180);
+    throw Error(`${path} HTTP ${r.status} · JSON 아님 · ${head||'빈 응답'}`);
+  }
+  if(!r.ok){
+    const detail=[d.error,d.status!=null?`upstream ${d.status}`:''].filter(Boolean).join(' · ');
+    throw Error(`${path} HTTP ${r.status}${detail?' · '+detail:''}`);
+  }
+  return d;
 }
 function applyConfig(d){
   if(d?.strategy) SERVER_CFG={...SERVER_CFG,...d.strategy};
@@ -485,7 +497,7 @@ $('health').onclick=async()=>{
     if(!d.pinConfigured){
       setConn('Worker 연결됨 · PIN 없음','var(--yellow)');
     }else{
-      setConn('Worker 연결됨','var(--green)');
+      setConn('Worker 연결됨 · Regime은 별도 점검','var(--green)');
     }
   }catch(e){
     setConn('Worker 연결 실패','var(--red)');
@@ -1078,8 +1090,11 @@ async function runLocalRegimeScan(showLog=true){
     setConn('Regime 실시간 분석 연결됨','var(--green)');
     return d;
   }catch(e){
-    setConn('Regime 분석 연결 실패','var(--red)');
-    if(showLog)log('Regime 분석 오류: '+(e?.message||e));
+    const msg=(e?.message||String(e));
+    const shortMsg=msg.length>72?msg.slice(0,72)+'…':msg;
+    setConn('Regime 실패 · '+shortMsg,'var(--red)');
+    log('Regime 분석 오류: '+msg);
+    console.error('Regime diagnostic:',e);
     throw e;
   }
 }

@@ -1,0 +1,10 @@
+확정 방어 수정:
+- 프론트는 to=null이면 to 필드를 아예 전송하지 않습니다.
+- Worker는 2000년 이후의 실제 timestamp만 Upbit의 to로 사용합니다.
+- 데이터 부족 시 실제 수신 개수를 화면에 표시합니다.
+- /candles 성공 응답에도 count를 넣습니다.
+
+이번에는 둘 다 교체:
+1) GitHub: index.html, docs/index.html
+2) Cloudflare: worker.js
+3) Ctrl+F5

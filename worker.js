@@ -83,7 +83,12 @@ export default {
       const symbol = String(body.symbol || "BTC").toUpperCase().replace(/[^A-Z0-9]/g, "");
       const frame = String(body.frame || "5m").toLowerCase();
       const count = Math.max(1, Math.min(200, Number(body.count) || 200));
-      const to = Number(body.to);
+      // null -> Number(null) === 0(1970-01-01) 버그 방지
+      const rawTo = body.to;
+      const parsedTo = Number(rawTo);
+      // pagination은 실제 timestamp(2000년 이후)일 때만 허용
+      const to = rawTo !== null && rawTo !== undefined && rawTo !== "" &&
+        Number.isFinite(parsedTo) && parsedTo > 946684800000 ? parsedTo : NaN;
       const path = frame === "day"
         ? `/v1/candles/days?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`
         : `/v1/candles/minutes/5?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`;

@@ -598,8 +598,8 @@ function calcScore(k,b,threshold,asOf,marketRegime,regimeOn=true,qualityOn=false
 
 
 const sparkWait=ms=>new Promise(r=>setTimeout(r,ms));
-async function fetchK(symbol,count=200,to=null){const d=await call('/candles',{symbol,count,to});return d.candles||[]}
-async function fetchDay(count=200,to=null){const d=await call('/candles',{symbol:'BTC',frame:'day',count,to});return d.candles||[]}
+async function fetchK(symbol,count=200,to=null){const body={symbol,count};if(to!==null&&to!==undefined&&to!=='')body.to=to;const d=await call('/candles',body);return Array.isArray(d?.candles)?d.candles:[]}
+async function fetchDay(count=200,to=null){const body={symbol:'BTC',frame:'day',count};if(to!==null&&to!==undefined&&to!=='')body.to=to;const d=await call('/candles',body);return Array.isArray(d?.candles)?d.candles:[]}
 async function historyDaily(days=320){const need=Math.max(220,Math.min(420,days+230));if(DAILY_BTC_CACHE.length>=need)return DAILY_BTC_CACHE.slice(-need);let out=[...DAILY_BTC_CACHE],to=out.length?out[0][0]:null;while(out.length<need){$('btLog').textContent=`BTC 일봉 Regime 데이터 ${Math.min(out.length,need)}/${need}일 수집 중…`;const a=await fetchDay(Math.min(200,need-out.length),to);if(!a.length)break;out=a.concat(out);if(a.length<200)break;to=a[0][0];await sleep(200)}const uniq=new Map(out.map(x=>[x[0],x]));DAILY_BTC_CACHE=[...uniq.values()].sort((a,b)=>a[0]-b[0]);return DAILY_BTC_CACHE.slice(-need)}
 function regimeAt(daily,asOf){const KST=9*60*60*1000,d=new Date(Number(asOf)+KST),cut=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-KST;return analyzeMarketRegime((daily||[]).filter(x=>x[0]<cut).slice(-200))}
 async function history(symbol,days){
@@ -1044,7 +1044,7 @@ async function runLocalRegimeScan(showLog=true){
   try{
     const btc=await fetchK('BTC',200);
     const daily=await fetchDay(200);
-    if(btc.length<60)throw Error('BTC 5분봉 데이터 부족');
+    if(btc.length<60)throw Error(`BTC 5분봉 데이터 부족 · ${btc.length}개 수신 / 최소 60개`);
     const asOf=(btc.at(-1)?.[0]||Date.now())+FIVE_MIN;
     const marketRegime=analyzeMarketRegime(daily);
     const threshold=Number(SERVER_CFG.minScore)||75;

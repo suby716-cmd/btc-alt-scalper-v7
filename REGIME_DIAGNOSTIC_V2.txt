@@ -1,0 +1,7 @@
+v2 수정:
+이전 진단판에는 runLocalRegimeScan이 구체적인 오류를 표시한 직후,
+bootApp의 바깥 catch가 다시 '연결 실패'로 덮어쓰는 버그가 있었습니다.
+
+이번 버전은 그 덮어쓰기를 제거했습니다.
+GitHub Pages의 index.html + docs/index.html만 교체해도 됩니다.
+Worker는 현재 /candles가 배포되어 있으므로 그대로 두어도 됩니다.

@@ -1120,8 +1120,16 @@ async function bootApp(){
     setConn('Worker 연결됨 · Regime 준비','var(--green)');
     await runLocalRegimeScan(false);
   }catch(e){
-    setConn('연결 실패','var(--red)');
-    if($('quality')) $('quality').innerHTML='<span class="bad">Worker 연결 오류: '+esc(e?.message||String(e))+'</span>';
+    // runLocalRegimeScan()이 이미 구체적인 /candles 오류를 표시했다면
+    // bootApp이 다시 '연결 실패'라는 일반 문구로 덮어쓰지 않는다.
+    const msg=e?.message||String(e);
+    const statusText=($('status')?.textContent||'');
+    if(!statusText.startsWith('Regime 실패 ·')){
+      const shortMsg=msg.length>72?msg.slice(0,72)+'…':msg;
+      setConn('연결 실패 · '+shortMsg,'var(--red)');
+    }
+    if($('quality')) $('quality').innerHTML='<span class="bad">진단: '+esc(msg)+'</span>';
+    console.error('bootApp diagnostic:',e);
   }
 }
 

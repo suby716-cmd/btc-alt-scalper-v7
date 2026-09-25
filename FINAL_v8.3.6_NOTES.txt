@@ -1,0 +1,40 @@
+BTC ALT REGIME TRADER v8.3.6 FINAL POLISH
+
+이번 정리:
+1. Relative Strength
+   - calcScore가 실제로 반환하는 relR + relRet를 사용하도록 연결.
+2. Alt Season Radar
+   - BTC 대비 5분 outperform 비율 50%
+   - EMA20>EMA50 상승 breadth 25%
+   - Relative Strength 25%
+3. 추천 매매 신호
+   - BUY/WATCH만 보여주던 필터 제거.
+   - 분석 가능한 종목 중 항상 최대 5개 표시.
+   - 매수 / 관망 / 매도 3단계 분류.
+   - 매도는 하락 패턴, 낮은 score+BTC 대비 약세, Risk-Off 상대약세를 사용.
+4. BTC 가격
+   - 상단 카드는 MARKET_DATA의 Upbit 실시간 BTC 현재가를 우선 사용.
+   - 5분봉 종가는 Regime 계산 내부에서만 사용.
+5. 표시 정리
+   - 최고 Score 소수점 1자리.
+   - 최고 신뢰도 정수.
+6. UI 진실성
+   - 실제로 로컬 재분석을 하던 'Cron 상태' 버튼을 'Regime 재분석'으로 변경.
+   - 현재 Cron 자동감시는 이 minimal Worker에 아직 복구되지 않았음을 안내.
+7. Telegram 테스트
+   - Worker에 /test 경로 추가.
+   - TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID Secret이 있으면 실제 테스트 전송.
+8. 기존 수정 유지
+   - /candles 최신 5분봉 null-to 버그 방지.
+   - RS 차트 표시/숨김.
+   - 양수 빨강 / 음수 파랑 미니차트.
+   - Regime 오류 상세 진단.
+
+배포:
+- GitHub: index.html + docs/index.html 교체
+- Cloudflare: worker.js 교체 후 배포
+- Ctrl+F5
+
+주의:
+현재 worker.js는 minimal 복구판이므로 /status, /ledger, /position, /trade 및 실제 5분 Cron 자동분석/KV 자동매매 알림은 아직 완전 복구판이 아닙니다.
+화면의 실시간 Regime/추천신호/상대강도/Telegram 테스트는 이번 버전에서 동작하도록 정리했습니다.

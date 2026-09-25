@@ -1,0 +1,16 @@
+v8.3.8 거시지표 안정화 + 미니차트
+
+핵심 수정
+- /macro는 읽기 전용 시장 데이터이므로 PIN 검증에서 분리.
+- BTC 도미넌스: Bitcoin.com /api/v1/bitcoin-dominance 우선, Alternative.me /v2/global fallback.
+- Mayer: 문서의 정확한 파라미터 timespan=30d 사용 (이전 span=1y 오기 수정).
+- Fear & Greed: Alternative.me에서 최근 30일을 한 번에 요청.
+- 세 지표 각각 실패 원인을 카드에 표시.
+- 최근 최대 30개 데이터로 미니차트 표시.
+- 상승 추이는 빨강, 하락 추이는 파랑.
+- 외부 거시지표가 실패해도 기존 Regime 엔진은 영향 없음.
+
+배포
+1. GitHub: index.html + docs/index.html 교체
+2. Cloudflare: worker.js 전체 교체 후 배포
+3. Ctrl+F5

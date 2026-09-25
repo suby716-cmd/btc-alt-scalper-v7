@@ -75,6 +75,110 @@ export default {
 
     // v8.3.5 Regime Engine candle bridge.
     // Returns the legacy compact format: [timestamp, open, high, low, close, volume]
+    if (u.pathname === "/macro") {
+      // Read-only public market data: PIN is intentionally not required.
+      if (req.method !== "POST" && req.method !== "GET") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405);
+
+      const [domBC, domAlt, fngR, mayerR] = await Promise.all([
+        fetchJson("https://charts.bitcoin.com/api/v1/bitcoin-dominance", 9000),
+        fetchJson("https://api.alternative.me/v2/global/", 9000),
+        fetchJson("https://api.alternative.me/fng/?limit=30&format=json", 9000),
+        fetchJson("https://charts.bitcoin.com/api/v1/charts/mayer-multiple?interval=daily&timespan=30d&limit=30", 12000)
+      ]);
+
+      const num = v => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
+      const valuesFrom = arr => Array.isArray(arr) ? arr.map(v => {
+        if (Array.isArray(v)) return num(v[v.length - 1]);
+        if (v && typeof v === "object") return num(v.value ?? v.y ?? v.dominance ?? v.multiple ?? v.btcDominance ?? v.percentage);
+        return num(v);
+      }).filter(v => v !== null) : [];
+
+      // Dominance: Bitcoin.com proxy first, Alternative.me fallback.
+      const db=domBC.body||{};
+      let btcDominance=num(
+        db.btcDominance ?? db.bitcoinDominance ?? db.dominance ??
+        db.current?.btcDominance ?? db.current?.dominance ??
+        db.data?.btcDominance ?? db.data?.dominance
+      );
+      let btcDominanceHistory=[];
+      for(const candidate of [
+        db.history, db.data?.history, db.data?.btcDominanceHistory,
+        db.data?.dominanceHistory, db.data?.dominance, db.data?.btcDominance
+      ]){
+        const v=valuesFrom(candidate);
+        if(v.length){ btcDominanceHistory=v; break; }
+      }
+      if(btcDominance===null) btcDominance=num(domAlt.body?.data?.bitcoin_percentage_of_market_cap);
+      if(btcDominance===null && btcDominanceHistory.length) btcDominance=btcDominanceHistory.at(-1);
+
+      // Fear & Greed: official Alternative.me 30-day history.
+      const fgRows=Array.isArray(fngR.body?.data)?fngR.body.data:[];
+      const fearGreedHistory=fgRows.slice().reverse().map(x=>num(x?.value)).filter(v=>v!==null);
+      const fg=fgRows[0]||null;
+      const fearGreed=num(fg?.value);
+      const fearGreedClass=fg?.value_classification||null;
+
+      // Mayer Multiple: documented Bitcoin.com data.multiple.
+      const mb=mayerR.body||{};
+      let mayerHistory=valuesFrom(mb.data?.multiple);
+      if(!mayerHistory.length) {
+        const price=valuesFrom(mb.data?.price), ma=valuesFrom(mb.data?.ma200);
+        if(price.length && ma.length){
+          const n=Math.min(price.length,ma.length);
+          mayerHistory=price.slice(-n).map((v,i)=>ma.slice(-n)[i]>0?v/ma.slice(-n)[i]:null).filter(v=>v!==null);
+        }
+      }
+      let mayerMultiple=mayerHistory.length?mayerHistory.at(-1):num(
+        mb.current?.multiple ?? mb.current?.mayerMultiple ?? mb.mayerMultiple ?? mb.latest?.multiple
+      );
+
+      return json({
+        ok: true,
+        btcDominance,
+        btcDominanceHistory: btcDominanceHistory.slice(-30),
+        mayerMultiple,
+        mayerHistory: mayerHistory.slice(-30),
+        fearGreed,
+        fearGreedClass,
+        fearGreedHistory: fearGreedHistory.slice(-30),
+        errors: {
+          dominance: btcDominance===null ? `Bitcoin.com ${domBC.status} / Alternative.me ${domAlt.status}` : null,
+          mayer: mayerMultiple===null ? `Bitcoin.com ${mayerR.status}` : null,
+          fearGreed: fearGreed===null ? `Alternative.me ${fngR.status}` : null
+        },
+        upstream: {
+          dominanceBitcoinCom: domBC.status,
+          dominanceAlternative: domAlt.status,
+          fearGreed: fngR.status,
+          mayer: mayerR.status
+        },
+        updatedAt: Date.now()
+      });
+    }
+
+    if (u.pathname === "/test") {
+      if (req.method !== "POST") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405);
+      if (env.PIN && !requirePin(req, env)) return json({ ok: false, error: "UNAUTHORIZED" }, 401);
+      if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) {
+        return json({ ok: false, error: "TELEGRAM_NOT_CONFIGURED" }, 503);
+      }
+      const tr = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: env.TELEGRAM_CHAT_ID,
+          text: "BTC ALT REGIME TRADER v8.3.6 · Telegram 연결 테스트 성공"
+        })
+      });
+      let tb = null;
+      try { tb = await tr.json(); } catch {}
+      if (!tr.ok || !tb?.ok) return json({ ok: false, error: "TELEGRAM_SEND_FAILED", status: tr.status }, 502);
+      return json({ ok: true });
+    }
+
     if (u.pathname === "/candles") {
       if (req.method !== "POST") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405);
       if (env.PIN && !requirePin(req, env)) return json({ ok: false, error: "UNAUTHORIZED" }, 401);

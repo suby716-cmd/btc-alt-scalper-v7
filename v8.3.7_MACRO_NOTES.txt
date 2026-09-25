@@ -1,0 +1,13 @@
+추가 지표
+- BTC 도미넌스: Alternative.me Global API
+- 공포·탐욕: Alternative.me Fear & Greed API
+- Mayer Multiple: Bitcoin.com Charts API
+  배수와 200일 이동평균 대비 괴리율(%)을 함께 표시.
+
+MVRV는 확인된 API 중 API key가 필요한 서비스가 있어, 이번 무키 배포판에는 Mayer Multiple을 채택했습니다.
+거시지표 호출 실패는 기존 Regime 분석을 중단시키지 않습니다.
+
+배포:
+GitHub index.html + docs/index.html 교체
+Cloudflare worker.js 교체/배포
+Ctrl+F5

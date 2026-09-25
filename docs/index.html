@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v8.3.8</title>
+<title>BTC ALT REGIME TRADER v8.3.9</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -72,12 +72,44 @@
 @media(max-width:900px){.macro-strip{grid-template-columns:1fr}}
 .macro-spark{display:block;width:100%;height:54px;margin-top:8px}
 .macro-strip .metric{min-height:132px}
+
+/* v8.3.9 responsive/mobile polish */
+.macro-strip{align-items:stretch}
+.macro-strip .metric{overflow:hidden}
+.macro-spark{min-height:54px}
+@media(max-width:760px){
+  body{overflow-x:hidden}
+  .wrap,.app,.container,main{max-width:100%!important}
+  .macro-strip{grid-template-columns:1fr!important;gap:8px!important;margin:8px 0!important}
+  .macro-strip .metric{min-height:118px!important;padding:12px!important}
+  .macro-strip .value{font-size:22px!important}
+  .macro-spark{height:48px!important;min-height:48px!important;margin-top:6px!important}
+  .top,.top-grid,.metrics,.stats,.summary-grid{gap:7px!important}
+  .controls{gap:7px!important}
+  .controls input,.controls button,.controls select{min-height:42px}
+  .regime-layout{grid-template-columns:1fr!important}
+  .rs-chart{height:280px!important}
+  table{font-size:12px}
+}
+@media(max-width:520px){
+  body{font-size:13px}
+  h1{font-size:20px!important;line-height:1.2}
+  .card{border-radius:10px!important}
+  .macro-strip .metric{min-height:112px!important}
+  .macro-strip .small{font-size:11px!important;white-space:normal}
+  .controls{display:grid!important;grid-template-columns:1fr 1fr!important}
+  .controls input{grid-column:1/-1;min-width:0!important;width:100%!important}
+  .controls button{width:100%;padding-left:8px!important;padding-right:8px!important}
+  .regime-engine-grid,.engine-grid{grid-template-columns:1fr 1fr!important;gap:7px!important}
+  .rs-controls{grid-template-columns:1fr!important}
+  .rs-chart{height:240px!important}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.8</h1><div class="sub">Upbit KRW · 실시간 24H 순위 + 미니차트 · 일봉/15분/5분 Regime + Pattern · Cloudflare Cron · Telegram 수동매매 알림</div></div>
+    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.9</h1><div class="sub">Upbit KRW · 실시간 24H 순위 + 미니차트 · 일봉/15분/5분 Regime + Pattern · Cloudflare Cron · Telegram 수동매매 알림</div></div>
     <div class="status"><span class="dot" id="dot"></span><span id="status">연결 준비중</span></div>
   </div>
 
@@ -198,7 +230,7 @@
 </div>
 
 <script>
-const VERSION='v8.3.8';
+const VERSION='v8.3.9';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -1175,7 +1207,7 @@ async function loadMacroMetrics(){
       drawMacroSpark('btcDomChart',d.btcDominanceHistory);
     }else $('btcDomSub').textContent=`도미넌스 미수신${d?.errors?.dominance?' · '+d.errors.dominance:''}`;
 
-    if(Number.isFinite(Number(d.mayerMultiple))){
+    if(Number.isFinite(Number(d.mayerMultiple)) && Number(d.mayerMultiple)>0.05){
       const mm=Number(d.mayerMultiple),pct=(mm-1)*100;
       $('mayer').textContent=mm.toFixed(3)+'×';
       $('mayerSub').textContent=`200일선 대비 ${pct>=0?'+':''}${pct.toFixed(1)}% · Bitcoin.com`;

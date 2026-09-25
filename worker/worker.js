@@ -76,97 +76,88 @@ export default {
     // v8.3.5 Regime Engine candle bridge.
     // Returns the legacy compact format: [timestamp, open, high, low, close, volume]
     if (u.pathname === "/macro") {
-      if (req.method !== "POST" && req.method !== "GET") return json({ ok:false, error:"METHOD_NOT_ALLOWED" },405);
+      if (req.method !== "POST" && req.method !== "GET") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
+      const n=v=>{const x=Number(v);return Number.isFinite(x)?x:null};
 
-      const [domR, altR, fngR, mayerR] = await Promise.all([
-        fetchJson("https://charts.bitcoin.com/api/v1/bitcoin-dominance", 10000),
-        fetchJson("https://api.alternative.me/v2/global/", 10000),
-        fetchJson("https://api.alternative.me/fng/?limit=30&format=json", 10000),
-        fetchJson("https://charts.bitcoin.com/api/v1/charts/mayer-multiple?interval=daily&timespan=30d&limit=30", 12000)
+      // Current BTC dominance and 30-day Fear & Greed are public/no-key sources.
+      const [altR,fngR]=await Promise.all([
+        fetchJson("https://api.alternative.me/v2/global/",9000),
+        fetchJson("https://api.alternative.me/fng/?limit=30&format=json",9000)
       ]);
-
-      const n=v=>{ const x=Number(v); return Number.isFinite(x)?x:null; };
-      const series=(arr, preferred=[])=>{
-        if(!Array.isArray(arr)) return [];
-        return arr.map(row=>{
-          if(Array.isArray(row)){
-            // [timestamp,value] and similar arrays: last numeric item is the value.
-            for(let i=row.length-1;i>=0;i--){ const x=n(row[i]); if(x!==null) return x; }
-            return null;
-          }
-          if(row && typeof row==="object"){
-            for(const k of [...preferred,"value","y","multiple","dominance","btcDominance","percentage","price"]){
-              const x=n(row[k]); if(x!==null) return x;
-            }
-            return null;
-          }
-          return n(row);
-        }).filter(x=>x!==null);
-      };
-
-      // Current BTC dominance + any historical series returned by Bitcoin.com.
-      const db=domR.body||{};
-      let domHist=[];
-      for(const a of [
-        db.data?.history,db.history,db.data?.dominanceHistory,db.data?.btcDominanceHistory,
-        db.data?.dominance,db.data?.btcDominance
-      ]){
-        const v=series(a,["btcDominance","dominance","percentage"]);
-        if(v.length>1){ domHist=v; break; }
-      }
-      let btcDominance=n(
-        db.current?.btcDominance ?? db.current?.dominance ?? db.btcDominance ??
-        db.bitcoinDominance ?? db.dominance ?? db.data?.current?.btcDominance ??
-        db.data?.current?.dominance
-      );
-      if(btcDominance===null && domHist.length) btcDominance=domHist.at(-1);
-      if(btcDominance===null) btcDominance=n(altR.body?.data?.bitcoin_percentage_of_market_cap);
-
-      // Fear & Greed: response is newest first, chart should be oldest -> newest.
+      const btcDominance=n(altR.body?.data?.bitcoin_percentage_of_market_cap);
       const fgRows=Array.isArray(fngR.body?.data)?fngR.body.data:[];
       const fg=fgRows[0]||null;
       const fearGreed=n(fg?.value);
       const fearGreedClass=fg?.value_classification||null;
       const fearGreedHistory=fgRows.slice().reverse().map(x=>n(x?.value)).filter(x=>x!==null);
 
-      // Mayer: official response fields data.multiple / data.price / data.ma200.
-      const mb=mayerR.body||{};
-      let mayerHist=series(mb.data?.multiple,["multiple","mayerMultiple"]);
-      const priceHist=series(mb.data?.price,["price"]);
-      const maHist=series(mb.data?.ma200,["ma200","value"]);
-      // Fallback: compute price/MA200 point-by-point when multiple isn't directly usable.
-      if(!mayerHist.length && priceHist.length && maHist.length){
-        const len=Math.min(priceHist.length,maHist.length);
-        mayerHist=priceHist.slice(-len).map((px,i)=>{
-          const ma=maHist.slice(-len)[i];
-          return ma>0?px/ma:null;
-        }).filter(x=>x!==null);
+      // Mayer: no third-party Mayer endpoint. Pull BTC daily closes and compute Price/SMA200.
+      // ~10 years = 19 Upbit pages of <=200 candles. Cache API avoids repeating this on every page load.
+      const cache=typeof caches!=="undefined"?caches.default:null;
+      const cacheKey=new Request("https://macro-cache.local/mayer-10y");
+      let mayerPayload=null;
+      if(cache){
+        const hit=await cache.match(cacheKey);
+        if(hit){try{mayerPayload=await hit.json()}catch{}}
       }
-      // Never treat 0 as a valid Mayer Multiple.
-      mayerHist=mayerHist.filter(x=>x>0.05 && x<20);
-      let mayerMultiple=mayerHist.length?mayerHist.at(-1):n(
-        mb.current?.multiple ?? mb.current?.mayerMultiple ?? mb.mayerMultiple ?? mb.latest?.multiple
-      );
-      if(!(mayerMultiple>0.05 && mayerMultiple<20)) mayerMultiple=null;
+      if(!mayerPayload){
+        let rows=[],to=null;
+        for(let page=0;page<20;page++){
+          const url=`https://api.upbit.com/v1/candles/days?market=KRW-BTC&count=200${to?`&to=${encodeURIComponent(to)}`:""}`;
+          const r=await fetchJson(url,10000);
+          const a=Array.isArray(r.body)?r.body:[];
+          if(!a.length) break;
+          rows.push(...a);
+          const oldest=a[a.length-1];
+          const t=new Date(oldest.candle_date_time_utc+"Z");
+          t.setSeconds(t.getSeconds()-1);
+          to=t.toISOString();
+          if(a.length<200) break;
+        }
+        const byTime=[...new Map(rows.map(x=>[x.timestamp,x])).values()].sort((a,b)=>a.timestamp-b.timestamp);
+        const closes=byTime.map(x=>n(x.trade_price)).filter(x=>x!==null);
+        const points=[];
+        for(let i=199;i<closes.length;i++){
+          let sum=0; for(let j=i-199;j<=i;j++) sum+=closes[j];
+          const mm=closes[i]/(sum/200);
+          if(Number.isFinite(mm)) points.push(mm);
+        }
+        // Downsample for browser: preserve shape, ~weekly points over 10y.
+        const step=Math.max(1,Math.floor(points.length/520));
+        const sampled=points.filter((_,i)=>i%step===0);
+        if(points.length && sampled.at(-1)!==points.at(-1)) sampled.push(points.at(-1));
+        mayerPayload={current:points.at(-1)||null,history:sampled.slice(-560)};
+        if(cache && mayerPayload.current){
+          const resp=new Response(JSON.stringify(mayerPayload),{headers:{"Content-Type":"application/json","Cache-Control":"public,max-age=21600"}});
+          await cache.put(cacheKey,resp);
+        }
+      }
 
-      // If dominance upstream has no history, keep the current value but return [].
-      // Frontend deliberately does not invent a fake historical line.
+      // BTC.D history: use CMC historical API only when the owner configures CMC_API_KEY.
+      // This avoids fabricating history or scraping unstable HTML. One year is enough to see current capital rotation.
+      let domHist=[];
+      let domHistoryStatus="not-configured";
+      if(env.CMC_API_KEY){
+        const end=new Date(),start=new Date(end.getTime()-366*86400000);
+        const url=`https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/historical?time_start=${encodeURIComponent(start.toISOString())}&time_end=${encodeURIComponent(end.toISOString())}&interval=1d&count=367`;
+        const rr=await fetch(url,{headers:{"X-CMC_PRO_API_KEY":env.CMC_API_KEY,"Accept":"application/json"}});
+        domHistoryStatus=String(rr.status);
+        if(rr.ok){
+          const jb=await rr.json();
+          const data=Array.isArray(jb?.data?.quotes)?jb.data.quotes:Array.isArray(jb?.data)?jb.data:[];
+          domHist=data.map(x=>n(x?.btc_dominance ?? x?.quote?.USD?.btc_dominance ?? x?.btcDominance)).filter(x=>x!==null);
+        }
+      }
+
       return json({
         ok:true,
         btcDominance,
-        btcDominanceHistory:domHist.slice(-30),
-        mayerMultiple,
-        mayerHistory:mayerHist.slice(-30),
-        fearGreed,
-        fearGreedClass,
-        fearGreedHistory:fearGreedHistory.slice(-30),
-        errors:{
-          dominance:btcDominance===null?`Bitcoin.com ${domR.status} / Alternative.me ${altR.status}`:null,
-          dominanceHistory:domHist.length<2?"upstream-history-unavailable":null,
-          mayer:mayerMultiple===null?`Bitcoin.com ${mayerR.status}`:null,
-          fearGreed:fearGreed===null?`Alternative.me ${fngR.status}`:null
-        },
-        upstream:{dominance:domR.status,dominanceFallback:altR.status,fearGreed:fngR.status,mayer:mayerR.status},
+        btcDominanceHistory:domHist,
+        dominanceHistoryStatus:domHistoryStatus,
+        mayerMultiple:n(mayerPayload?.current),
+        mayerHistory:Array.isArray(mayerPayload?.history)?mayerPayload.history:[],
+        mayerReference:{deepDiscount:0.8,trend:1.0,historicalOverheat:2.4},
+        fearGreed,fearGreedClass,fearGreedHistory,
         updatedAt:Date.now()
       });
     }

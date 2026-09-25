@@ -1,0 +1,28 @@
+v8.4.0 CYCLE CONTEXT
+
+Mayer Multiple
+- Bitcoin.com Mayer endpoint 의존 제거.
+- Upbit KRW-BTC 일봉을 약 10년까지 페이지네이션.
+- 각 날짜 Mayer = 종가 / 직전 200일 SMA 직접 계산.
+- Cloudflare Cache API 6시간 캐시.
+- 브라우저에는 약 주간 단위로 다운샘플한 장기 곡선을 전달.
+- 0.8× / 1.0× / 2.4× 참고선을 차트에 표시.
+- 2.4×는 역사적 과열 참고선이지 자동 매도선이 아님.
+
+BTC Dominance
+- 현재값: Alternative.me.
+- 장기/최근 역사값은 임의 생성/보간하지 않음.
+- CMC_API_KEY Cloudflare Secret을 설정한 경우 CoinMarketCap historical global metrics에서 최근 1년 BTC.D를 불러와 차트 표시.
+- 키가 없으면 현재값은 계속 표시되고, 차트 대신 '시계열 API 키 설정 시 활성화' 안내.
+- 목적: 최근 1년 고점/저점, 고점 대비 %p 하락을 통해 알트 자금순환을 관찰.
+
+Fear & Greed
+- 30일 추이 유지, 25/50/75 참고선 추가.
+
+모바일
+- 기존 v8.3.9 반응형 유지.
+- 세 거시카드 내부 순서를 현재값 -> 해석 -> 장기차트로 통일.
+
+Cloudflare Secret (선택):
+CMC_API_KEY
+없어도 기존 Regime/Mayer/Fear&Greed/BTC.D 현재값은 동작합니다.

@@ -1,0 +1,31 @@
+v8.4.3 BTC.D COMPLETE
+
+목표
+- BTC.D를 단순 숫자가 아니라 '실제로 내려가는가'를 보는 지표로 사용.
+
+동작
+A) Cloudflare에 CMC_API_KEY가 설정된 경우
+- 현재 BTC.D: CoinMarketCap
+- 과거 BTC.D: 같은 CoinMarketCap historical global metrics, 최근 1년 daily
+- 같은 공급자/같은 정의이므로 현재값과 과거 그래프를 섞지 않음.
+- 7일 변화(%p), 30일 변화(%p), 1년 고점 대비 하락폭을 즉시 표시.
+
+B) CMC_API_KEY가 없는 경우
+- 현재 BTC.D: CoinGecko 우선, Alternative.me fallback.
+- 과거 데이터를 다른 공급자에서 억지로 붙이지 않음.
+- 실제 수신한 BTC.D를 브라우저에 하루 1개씩 최대 370일 저장.
+- 데이터가 쌓이면 같은 방식으로 7일/30일/고점 대비 하락폭 표시.
+
+자금순환 상태
+- BTC.D 7일 <= -0.5%p + ALT Relative Strength >=55 : 알트 자금순환 강화
+- BTC.D 하락 + ALT Relative Strength >=45 : 알트 자금순환 관찰
+- BTC.D 7일 >= +0.5%p : BTC 점유율 강화
+- 그 외 : 뚜렷한 순환 신호 없음
+이 문구는 시장 상태 설명이며 매매 신호가 아님.
+
+Cloudflare Secret
+CMC_API_KEY=<본인의 CoinMarketCap API Key>
+
+주의
+- CoinMarketCap historical global metrics는 공식 문서상 API key가 필요한 endpoint.
+- 키 없이 '과거 1년'을 가짜 데이터로 생성하지 않음.

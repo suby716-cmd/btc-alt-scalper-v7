@@ -106,6 +106,10 @@ export default {
         alternative:altDom,
         cmcGap:(cgDom!==null&&cmcDom!==null)?Math.abs(cgDom-cmcDom):null
       };
+      if(env.CMC_API_KEY && cmcDom!==null && cmcDom>1 && cmcDom<100){
+        btcDominance=cmcDom;
+        btcDominanceSource="CoinMarketCap";
+      }
       const fgRows=Array.isArray(fngR.body?.data)?fngR.body.data:[];
       const fg=fgRows[0]||null;
       const fearGreed=n(fg?.value);
@@ -158,11 +162,11 @@ export default {
       // This avoids fabricating history or scraping unstable HTML. One year is enough to see current capital rotation.
       let domHist=[];
       let domHistoryStatus="not-configured";
-      // Never splice a historical series onto a different current methodology.
-      // CMC history is accepted only when today's CMC and CoinGecko readings are within 2 percentage points.
-      if(env.CMC_API_KEY && crossCheck.cmcGap!==null && crossCheck.cmcGap<=2){
+      // Historical series must use the SAME provider as the displayed current value.
+      // With a CMC_API_KEY we use CMC for both current + history; without it, we never splice CMC history onto CoinGecko.
+      if(env.CMC_API_KEY){
         const end=new Date(),start=new Date(end.getTime()-366*86400000);
-        const url=`https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/historical?time_start=${encodeURIComponent(start.toISOString())}&time_end=${encodeURIComponent(end.toISOString())}&interval=1d&count=367`;
+        const url=`https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/historical?time_start=${encodeURIComponent(start.toISOString())}&time_end=${encodeURIComponent(end.toISOString())}&interval=1d&count=367&aux=btc_dominance`;
         const rr=await fetch(url,{headers:{"X-CMC_PRO_API_KEY":env.CMC_API_KEY,"Accept":"application/json"}});
         domHistoryStatus=String(rr.status);
         if(rr.ok){
@@ -178,6 +182,7 @@ export default {
         btcDominanceSource,
         btcDominanceCrossCheck:crossCheck,
         btcDominanceHistory:domHist,
+        btcDominanceHistoryLabel:domHist.length>1?"CoinMarketCap 1년":"실측 누적",
         dominanceHistoryStatus:domHistoryStatus,
         mayerMultiple:n(mayerPayload?.current),
         mayerHistory:Array.isArray(mayerPayload?.history)?mayerPayload.history:[],

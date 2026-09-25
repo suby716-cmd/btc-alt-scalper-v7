@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v8.3.7</title>
+<title>BTC ALT REGIME TRADER v8.3.8</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -70,12 +70,14 @@
 .macro-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
 .macro-strip .metric{padding:12px 14px}.macro-strip .value{font-size:20px;font-weight:800;margin-top:5px}.macro-strip .small{margin-top:4px}
 @media(max-width:900px){.macro-strip{grid-template-columns:1fr}}
+.macro-spark{display:block;width:100%;height:54px;margin-top:8px}
+.macro-strip .metric{min-height:132px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.7</h1><div class="sub">Upbit KRW · 실시간 24H 순위 + 미니차트 · 일봉/15분/5분 Regime + Pattern · Cloudflare Cron · Telegram 수동매매 알림</div></div>
+    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.3.8</h1><div class="sub">Upbit KRW · 실시간 24H 순위 + 미니차트 · 일봉/15분/5분 Regime + Pattern · Cloudflare Cron · Telegram 수동매매 알림</div></div>
     <div class="status"><span class="dot" id="dot"></span><span id="status">연결 준비중</span></div>
   </div>
 
@@ -104,9 +106,9 @@
 
   <div class="panel">
     <div class="macro-strip">
-  <div class="metric card"><div class="label">BTC 도미넌스</div><div class="value" id="btcDom">—</div><div class="small" id="btcDomSub">전체 시총 대비 BTC</div></div>
-  <div class="metric card"><div class="label">Mayer Multiple</div><div class="value" id="mayer">—</div><div class="small" id="mayerSub">BTC ÷ 200일 이동평균</div></div>
-  <div class="metric card"><div class="label">공포·탐욕 지수</div><div class="value" id="fearGreed">—</div><div class="small" id="fearGreedSub">0 공포 · 100 탐욕</div></div>
+  <div class="metric card"><div class="label">BTC 도미넌스</div><div class="value" id="btcDom">—</div><div class="small" id="btcDomSub">전체 시총 대비 BTC</div><canvas class="macro-spark" id="btcDomChart"></canvas></div>
+  <div class="metric card"><div class="label">Mayer Multiple</div><div class="value" id="mayer">—</div><div class="small" id="mayerSub">BTC ÷ 200일 이동평균</div><canvas class="macro-spark" id="mayerChart"></canvas></div>
+  <div class="metric card"><div class="label">공포·탐욕 지수</div><div class="value" id="fearGreed">—</div><div class="small" id="fearGreedSub">0 공포 · 100 탐욕</div><canvas class="macro-spark" id="fearGreedChart"></canvas></div>
 </div>
 <div class="controls">
       <input id="worker" placeholder="Cloudflare Worker URL (https://...workers.dev)">
@@ -196,7 +198,7 @@
 </div>
 
 <script>
-const VERSION='v8.3.7';
+const VERSION='v8.3.8';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -1147,24 +1149,47 @@ setInterval(loadRSCandles,60000);
 function fearGreedKo(cls){
   return ({'Extreme Fear':'극단적 공포','Fear':'공포','Neutral':'중립','Greed':'탐욕','Extreme Greed':'극단적 탐욕'})[cls]||cls||'—';
 }
+function drawMacroSpark(id, values){
+  const c=$(id); if(!c) return;
+  const vals=(values||[]).map(Number).filter(Number.isFinite).slice(-30);
+  const dpr=window.devicePixelRatio||1,w=Math.max(120,c.clientWidth||260),h=54;
+  c.width=Math.round(w*dpr); c.height=Math.round(h*dpr);
+  const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h);
+  if(!vals.length) return;
+  const lo=Math.min(...vals),hi=Math.max(...vals),span=(hi-lo)||1,pad=4;
+  x.lineWidth=1.8; x.strokeStyle=vals.at(-1)>=vals[0]?'#d93025':'#1976d2';
+  x.beginPath();
+  vals.forEach((v,i)=>{
+    const px=pad+(w-pad*2)*(vals.length===1?.5:i/(vals.length-1));
+    const py=h-pad-(h-pad*2)*(v-lo)/span;
+    i?x.lineTo(px,py):x.moveTo(px,py);
+  });
+  x.stroke();
+}
 async function loadMacroMetrics(){
   try{
     const d=await call('/macro',{});
     if(Number.isFinite(Number(d.btcDominance))){
       $('btcDom').textContent=Number(d.btcDominance).toFixed(2)+'%';
-      $('btcDomSub').textContent='전체 암호화폐 시총 대비 BTC · Alternative.me';
-    }else $('btcDomSub').textContent='도미넌스 데이터 일시 미수신';
+      $('btcDomSub').textContent='BTC 시총 점유율 · Bitcoin.com/CoinGecko';
+      drawMacroSpark('btcDomChart',d.btcDominanceHistory);
+    }else $('btcDomSub').textContent=`도미넌스 미수신${d?.errors?.dominance?' · '+d.errors.dominance:''}`;
+
     if(Number.isFinite(Number(d.mayerMultiple))){
       const mm=Number(d.mayerMultiple),pct=(mm-1)*100;
       $('mayer').textContent=mm.toFixed(3)+'×';
       $('mayerSub').textContent=`200일선 대비 ${pct>=0?'+':''}${pct.toFixed(1)}% · Bitcoin.com`;
-    }else $('mayerSub').textContent='Mayer 데이터 일시 미수신';
+      drawMacroSpark('mayerChart',d.mayerHistory);
+    }else $('mayerSub').textContent=`Mayer 미수신${d?.errors?.mayer?' · '+d.errors.mayer:''}`;
+
     if(Number.isFinite(Number(d.fearGreed))){
       $('fearGreed').textContent=`${Math.round(Number(d.fearGreed))} · ${fearGreedKo(d.fearGreedClass)}`;
-      $('fearGreedSub').textContent='0 극단적 공포 · 100 극단적 탐욕 · Alternative.me';
-    }else $('fearGreedSub').textContent='공포·탐욕 데이터 일시 미수신';
+      $('fearGreedSub').textContent='최근 30일 · Alternative.me';
+      drawMacroSpark('fearGreedChart',d.fearGreedHistory);
+    }else $('fearGreedSub').textContent=`공포·탐욕 미수신${d?.errors?.fearGreed?' · '+d.errors.fearGreed:''}`;
   }catch(e){
-    $('btcDomSub').textContent=$('mayerSub').textContent=$('fearGreedSub').textContent='거시지표 연결 실패';
+    const msg=(e?.message||String(e)).slice(0,80);
+    $('btcDomSub').textContent=$('mayerSub').textContent=$('fearGreedSub').textContent='거시지표 연결 실패 · '+msg;
     console.warn('macro metrics:',e);
   }
 }

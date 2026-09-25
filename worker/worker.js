@@ -80,19 +80,32 @@ export default {
       const n=v=>{const x=Number(v);return Number.isFinite(x)?x:null};
 
       // Current BTC dominance and 30-day Fear & Greed are public/no-key sources.
-      const [cmcLatestR,altR,fngR]=await Promise.all([
+      const [cgR,cmcLatestR,altR,fngR]=await Promise.all([
+        fetchJson("https://api.coingecko.com/api/v3/global",9000),
         fetchJson("https://pro-api.coinmarketcap.com/public-api/v1/global-metrics/quotes/latest",9000),
         fetchJson("https://api.alternative.me/v2/global/",9000),
         fetchJson("https://api.alternative.me/fng/?limit=30&format=json",9000)
       ]);
-      // CMC keyless latest returns btc_dominance directly as percentage points (e.g. ~58, not 0.58).
-      // Alternative.me is fallback only; normalize fractional responses defensively.
-      let btcDominance=n(cmcLatestR.body?.data?.btc_dominance);
-      if(!(btcDominance>1 && btcDominance<100)){
-        let av=n(altR.body?.data?.bitcoin_percentage_of_market_cap);
-        if(av!==null && av>0 && av<=1) av*=100;
-        if(av!==null && av>1 && av<100) btcDominance=av;
+
+      // BTC.D canonical source = CoinGecko global market_cap_percentage.btc.
+      // CMC/Alternative.me are validation only, because providers can use different universes/methodologies.
+      const cgDom=n(cgR.body?.data?.market_cap_percentage?.btc);
+      const cmcDom=n(cmcLatestR.body?.data?.btc_dominance);
+      let altDom=n(altR.body?.data?.bitcoin_percentage_of_market_cap);
+      if(altDom!==null && altDom>0 && altDom<=1) altDom*=100;
+
+      let btcDominance=null, btcDominanceSource="unavailable";
+      if(cgDom!==null && cgDom>1 && cgDom<100){
+        btcDominance=cgDom; btcDominanceSource="CoinGecko";
+      }else if(altDom!==null && altDom>1 && altDom<100){
+        btcDominance=altDom; btcDominanceSource="Alternative.me fallback";
       }
+      const crossCheck={
+        coingecko:cgDom,
+        coinmarketcap:cmcDom,
+        alternative:altDom,
+        cmcGap:(cgDom!==null&&cmcDom!==null)?Math.abs(cgDom-cmcDom):null
+      };
       const fgRows=Array.isArray(fngR.body?.data)?fngR.body.data:[];
       const fg=fgRows[0]||null;
       const fearGreed=n(fg?.value);
@@ -145,7 +158,9 @@ export default {
       // This avoids fabricating history or scraping unstable HTML. One year is enough to see current capital rotation.
       let domHist=[];
       let domHistoryStatus="not-configured";
-      if(env.CMC_API_KEY){
+      // Never splice a historical series onto a different current methodology.
+      // CMC history is accepted only when today's CMC and CoinGecko readings are within 2 percentage points.
+      if(env.CMC_API_KEY && crossCheck.cmcGap!==null && crossCheck.cmcGap<=2){
         const end=new Date(),start=new Date(end.getTime()-366*86400000);
         const url=`https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/historical?time_start=${encodeURIComponent(start.toISOString())}&time_end=${encodeURIComponent(end.toISOString())}&interval=1d&count=367`;
         const rr=await fetch(url,{headers:{"X-CMC_PRO_API_KEY":env.CMC_API_KEY,"Accept":"application/json"}});
@@ -160,7 +175,8 @@ export default {
       return json({
         ok:true,
         btcDominance,
-        btcDominanceSource:(n(cmcLatestR.body?.data?.btc_dominance)>1?'CoinMarketCap':'Alternative.me'),
+        btcDominanceSource,
+        btcDominanceCrossCheck:crossCheck,
         btcDominanceHistory:domHist,
         dominanceHistoryStatus:domHistoryStatus,
         mayerMultiple:n(mayerPayload?.current),

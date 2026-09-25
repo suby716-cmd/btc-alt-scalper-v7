@@ -1,0 +1,11 @@
+v8.4.2 BTC.D Trend Verified
+
+- BTC.D 기준값을 CoinGecko /api/v3/global 의 market_cap_percentage.btc 로 통일.
+- CoinMarketCap keyless 값은 표시값으로 사용하지 않고 교차검증용으로만 사용.
+- Alternative.me는 CoinGecko 장애 시 fallback.
+- CMC historical은 '오늘 CMC vs CoinGecko 차이 <= 2%p'일 때만 차트에 연결.
+  서로 다른 산식/코인 universe의 현재값과 과거값을 억지로 이어붙이지 않음.
+- 역사 API를 사용할 수 없으면 CoinGecko 실측 BTC.D를 브라우저에 하루 1개씩 최대 370일 누적.
+- 누적 8일 이후 7일 변화, 31일 이후 30일 변화 표시.
+- 표시: 상승/하락/횡보 + 7일 %p + 30일 %p + 관측 고점 대비 하락폭.
+- Mayer/Fear&Greed/Regime은 v8.4.1 그대로 유지.

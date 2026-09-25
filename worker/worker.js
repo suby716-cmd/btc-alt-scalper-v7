@@ -76,86 +76,98 @@ export default {
     // v8.3.5 Regime Engine candle bridge.
     // Returns the legacy compact format: [timestamp, open, high, low, close, volume]
     if (u.pathname === "/macro") {
-      // Read-only public market data: PIN is intentionally not required.
-      if (req.method !== "POST" && req.method !== "GET") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405);
+      if (req.method !== "POST" && req.method !== "GET") return json({ ok:false, error:"METHOD_NOT_ALLOWED" },405);
 
-      const [domBC, domAlt, fngR, mayerR] = await Promise.all([
-        fetchJson("https://charts.bitcoin.com/api/v1/bitcoin-dominance", 9000),
-        fetchJson("https://api.alternative.me/v2/global/", 9000),
-        fetchJson("https://api.alternative.me/fng/?limit=30&format=json", 9000),
+      const [domR, altR, fngR, mayerR] = await Promise.all([
+        fetchJson("https://charts.bitcoin.com/api/v1/bitcoin-dominance", 10000),
+        fetchJson("https://api.alternative.me/v2/global/", 10000),
+        fetchJson("https://api.alternative.me/fng/?limit=30&format=json", 10000),
         fetchJson("https://charts.bitcoin.com/api/v1/charts/mayer-multiple?interval=daily&timespan=30d&limit=30", 12000)
       ]);
 
-      const num = v => {
-        const n = Number(v);
-        return Number.isFinite(n) ? n : null;
+      const n=v=>{ const x=Number(v); return Number.isFinite(x)?x:null; };
+      const series=(arr, preferred=[])=>{
+        if(!Array.isArray(arr)) return [];
+        return arr.map(row=>{
+          if(Array.isArray(row)){
+            // [timestamp,value] and similar arrays: last numeric item is the value.
+            for(let i=row.length-1;i>=0;i--){ const x=n(row[i]); if(x!==null) return x; }
+            return null;
+          }
+          if(row && typeof row==="object"){
+            for(const k of [...preferred,"value","y","multiple","dominance","btcDominance","percentage","price"]){
+              const x=n(row[k]); if(x!==null) return x;
+            }
+            return null;
+          }
+          return n(row);
+        }).filter(x=>x!==null);
       };
-      const valuesFrom = arr => Array.isArray(arr) ? arr.map(v => {
-        if (Array.isArray(v)) return num(v[v.length - 1]);
-        if (v && typeof v === "object") return num(v.value ?? v.y ?? v.dominance ?? v.multiple ?? v.btcDominance ?? v.percentage);
-        return num(v);
-      }).filter(v => v !== null) : [];
 
-      // Dominance: Bitcoin.com proxy first, Alternative.me fallback.
-      const db=domBC.body||{};
-      let btcDominance=num(
-        db.btcDominance ?? db.bitcoinDominance ?? db.dominance ??
-        db.current?.btcDominance ?? db.current?.dominance ??
-        db.data?.btcDominance ?? db.data?.dominance
-      );
-      let btcDominanceHistory=[];
-      for(const candidate of [
-        db.history, db.data?.history, db.data?.btcDominanceHistory,
-        db.data?.dominanceHistory, db.data?.dominance, db.data?.btcDominance
+      // Current BTC dominance + any historical series returned by Bitcoin.com.
+      const db=domR.body||{};
+      let domHist=[];
+      for(const a of [
+        db.data?.history,db.history,db.data?.dominanceHistory,db.data?.btcDominanceHistory,
+        db.data?.dominance,db.data?.btcDominance
       ]){
-        const v=valuesFrom(candidate);
-        if(v.length){ btcDominanceHistory=v; break; }
+        const v=series(a,["btcDominance","dominance","percentage"]);
+        if(v.length>1){ domHist=v; break; }
       }
-      if(btcDominance===null) btcDominance=num(domAlt.body?.data?.bitcoin_percentage_of_market_cap);
-      if(btcDominance===null && btcDominanceHistory.length) btcDominance=btcDominanceHistory.at(-1);
+      let btcDominance=n(
+        db.current?.btcDominance ?? db.current?.dominance ?? db.btcDominance ??
+        db.bitcoinDominance ?? db.dominance ?? db.data?.current?.btcDominance ??
+        db.data?.current?.dominance
+      );
+      if(btcDominance===null && domHist.length) btcDominance=domHist.at(-1);
+      if(btcDominance===null) btcDominance=n(altR.body?.data?.bitcoin_percentage_of_market_cap);
 
-      // Fear & Greed: official Alternative.me 30-day history.
+      // Fear & Greed: response is newest first, chart should be oldest -> newest.
       const fgRows=Array.isArray(fngR.body?.data)?fngR.body.data:[];
-      const fearGreedHistory=fgRows.slice().reverse().map(x=>num(x?.value)).filter(v=>v!==null);
       const fg=fgRows[0]||null;
-      const fearGreed=num(fg?.value);
+      const fearGreed=n(fg?.value);
       const fearGreedClass=fg?.value_classification||null;
+      const fearGreedHistory=fgRows.slice().reverse().map(x=>n(x?.value)).filter(x=>x!==null);
 
-      // Mayer Multiple: documented Bitcoin.com data.multiple.
+      // Mayer: official response fields data.multiple / data.price / data.ma200.
       const mb=mayerR.body||{};
-      let mayerHistory=valuesFrom(mb.data?.multiple);
-      if(!mayerHistory.length) {
-        const price=valuesFrom(mb.data?.price), ma=valuesFrom(mb.data?.ma200);
-        if(price.length && ma.length){
-          const n=Math.min(price.length,ma.length);
-          mayerHistory=price.slice(-n).map((v,i)=>ma.slice(-n)[i]>0?v/ma.slice(-n)[i]:null).filter(v=>v!==null);
-        }
+      let mayerHist=series(mb.data?.multiple,["multiple","mayerMultiple"]);
+      const priceHist=series(mb.data?.price,["price"]);
+      const maHist=series(mb.data?.ma200,["ma200","value"]);
+      // Fallback: compute price/MA200 point-by-point when multiple isn't directly usable.
+      if(!mayerHist.length && priceHist.length && maHist.length){
+        const len=Math.min(priceHist.length,maHist.length);
+        mayerHist=priceHist.slice(-len).map((px,i)=>{
+          const ma=maHist.slice(-len)[i];
+          return ma>0?px/ma:null;
+        }).filter(x=>x!==null);
       }
-      let mayerMultiple=mayerHistory.length?mayerHistory.at(-1):num(
+      // Never treat 0 as a valid Mayer Multiple.
+      mayerHist=mayerHist.filter(x=>x>0.05 && x<20);
+      let mayerMultiple=mayerHist.length?mayerHist.at(-1):n(
         mb.current?.multiple ?? mb.current?.mayerMultiple ?? mb.mayerMultiple ?? mb.latest?.multiple
       );
+      if(!(mayerMultiple>0.05 && mayerMultiple<20)) mayerMultiple=null;
 
+      // If dominance upstream has no history, keep the current value but return [].
+      // Frontend deliberately does not invent a fake historical line.
       return json({
-        ok: true,
+        ok:true,
         btcDominance,
-        btcDominanceHistory: btcDominanceHistory.slice(-30),
+        btcDominanceHistory:domHist.slice(-30),
         mayerMultiple,
-        mayerHistory: mayerHistory.slice(-30),
+        mayerHistory:mayerHist.slice(-30),
         fearGreed,
         fearGreedClass,
-        fearGreedHistory: fearGreedHistory.slice(-30),
-        errors: {
-          dominance: btcDominance===null ? `Bitcoin.com ${domBC.status} / Alternative.me ${domAlt.status}` : null,
-          mayer: mayerMultiple===null ? `Bitcoin.com ${mayerR.status}` : null,
-          fearGreed: fearGreed===null ? `Alternative.me ${fngR.status}` : null
+        fearGreedHistory:fearGreedHistory.slice(-30),
+        errors:{
+          dominance:btcDominance===null?`Bitcoin.com ${domR.status} / Alternative.me ${altR.status}`:null,
+          dominanceHistory:domHist.length<2?"upstream-history-unavailable":null,
+          mayer:mayerMultiple===null?`Bitcoin.com ${mayerR.status}`:null,
+          fearGreed:fearGreed===null?`Alternative.me ${fngR.status}`:null
         },
-        upstream: {
-          dominanceBitcoinCom: domBC.status,
-          dominanceAlternative: domAlt.status,
-          fearGreed: fngR.status,
-          mayer: mayerR.status
-        },
-        updatedAt: Date.now()
+        upstream:{dominance:domR.status,dominanceFallback:altR.status,fearGreed:fngR.status,mayer:mayerR.status},
+        updatedAt:Date.now()
       });
     }
 

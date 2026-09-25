@@ -1,0 +1,9 @@
+v8.3.9
+- Mayer Multiple: Bitcoin.com 공식 data.multiple / data.price / data.ma200 구조를 견고하게 파싱.
+- 0.000을 유효한 Mayer 값으로 표시하지 않음.
+- Mayer 최근 30일 미니차트.
+- BTC dominance는 Bitcoin.com 현재값 + 제공되는 history 배열을 파싱. history 미제공 시 가짜 차트를 만들지 않음.
+- Fear & Greed 최근 30일 차트 유지.
+- 모바일: 거시지표 1열, 컨트롤 2열, Regime/RS 1열, 차트 높이/패딩/간격 최적화.
+- 520px 이하에서 버튼과 입력창 터치 크기/폭 최적화.
+배포: GitHub index.html/docs/index.html + Cloudflare worker.js 교체 후 Ctrl+F5.

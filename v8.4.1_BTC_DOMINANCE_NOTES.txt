@@ -1,0 +1,16 @@
+v8.4.1 BTC Dominance Fix
+
+1. 현재 BTC.D
+- CoinMarketCap Keyless Public API /public-api/v1/global-metrics/quotes/latest 를 1순위로 사용.
+- btc_dominance는 % 단위 그대로 사용.
+- Alternative.me는 fallback이며 0~1 분수형 응답이면 x100 정규화.
+- 따라서 v8.4.0의 0.64% 오표시를 방지.
+
+2. BTC.D 과거차트
+- CMC_API_KEY가 Cloudflare Secret에 있으면 공식 historical global metrics에서 최근 1년 일봉 사용.
+- 키가 없으면 브라우저가 실제로 받은 BTC.D 값을 하루 1개씩 최대 370일 localStorage에 누적.
+- 누적 데이터는 실제 관측값만 사용하며 과거 데이터를 임의 생성하지 않음.
+- 2개 이상 누적되면 미니차트 자동 활성화.
+- 고점 대비 %p 하락폭 + ALT 상대강도와 함께 알트 자금순환 관찰 문구 표시.
+
+3. Mayer / Fear&Greed / Regime 로직은 v8.4.0 그대로 유지.

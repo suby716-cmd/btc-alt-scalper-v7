@@ -80,11 +80,19 @@ export default {
       const n=v=>{const x=Number(v);return Number.isFinite(x)?x:null};
 
       // Current BTC dominance and 30-day Fear & Greed are public/no-key sources.
-      const [altR,fngR]=await Promise.all([
+      const [cmcLatestR,altR,fngR]=await Promise.all([
+        fetchJson("https://pro-api.coinmarketcap.com/public-api/v1/global-metrics/quotes/latest",9000),
         fetchJson("https://api.alternative.me/v2/global/",9000),
         fetchJson("https://api.alternative.me/fng/?limit=30&format=json",9000)
       ]);
-      const btcDominance=n(altR.body?.data?.bitcoin_percentage_of_market_cap);
+      // CMC keyless latest returns btc_dominance directly as percentage points (e.g. ~58, not 0.58).
+      // Alternative.me is fallback only; normalize fractional responses defensively.
+      let btcDominance=n(cmcLatestR.body?.data?.btc_dominance);
+      if(!(btcDominance>1 && btcDominance<100)){
+        let av=n(altR.body?.data?.bitcoin_percentage_of_market_cap);
+        if(av!==null && av>0 && av<=1) av*=100;
+        if(av!==null && av>1 && av<100) btcDominance=av;
+      }
       const fgRows=Array.isArray(fngR.body?.data)?fngR.body.data:[];
       const fg=fgRows[0]||null;
       const fearGreed=n(fg?.value);
@@ -152,6 +160,7 @@ export default {
       return json({
         ok:true,
         btcDominance,
+        btcDominanceSource:(n(cmcLatestR.body?.data?.btc_dominance)>1?'CoinMarketCap':'Alternative.me'),
         btcDominanceHistory:domHist,
         dominanceHistoryStatus:domHistoryStatus,
         mayerMultiple:n(mayerPayload?.current),

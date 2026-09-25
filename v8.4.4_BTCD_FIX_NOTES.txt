@@ -1,0 +1,9 @@
+v8.4.4
+- BTC.D는 CoinGecko만 사용.
+- Alternative.me / CoinMarketCap BTC.D fallback 제거.
+- CoinGecko API 실패 시 CoinGecko 공개 BTC Dominance 페이지로 같은 공급자 fallback.
+- Today/7D/1M/3M/1Y 실제 체크포인트로 즉시 추세/그래프 표시.
+- 7일/30일/3개월/1년 변화(%p) 표시.
+- CoinGecko 둘 다 실패하면 잘못된 숫자 대신 — 표시.
+- CMC_API_KEY는 BTC.D에 불필요.
+배포: index.html, docs/index.html, worker.js 교체 후 Ctrl+F5.

@@ -48,6 +48,32 @@ async function fetchJson(url, ms = 5000) {
   }
 }
 
+
+async function fetchText(url, ms = 8000) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
+  try {
+    const r = await fetch(url, {headers:{
+      "Accept":"text/html,application/xhtml+xml",
+      "User-Agent":"Mozilla/5.0 (compatible; BTC-ALT-REGIME-TRADER/8.4.4)"
+    },signal:c.signal});
+    return {ok:r.ok,status:r.status,body:r.ok?await r.text():""};
+  } catch(e) { return {ok:false,status:0,error:String(e?.message||e),body:""}; }
+  finally { clearTimeout(t); }
+}
+function parseCoinGeckoDominancePage(html) {
+  if(!html) return null;
+  const text=html.replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ")
+    .replace(/<[^>]+>/g," ").replace(/&nbsp;|&#160;/g," ").replace(/&amp;/g,"&").replace(/\s+/g," ").trim();
+  const row=text.match(/\bBTC\s+(\d{1,2}(?:\.\d+)?)%\s+(\d{1,2}(?:\.\d+)?)%\s+(\d{1,2}(?:\.\d+)?)%\s+(\d{1,2}(?:\.\d+)?)%\s+(\d{1,2}(?:\.\d+)?)%/i);
+  if(row){
+    const v=row.slice(1,6).map(Number);
+    if(v.every(x=>x>20&&x<90)) return {today:v[0],d7:v[1],m1:v[2],m3:v[3],y1:v[4]};
+  }
+  const sentence=text.match(/Bitcoin dominance of\s+(\d{1,2}(?:\.\d+)?)%/i);
+  if(sentence){const x=Number(sentence[1]); if(x>20&&x<90)return {today:x};}
+  return null;
+}
+
 export default {
   async fetch(req, env) {
     const u = new URL(req.url);
@@ -79,37 +105,25 @@ export default {
       if (req.method !== "POST" && req.method !== "GET") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
       const n=v=>{const x=Number(v);return Number.isFinite(x)?x:null};
 
-      // Current BTC dominance and 30-day Fear & Greed are public/no-key sources.
-      const [cgR,cmcLatestR,altR,fngR]=await Promise.all([
+      // BTC.D is CoinGecko-only. Do NOT substitute a different provider's methodology.
+      const [cgApiR,cgPageR,fngR]=await Promise.all([
         fetchJson("https://api.coingecko.com/api/v3/global",9000),
-        fetchJson("https://pro-api.coinmarketcap.com/public-api/v1/global-metrics/quotes/latest",9000),
-        fetchJson("https://api.alternative.me/v2/global/",9000),
+        fetchText("https://www.coingecko.com/en/charts/bitcoin-dominance",9000),
         fetchJson("https://api.alternative.me/fng/?limit=30&format=json",9000)
       ]);
-
-      // BTC.D canonical source = CoinGecko global market_cap_percentage.btc.
-      // CMC/Alternative.me are validation only, because providers can use different universes/methodologies.
-      const cgDom=n(cgR.body?.data?.market_cap_percentage?.btc);
-      const cmcDom=n(cmcLatestR.body?.data?.btc_dominance);
-      let altDom=n(altR.body?.data?.bitcoin_percentage_of_market_cap);
-      if(altDom!==null && altDom>0 && altDom<=1) altDom*=100;
-
-      let btcDominance=null, btcDominanceSource="unavailable";
-      if(cgDom!==null && cgDom>1 && cgDom<100){
-        btcDominance=cgDom; btcDominanceSource="CoinGecko";
-      }else if(altDom!==null && altDom>1 && altDom<100){
-        btcDominance=altDom; btcDominanceSource="Alternative.me fallback";
+      const cgApiDom=n(cgApiR.body?.data?.market_cap_percentage?.btc);
+      const cgPage=parseCoinGeckoDominancePage(cgPageR.body);
+      const pageDom=n(cgPage?.today);
+      let btcDominance=null, btcDominanceSource="CoinGecko unavailable";
+      if(cgApiDom!==null && cgApiDom>20 && cgApiDom<90){
+        btcDominance=cgApiDom; btcDominanceSource="CoinGecko API";
+      } else if(pageDom!==null && pageDom>20 && pageDom<90){
+        btcDominance=pageDom; btcDominanceSource="CoinGecko";
       }
-      const crossCheck={
-        coingecko:cgDom,
-        coinmarketcap:cmcDom,
-        alternative:altDom,
-        cmcGap:(cgDom!==null&&cmcDom!==null)?Math.abs(cgDom-cmcDom):null
-      };
-      if(env.CMC_API_KEY && cmcDom!==null && cmcDom>1 && cmcDom<100){
-        btcDominance=cmcDom;
-        btcDominanceSource="CoinMarketCap";
-      }
+      const btcDominanceSnapshots=cgPage?{
+        today:n(cgPage.today),d7:n(cgPage.d7),m1:n(cgPage.m1),m3:n(cgPage.m3),y1:n(cgPage.y1)
+      }:null;
+      const crossCheck={coingeckoApi:cgApiDom,coingeckoPage:pageDom,apiStatus:cgApiR.status,pageStatus:cgPageR.status};
       const fgRows=Array.isArray(fngR.body?.data)?fngR.body.data:[];
       const fg=fgRows[0]||null;
       const fearGreed=n(fg?.value);
@@ -158,31 +172,18 @@ export default {
         }
       }
 
-      // BTC.D history: use CMC historical API only when the owner configures CMC_API_KEY.
-      // This avoids fabricating history or scraping unstable HTML. One year is enough to see current capital rotation.
+      // No mixed-provider history. Real CoinGecko checkpoints are returned immediately.
       let domHist=[];
-      let domHistoryStatus="not-configured";
-      // Historical series must use the SAME provider as the displayed current value.
-      // With a CMC_API_KEY we use CMC for both current + history; without it, we never splice CMC history onto CoinGecko.
-      if(env.CMC_API_KEY){
-        const end=new Date(),start=new Date(end.getTime()-366*86400000);
-        const url=`https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/historical?time_start=${encodeURIComponent(start.toISOString())}&time_end=${encodeURIComponent(end.toISOString())}&interval=1d&count=367&aux=btc_dominance`;
-        const rr=await fetch(url,{headers:{"X-CMC_PRO_API_KEY":env.CMC_API_KEY,"Accept":"application/json"}});
-        domHistoryStatus=String(rr.status);
-        if(rr.ok){
-          const jb=await rr.json();
-          const data=Array.isArray(jb?.data?.quotes)?jb.data.quotes:Array.isArray(jb?.data)?jb.data:[];
-          domHist=data.map(x=>n(x?.btc_dominance ?? x?.quote?.USD?.btc_dominance ?? x?.btcDominance)).filter(x=>x!==null);
-        }
-      }
+      let domHistoryStatus=btcDominanceSnapshots?"coingecko-checkpoints":"coingecko-unavailable";
 
       return json({
         ok:true,
         btcDominance,
         btcDominanceSource,
         btcDominanceCrossCheck:crossCheck,
+        btcDominanceSnapshots,
         btcDominanceHistory:domHist,
-        btcDominanceHistoryLabel:domHist.length>1?"CoinMarketCap 1년":"실측 누적",
+        btcDominanceHistoryLabel:btcDominanceSnapshots?"CoinGecko 체크포인트":"실측 누적",
         dominanceHistoryStatus:domHistoryStatus,
         mayerMultiple:n(mayerPayload?.current),
         mayerHistory:Array.isArray(mayerPayload?.history)?mayerPayload.history:[],

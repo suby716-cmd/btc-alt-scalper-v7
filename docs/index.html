@@ -1107,6 +1107,9 @@ async function loadMarketUpbit(){
     if(!r.ok)throw Error('Upbit '+r.status);
     const rows=await r.json();
     rows.forEach(x=>{const c=MARKET_COINS.find(v=>v[2]===x.market);if(!c)return;MARKET_DATA[c[0]]={...(MARKET_DATA[c[0]]||{}),price:+x.trade_price,change24:+x.signed_change_rate*100,changePrice:+x.signed_change_price,volume24:+x.acc_trade_volume_24h,updated:+x.timestamp}});
+    // 상단 BTC 가격은 Regime 재분석을 기다리지 않고 Upbit 실시간 ticker로 즉시 갱신
+    const liveBtc=Number(MARKET_DATA?.BTC?.price);
+    if(Number.isFinite(liveBtc)) $('btc').textContent=money(liveBtc);
     renderMarketList();updateMarketSelected();
   }catch(e){console.warn('market Upbit:',e.message)}
 }
@@ -1206,11 +1209,12 @@ async function runLocalRegimeScan(showLog=true){
 }
 
 loadRSCandles();
-setInterval(loadMarketUpbit,5000);
+setInterval(loadMarketUpbit,3000);
 setInterval(loadMarketBinance,10000);
 setInterval(loadMarketFx,600000);
 setInterval(loadMarketCharts,600000);
 setInterval(loadRSCandles,60000);
+// 상단 BTC 가격은 3초 ticker, 5분봉 기반 RSI/5m/Regime은 별도 분석 주기를 유지합니다.
 
 function drawMacroSpark(id, values, opts={}){
   const c=$(id); if(!c) return;

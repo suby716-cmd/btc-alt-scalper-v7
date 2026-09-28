@@ -10,7 +10,7 @@
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
 
-.regime-layout{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(480px,1fr);gap:12px;margin-top:11px}
+.regime-layout{display:grid;grid-template-columns:1fr;gap:12px;margin-top:11px}
 .regime-title{font-size:17px;font-weight:800;margin-bottom:10px}.regime-title span{font-size:11px;color:var(--muted);font-weight:500}
 .regime-top{display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:8px}.regime-card,.indicator-card{padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
 .regime-label{font-size:11px;color:var(--muted)}.regime-state{font-size:21px;font-weight:800;color:var(--green);margin-top:3px}.regime-small{font-size:11px;color:var(--muted);margin-top:2px}
@@ -20,9 +20,9 @@
 .badge{display:inline-block;padding:2px 6px;border-radius:999px;border:1px solid var(--line);font-size:11px}.badge.buy{background:#e9f8ef;border-color:#b7e3c5;color:var(--green)}.badge.watch{background:#fff7e6;color:var(--yellow)}
 .badge.sell{background:#fff0f0;color:#c62828;border-color:#ffc9c9}
 .rs-title{font-size:17px;font-weight:800}.rs-title span{font-size:11px;color:var(--muted);font-weight:500}.live-dot{float:right;color:var(--green)!important;font-size:11px!important}
-.rs-controls{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.rs-controls select{padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
-.rs-note{margin-top:8px}.rs-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:11px;color:var(--muted)}.rs-chart{width:100%;height:390px;margin-top:7px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff}
-@media(max-width:1150px){.regime-layout{grid-template-columns:1fr}.regime-top{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.regime-top{grid-template-columns:1fr 1fr}.engine-indicators{grid-template-columns:1fr 1fr}.rs-chart{height:300px}}
+.rs-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}.rs-controls select{padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.rs-note{margin-top:8px}.rs-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:11px;color:var(--muted)}.rs-chart{width:100%;height:620px;margin-top:7px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff}
+@media(max-width:1150px){.regime-top{grid-template-columns:repeat(2,1fr)}.rs-controls{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:650px){.regime-top{grid-template-columns:1fr 1fr}.engine-indicators{grid-template-columns:1fr 1fr}.rs-controls{grid-template-columns:1fr 1fr}.rs-chart{height:420px}}
 
 .workspace{display:grid;grid-template-columns:460px minmax(0,1fr);gap:12px;align-items:start}
 .maincol{min-width:0}
@@ -243,8 +243,18 @@
         <div class="rs-slot"><input type="checkbox" id="rsShow8" checked title="차트 표시/숨김"><select id="rsCoin8"></select></div>
         <div class="rs-slot"><input type="checkbox" id="rsShow9" checked title="차트 표시/숨김"><select id="rsCoin9"></select></div>
         <div class="rs-slot"><input type="checkbox" id="rsShow10" checked title="차트 표시/숨김"><select id="rsCoin10"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow11" checked title="차트 표시/숨김"><select id="rsCoin11"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow12" checked title="차트 표시/숨김"><select id="rsCoin12"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow13" checked title="차트 표시/숨김"><select id="rsCoin13"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow14" checked title="차트 표시/숨김"><select id="rsCoin14"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow15" checked title="차트 표시/숨김"><select id="rsCoin15"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow16" checked title="차트 표시/숨김"><select id="rsCoin16"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow17" checked title="차트 표시/숨김"><select id="rsCoin17"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow18" checked title="차트 표시/숨김"><select id="rsCoin18"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow19" checked title="차트 표시/숨김"><select id="rsCoin19"></select></div>
+        <div class="rs-slot"><input type="checkbox" id="rsShow20" checked title="차트 표시/숨김"><select id="rsCoin20"></select></div>
       </div><div class="rs-toolbar"><button id="rsShowAll">전체 표시</button><button id="rsHideAll">전체 숨김</button></div>
-      <div class="small rs-note">체크한 코인만 표시 · 첫 시점 = 100 · 각 코인의 최근 5분 수익률 흐름을 BTC와 같은 기준으로 비교합니다.</div>
+      <div class="small rs-note">20개 코인까지 선택 가능 · 체크한 코인만 표시 · 첫 시점 = 100 · 각 코인의 최근 5분 수익률 흐름을 BTC와 같은 기준으로 비교합니다.</div>
       <div class="rs-legend" id="rsLegend"></div>
       <canvas id="rsChart" class="rs-chart" aria-label="BTC/ALT 최근 5분 상대강도 차트"></canvas>
     </section>
@@ -1031,12 +1041,12 @@ async function loadMarketCharts(){
 
 function rsSymbols(){return [...new Set(['BTC',...MARKET_COINS.map(c=>c[0])])];}
 let rsSeries={};
-const RS_PALETTE=['#1976d2','#d93025','#0f9d58','#7c3aed','#f59e0b','#0891b2','#db2777','#65a30d','#ea580c','#475569'];
+const RS_PALETTE=['#1976d2','#d93025','#0f9d58','#7c3aed','#f59e0b','#0891b2','#db2777','#65a30d','#ea580c','#475569','#2563eb','#be123c','#15803d','#9333ea','#ca8a04','#0e7490','#be185d','#4d7c0f','#c2410c','#334155'];
 
 function initRSControls(preserve=false){
-  const defaults=['BTC','ETH','SOL','XRP','HBAR','ONDO','LINK','UNI','AAVE','NEAR'];
+  const defaults=['BTC','ETH','SOL','XRP','HBAR','ONDO','LINK','UNI','AAVE','NEAR','ALGO','APT','ICP','XLM','ADA','GRT','AVAX','DOGE','SUI','TAO'];
   const symbols=rsSymbols();
-  for(let i=1;i<=10;i++){
+  for(let i=1;i<=20;i++){
     const el=$('rsCoin'+i); if(!el)continue;
     const old=preserve?el.value:'';
     el.innerHTML=symbols.map(sym=>`<option value="${sym}">${sym} · ${COIN_NAME_MAP[sym]||sym}</option>`).join('');
@@ -1051,7 +1061,7 @@ function initRSControls(preserve=false){
   }
 }
 async function loadRSCandles(){
-  const targets=[...new Set(Array.from({length:10},(_,i)=>$('rsCoin'+(i+1))?.value).filter(Boolean))];
+  const targets=[...new Set(Array.from({length:20},(_,i)=>$('rsCoin'+(i+1))?.value).filter(Boolean))];
   const out={};
   for(const sym of targets){
     try{
@@ -1071,7 +1081,7 @@ function drawRSChart(){
   const w=Math.max(300,Math.floor(rect.width||520)),h=Math.max(220,Math.floor(rect.height||260));
   c.width=Math.floor(w*dpr);c.height=Math.floor(h*dpr);
   const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
-  const syms=Array.from({length:10},(_,i)=>$('rsShow'+(i+1))?.checked?$('rsCoin'+(i+1))?.value:null).filter(Boolean);
+  const syms=Array.from({length:20},(_,i)=>$('rsShow'+(i+1))?.checked?$('rsCoin'+(i+1))?.value:null).filter(Boolean);
   if(!syms.length||!Object.keys(rsSeries).length){ctx.fillStyle='#64748b';ctx.font='12px Arial';ctx.fillText('상대강도 차트 대기중…',16,28);return;}
   const left=44,right=138,top=18,bottom=30;
   const all=syms.flatMap(sym=>rsSeries[sym]||[]),min=Math.min(0,...all),max=Math.max(0,...all),range=(max-min)||1;
@@ -1124,8 +1134,8 @@ function calcMarketPremium(){
 async function refreshMarket(){await Promise.allSettled([loadMarketUpbit(),loadMarketBinance(),loadMarketFx()]);calcMarketPremium()}
 $('marketSearch')?.addEventListener('input',renderMarketList);
 
-$('rsShowAll')?.addEventListener('click',()=>{for(let i=1;i<=10;i++){const c=$('rsShow'+i);if(c){c.checked=true;localStorage.setItem('rsShow'+i,'1')}}drawRSChart();});
-$('rsHideAll')?.addEventListener('click',()=>{for(let i=1;i<=10;i++){const c=$('rsShow'+i);if(c){c.checked=false;localStorage.setItem('rsShow'+i,'0')}}drawRSChart();});
+$('rsShowAll')?.addEventListener('click',()=>{for(let i=1;i<=20;i++){const c=$('rsShow'+i);if(c){c.checked=true;localStorage.setItem('rsShow'+i,'1')}}drawRSChart();});
+$('rsHideAll')?.addEventListener('click',()=>{for(let i=1;i<=20;i++){const c=$('rsShow'+i);if(c){c.checked=false;localStorage.setItem('rsShow'+i,'0')}}drawRSChart();});
 
 $('marketAddBtn')?.addEventListener('click',addMarketCoin);
 $('marketAddSymbol')?.addEventListener('keydown',e=>{if(e.key==='Enter')addMarketCoin();});

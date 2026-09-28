@@ -113,6 +113,42 @@
  .macro-context{min-height:0}
  .macro-spark-lg{height:64px!important;min-height:64px!important}
 }
+/* ===== 순환매 레이더 ===== */
+.rot-note{margin-top:6px}
+.rot-verdict{margin-top:10px;padding:11px 13px;border:1px solid var(--line);border-left:5px solid #94a3b8;border-radius:10px;background:var(--panel2)}
+.rot-verdict b{font-size:16px}.rot-verdict .small{margin-top:3px}
+.rot-verdict.inflow{border-left-color:var(--violet);background:#f6f2ff}
+.rot-verdict.exit{border-left-color:var(--red);background:#fff5f5}
+.rot-verdict.lead{border-left-color:var(--green);background:#f1faf5}
+.rot-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.rot-bar button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer}
+.rot-bar button.on{background:#eef2ff;border-color:#a5b4fc;font-weight:700}
+.rot-bar button:disabled{opacity:.5;cursor:wait}
+.rot-bar .rot-gap{flex:1}
+.rot-error{margin-top:8px;padding:8px 10px;border:1px solid #ffc9c9;background:#fff0f0;border-radius:8px;color:#b42318;font-size:12px}
+.rot-btc{margin-top:8px;font-size:12px;color:var(--muted)}
+.rot-table{width:100%;min-width:900px;border-collapse:collapse;margin-top:8px}
+.rot-table th{font-size:11px;color:var(--muted);font-weight:700;text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rot-table td{padding:8px;border-bottom:1px solid #eef1f5;text-align:right;white-space:nowrap;vertical-align:middle}
+.rot-table th:first-child,.rot-table td:first-child{text-align:left}
+.rot-table th:last-child,.rot-table td:last-child{text-align:center}
+.rot-coin b{font-size:13px}.rot-coin span{display:block;font-size:11px;color:var(--muted)}
+.rot-score{display:inline-block;min-width:96px;text-align:left}
+.rot-score b{font-size:15px}
+.rot-score i{display:block;height:4px;border-radius:3px;background:#e5e7eb;margin:3px 0 2px;overflow:hidden}
+.rot-score i u{display:block;height:100%;border-radius:3px;text-decoration:none}
+.rot-score small{font-size:10px;color:var(--muted)}
+.rot-tr-up{color:var(--red)}.rot-tr-down{color:var(--blue)}
+.rot-badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid var(--line);background:#f8fafc;color:var(--muted)}
+.rot-badge.inflow{background:#f3ecff;border-color:#d8c5ff;color:#6d28d9}
+.rot-badge.strong{background:#e9f8ef;border-color:#b7e3c5;color:var(--green)}
+.rot-badge.hold{background:#eef6ff;border-color:#c5dcf7;color:#1d5fa8}
+.rot-badge.exit{background:#fff0f0;border-color:#ffc9c9;color:#c62828}
+.rot-row-fail td{color:var(--muted);background:#fafafa}
+.rot-foot{margin-top:8px}
+.rot-details{margin-top:8px;font-size:12px;color:var(--muted)}
+.rot-details summary{cursor:pointer;font-weight:700}
+.rot-details ul{margin:6px 0 0;padding-left:18px}
 </style>
 </head>
 <body>
@@ -230,6 +266,37 @@
       </div>
     </section>
 
+    <section class="panel rot-panel" id="rotPanel">
+      <div class="rs-title">🔄 순환매 레이더 · BTC 대비 자금 이동 <span>(추세와 순환매를 분리해서 봅니다)</span><span class="live-dot" id="rotLive">● 대기</span></div>
+      <div class="small rot-note">강한 코인이 계속 오르면 추세 점수를 유지하고, 후발 코인의 상대강도·거래량 점유율이 함께 올라올 때만 순환매 유입으로 표시합니다. 매수/매도 신호가 아니라 수동 판단용 관찰 신호이며, Worker의 BUY/SELL 로직에는 영향을 주지 않습니다.</div>
+      <div class="rot-verdict" id="rotVerdict"><b>데이터 수집중…</b><div class="small">BTC와 10개 코인의 5분·1시간 캔들을 불러오는 중입니다. 처음에는 10초 안팎 걸릴 수 있습니다.</div></div>
+      <div class="rot-bar">
+        <button id="rotRefreshBtn" type="button">순환매 새로고침</button>
+        <button type="button" data-rot-sort="state" class="on">판정순</button>
+        <button type="button" data-rot-sort="trend">추세순</button>
+        <button type="button" data-rot-sort="rot">순환매순</button>
+        <span class="rot-gap"></span>
+        <span class="small" id="rotStatus">—</span>
+      </div>
+      <div class="rot-error" id="rotError" hidden></div>
+      <div class="rot-btc" id="rotBtc"></div>
+      <div class="regime-table-wrap">
+        <table class="rot-table">
+          <thead><tr><th>코인</th><th>추세</th><th>순환매</th><th>1시간 BTC대비</th><th>4시간 BTC대비</th><th>24시간 BTC대비</th><th>5분 BTC상회</th><th>거래량 점유율</th><th>판정</th></tr></thead>
+          <tbody id="rotBody"><tr><td colspan="9" class="small" style="text-align:center;padding:16px">수집중…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="small rot-foot">추적군 거래량 점유율 = 레이더에 등록된 10개 코인 사이의 상대 비중입니다(전체 시장 점유율 아님, BTC 제외). 괄호 안 수치는 최근 24시간 시간당 평균 대비 변화(%p)입니다. 점수 흐름(94→96→98)은 이 브라우저가 열려 있는 동안 5분마다 기록됩니다.</div>
+      <details class="rot-details"><summary>점수와 판정 기준</summary>
+        <ul>
+          <li>추세 점수 = 24h·4h·1h BTC 대비 상대강도, 5분봉 BTC 상회 횟수, 24h 절대 상승률을 합산. 코인이 계속 오르면 유지됩니다.</li>
+          <li>순환매 점수 = 최근 1시간 상대강도의 가속, 거래량 점유율 증가, 거래량 급증, 5분봉 BTC 상회 횟수를 합산.</li>
+          <li>순환매 유입: 순환매 65점 이상, 1h 상대강도 플러스, 5분 BTC 상회 8/12 이상, 점유율 증가, 추세 80 미만(후발).</li>
+          <li>이탈 경고: 추세 60 이상이던 코인이 1h 상대강도가 꺾이고 점유율이 줄 때. 강한 추세: 추세 80 이상. 추세 유지: 60 이상.</li>
+        </ul>
+      </details>
+    </section>
+
     <section class="panel rs-panel">
       <div class="rs-title">📈 BTC / ALT 상대강도 <span>(최근 5분)</span><span class="live-dot">● LIVE</span></div>
       <div class="rs-controls">
@@ -264,7 +331,7 @@
 </div>
 
 <script>
-const VERSION='v8.4.4';
+const VERSION='v8.5.0-rotation';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -1204,6 +1271,238 @@ async function runLocalRegimeScan(showLog=true){
     throw e;
   }
 }
+
+/* =========================================================
+   순환매 레이더 · BTC 대비 자금 이동 (브라우저 계산, Worker /upbit 프록시 사용)
+   - Worker BUY/SELL 로직과 무관. 화면 관찰용.
+   ========================================================= */
+const ROT_COINS=[['NEAR','니어'],['AAVE','에이브'],['TAO','비트텐서'],['UNI','유니스왑'],['ONDO','온도'],['XLM','스텔라루멘'],['HBAR','헤데라'],['XRP','엑스알피'],['ADA','에이다'],['POL','폴리곤']];
+const ROT_REFRESH_MS=5*60*1000,ROT_HIST_KEY='rotHistV1',ROT_HIST_MAX=36;
+const ROT_STATE={INFLOW:{txt:'🔄 순환매 유입',cls:'inflow',ord:0},EXIT:{txt:'⚠ 이탈 경고',cls:'exit',ord:1},STRONG:{txt:'🔥 강한 추세',cls:'strong',ord:2},HOLD:{txt:'추세 유지',cls:'hold',ord:3},WATCH:{txt:'관망',cls:'',ord:4}};
+let rotBusy=false,rotLast=null,rotLastOkAt=0,rotNextAt=Date.now()+ROT_REFRESH_MS,rotSort=localStorage.getItem('rotSortV1')||'state';
+const rotClamp=(x,a=0,b=100)=>Math.max(a,Math.min(b,x));
+const rotSc=(x,k)=>rotClamp(50+50*Math.tanh(x/k));
+const rotStart=c=>new Date(c.candle_date_time_utc+'Z').getTime();
+const rotPct=x=>x==null||!Number.isFinite(x)?'—':(x>0?'+':'')+x.toFixed(2)+'%';
+const rotHM=t=>new Date(t).toLocaleTimeString('ko-KR',{hour12:false});
+
+function rotFriendly(e){
+  const m=String(e?.message||e||'');
+  if(/^Worker URL/.test(m))return m;
+  if(/Failed to fetch|NetworkError|Load failed/i.test(m))return 'Worker에 연결하지 못했습니다. Worker URL이 맞는지, Worker가 배포되어 있는지 확인하세요.';
+  if(/invalid path|HTTP 404/i.test(m))return 'Worker에 /upbit 경로가 없습니다. 최신 worker.js를 다시 배포하세요.';
+  return m;
+}
+async function rotUpbit(path,tries=3){
+  let last;
+  for(let i=0;i<tries;i++){
+    try{
+      const base=workerBase();
+      const ctrl=new AbortController(),t=setTimeout(()=>ctrl.abort(),10000);
+      let r,txt;
+      try{r=await fetch(base+'/upbit?path='+encodeURIComponent(path),{cache:'no-store',signal:ctrl.signal});txt=await r.text();}
+      finally{clearTimeout(t);}
+      let d;try{d=JSON.parse(txt)}catch{throw Error('Worker가 JSON이 아닌 응답을 보냈습니다 (HTTP '+r.status+')')}
+      if(r.status===429)throw Error('Upbit 요청 제한(429)');
+      if(!r.ok)throw Error((d&&(d.error?.message||d.error))||('HTTP '+r.status));
+      if(!Array.isArray(d)||!d.length)throw Error('캔들 데이터가 비어 있습니다');
+      return d;
+    }catch(e){
+      if(/^Worker URL/.test(e.message))throw e;
+      last=e.name==='AbortError'?Error('응답 시간초과'):e;
+      if(i<tries-1)await sparkWait(500*(i+1));
+    }
+  }
+  throw last;
+}
+async function rotLoadCoin(sym){
+  const m='KRW-'+sym;
+  const c5=await rotUpbit('/v1/candles/minutes/5?market='+m+'&count=50');
+  await sparkWait(130);
+  const c60=await rotUpbit('/v1/candles/minutes/60?market='+m+'&count=27');
+  return {c5,c60};
+}
+function rotPriceAgo(c,ms,span,refNow){
+  const target=refNow-ms;
+  for(const x of c){if(rotStart(x)+span<=target)return +x.trade_price}
+  return null;
+}
+function rotReturns(d,refNow){
+  const now=+d.c5[0].trade_price;
+  const f=p=>p?(now/p-1)*100:null;
+  return {r1:f(rotPriceAgo(d.c5,3600e3,300e3,refNow)),r4:f(rotPriceAgo(d.c5,4*3600e3,300e3,refNow)),r24:f(rotPriceAgo(d.c60,24*3600e3,3600e3,refNow))};
+}
+/* 순수 계산: btc={c5,c60}, data={SYM:{c5,c60}|{error}} → 행 배열 */
+function rotCompute(btc,data,coins){
+  const refNow=rotStart(btc.c5[0])+300e3;
+  const b=rotReturns(btc,refNow);
+  const bMap=new Map(btc.c5.map(x=>[rotStart(x),x]));
+  const barStarts=btc.c5.slice(1,13).map(rotStart);
+  const rows=coins.map(([sym,name])=>{
+    const d=data[sym];
+    if(!d||d.error)return {sym,name,ok:false,error:d?.error||'데이터 없음'};
+    const r=rotReturns(d,refNow);
+    if(r.r1==null||r.r4==null||r.r24==null)return {sym,name,ok:false,error:'캔들 부족(거래 공백)'};
+    const cMap=new Map(d.c5.map(x=>[rotStart(x),x]));
+    let wins=0;
+    for(const t of barStarts){
+      const bb=bMap.get(t),cc=cMap.get(t);if(!bb)continue;
+      const br=bb.trade_price/bb.opening_price-1,cr=cc?cc.trade_price/cc.opening_price-1:0;
+      if(cr>br)wins++;
+    }
+    const cutoff=refNow-3600e3;
+    const vNow=d.c5.filter(x=>rotStart(x)>=cutoff).reduce((s,x)=>s+(+x.candle_acc_trade_price||0),0);
+    const vBase=d.c60.slice(1,25).reduce((s,x)=>s+(+x.candle_acc_trade_price||0),0);
+    return {sym,name,ok:true,r1:r.r1,r4:r.r4,r24:r.r24,rel1:r.r1-b.r1,rel4:r.r4-b.r4,rel24:r.r24-b.r24,wins,vNow,vBase};
+  });
+  const ok=rows.filter(x=>x.ok);
+  const totNow=ok.reduce((s,x)=>s+x.vNow,0),totBase=ok.reduce((s,x)=>s+x.vBase,0);
+  ok.forEach(x=>{
+    x.shareNow=totNow>0?x.vNow/totNow*100:0;
+    x.shareBase=totBase>0?x.vBase/totBase*100:0;
+    x.shareDelta=x.shareNow-x.shareBase;
+    const hourly=x.vBase/24;
+    x.volSurge=hourly>0?x.vNow/hourly:1;
+    const win=x.wins/12*100;
+    x.trend=Math.round(.30*rotSc(x.rel24,4)+.25*rotSc(x.rel4,1.5)+.15*rotSc(x.rel1,.7)+.15*win+.15*rotSc(x.r24,6));
+    x.rot=Math.round(.30*rotSc(x.rel1-x.rel4/4,.5)+.20*rotSc(x.rel4-x.rel24/6,1)+.25*rotSc(x.shareDelta,3)+.15*win+.10*rotSc(x.volSurge-1,1));
+    x.state=rotJudge(x);
+  });
+  return {btc:b,rows};
+}
+function rotJudge(x){
+  if(x.trend>=60){
+    if(x.trend>=80&&((x.rel1<-.4&&x.rel4<0)||(x.shareDelta<-2&&x.rot<40)))return 'EXIT';
+    if(x.trend<80&&x.rel1<0&&x.shareDelta<-2&&x.rot<40)return 'EXIT';
+  }
+  if(x.trend>=80)return 'STRONG';
+  if(x.rot>=65&&x.rel1>0&&x.wins>=8&&x.shareDelta>0)return 'INFLOW';
+  if(x.trend>=60)return 'HOLD';
+  return 'WATCH';
+}
+/* 점수 흐름 기록 (이 브라우저 localStorage) */
+function rotHistLoad(){try{return JSON.parse(localStorage.getItem(ROT_HIST_KEY)||'{}')||{}}catch{return {}}}
+function rotHistSave(h){try{localStorage.setItem(ROT_HIST_KEY,JSON.stringify(h))}catch{}}
+function rotHistPush(h,rows){
+  const now=Date.now();
+  rows.filter(x=>x.ok).forEach(x=>{
+    const a=h[x.sym]=(h[x.sym]||[]).filter(s=>now-s.t<ROT_HIST_MAX*ROT_REFRESH_MS);
+    const s={t:now,tr:x.trend,ro:x.rot};
+    if(a.length&&now-a[a.length-1].t<240000)a[a.length-1]=s;else a.push(s);
+  });
+}
+function rotTrail(h,sym,key){
+  const now=Date.now();
+  return (h[sym]||[]).filter(s=>now-s.t<=25*60000).slice(-3).map(s=>s[key]);
+}
+function rotArrow(t){
+  if(t.length<2)return '';
+  const d=t[t.length-1]-t[0];
+  return d>=4?'<span class="rot-tr-up">▲</span>':d<=-4?'<span class="rot-tr-down">▼</span>':'';
+}
+function rotRising(t){return t.length>=2&&t[t.length-1]-t[0]>=4}
+
+function rotVerdictOf(rows,hist){
+  const ok=rows.filter(x=>x.ok);
+  if(ok.length<3)return {cls:'',title:'판정 보류',sub:'수집된 코인이 3개 미만이라 순환매를 판단하지 않습니다.'};
+  const lead=ok.filter(x=>x.state==='STRONG'||(x.state==='HOLD'&&x.trend>=70)).sort((a,b)=>b.trend-a.trend)[0];
+  const inflow=ok.filter(x=>x.state==='INFLOW').sort((a,b)=>b.rot-a.rot);
+  const exit=ok.filter(x=>x.state==='EXIT').sort((a,b)=>b.trend-a.trend);
+  const names=a=>a.map(x=>x.sym).join('/');
+  const tag=a=>a.map(x=>x.sym+' 순환매 '+(rotTrail(hist,x.sym,'ro').join('→')||x.rot)+(rotRising(rotTrail(hist,x.sym,'ro'))?' ▲':'')).join(' · ');
+  if(inflow.length&&exit.length)
+    return {cls:'inflow',title:'↔ '+names(exit)+'에서 '+names(inflow)+'(으)로 자금 이동 후보',sub:names(exit)+'는 상대강도와 거래량 점유율이 줄고, '+tag(inflow)+'. 한두 번 더 확인될 때까지 관찰하세요.'};
+  if(lead&&inflow.length)
+    return {cls:'inflow',title:'🔄 '+lead.sym+' 주도 상승 + '+names(inflow)+' 후발 순환매 유입',sub:lead.sym+' 추세 '+(rotTrail(hist,lead.sym,'tr').join('→')||lead.trend)+' 유지 · '+tag(inflow)+(inflow.some(x=>rotRising(rotTrail(hist,x.sym,'ro')))?'':' · 아직 초기 신호(점수 상승 확인 전)')};
+  if(exit.length)
+    return {cls:'exit',title:'⚠ '+names(exit)+' 이탈 경고',sub:'BTC 대비 힘이 약해지고 거래량 점유율이 줄고 있습니다. 후발 코인으로의 유입은 아직 확인되지 않았습니다.'};
+  if(lead)
+    return {cls:'lead',title:lead.sym+' 단독 주도 · 후발 확산은 아직 확인되지 않음',sub:lead.sym+' 추세 '+(rotTrail(hist,lead.sym,'tr').join('→')||lead.trend)+'. 강하다는 이유만으로 이탈로 보지 않습니다.'};
+  if(inflow.length)
+    return {cls:'inflow',title:'후발 순환매 후보: '+names(inflow),sub:'뚜렷한 주도 코인은 없습니다. '+tag(inflow)};
+  return {cls:'',title:'뚜렷한 순환 신호 없음',sub:'상대강도와 거래량 점유율이 함께 올라오는 코인이 아직 없습니다.'};
+}
+function rotScoreCell(v,trail,color){
+  return `<span class="rot-score"><b>${v}</b> ${rotArrow(trail)}<i><u style="width:${v}%;background:${color}"></u></i><small>${trail.length>=2?trail.join('→'):'&nbsp;'}</small></span>`;
+}
+function rotRender(res,hist,meta){
+  const ver=rotVerdictOf(res.rows,hist),vb=$('rotVerdict');
+  vb.className='rot-verdict'+(ver.cls?' '+ver.cls:'');
+  vb.innerHTML='<b></b><div class="small"></div>';
+  vb.firstChild.textContent=ver.title;vb.lastChild.textContent=ver.sub;
+  $('rotBtc').innerHTML=`BTC 기준 · 1시간 <span class="${marketCls(res.btc.r1)}">${rotPct(res.btc.r1)}</span> · 4시간 <span class="${marketCls(res.btc.r4)}">${rotPct(res.btc.r4)}</span> · 24시간 <span class="${marketCls(res.btc.r24)}">${rotPct(res.btc.r24)}</span>`;
+  const rows=res.rows.slice();
+  const key={state:(a,b)=>(a.ok?ROT_STATE[a.state].ord:9)-(b.ok?ROT_STATE[b.state].ord:9)||(b.rot||0)-(a.rot||0),trend:(a,b)=>(b.trend??-1)-(a.trend??-1),rot:(a,b)=>(b.rot??-1)-(a.rot??-1)}[rotSort]||null;
+  if(key)rows.sort(key);
+  $('rotBody').innerHTML=rows.map(x=>{
+    if(!x.ok)return `<tr class="rot-row-fail"><td class="rot-coin"><b>${x.sym}</b><span>${x.name}</span></td><td colspan="7" style="text-align:center" title="${String(x.error).replace(/"/g,'')}">수집 실패 · ${String(x.error).replace(/</g,'')}</td><td>—</td></tr>`;
+    const st=ROT_STATE[x.state];
+    const sh=`${x.shareNow.toFixed(1)}% <span class="${marketCls(x.shareDelta)}">(${x.shareDelta>0?'+':''}${x.shareDelta.toFixed(1)}%p)</span>`;
+    return `<tr><td class="rot-coin"><b>${x.sym}</b><span>${x.name}</span></td>
+<td>${rotScoreCell(x.trend,rotTrail(hist,x.sym,'tr'),'#0f9d58')}</td>
+<td>${rotScoreCell(x.rot,rotTrail(hist,x.sym,'ro'),'#7c3aed')}</td>
+<td class="${marketCls(x.rel1)}">${rotPct(x.rel1)}</td><td class="${marketCls(x.rel4)}">${rotPct(x.rel4)}</td><td class="${marketCls(x.rel24)}">${rotPct(x.rel24)}</td>
+<td>${x.wins}/12</td><td>${sh}</td>
+<td><span class="rot-badge ${st.cls}">${st.txt}</span></td></tr>`;
+  }).join('');
+}
+function rotSetStatus(){
+  const el=$('rotStatus');if(!el)return;
+  if(rotBusy)return;
+  const left=Math.max(0,Math.round((rotNextAt-Date.now())/1000));
+  const ok=rotLast?rotLast.rows.filter(x=>x.ok).length:0;
+  el.textContent=rotLastOkAt?`마지막 갱신 ${rotHM(rotLastOkAt)} · 수집 ${ok}/${ROT_COINS.length} · 다음 갱신 ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`:'아직 성공한 갱신이 없습니다';
+}
+function rotShowError(msg){const e=$('rotError');if(!e)return;if(msg){e.textContent=msg;e.hidden=false}else{e.hidden=true;e.textContent=''}}
+async function rotRefresh(manual=false){
+  if(rotBusy)return;
+  rotBusy=true;rotNextAt=Date.now()+ROT_REFRESH_MS;
+  const btn=$('rotRefreshBtn'),live=$('rotLive'),st=$('rotStatus');
+  if(btn)btn.disabled=true;
+  if(live){live.textContent='● 수집중';live.style.color='#b7791f'}
+  const total=ROT_COINS.length+1;let done=0;
+  const prog=()=>{if(st)st.textContent=`수집중 ${done}/${total}…`};prog();
+  try{
+    const btc=await rotLoadCoin('BTC');done++;prog();
+    const data={};let fails=0,firstErr='';
+    for(const [sym] of ROT_COINS){
+      try{data[sym]=await rotLoadCoin(sym)}
+      catch(e){fails++;const m=rotFriendly(e);if(!firstErr)firstErr=m;data[sym]={error:m};if(/^Worker URL/.test(m))throw e}
+      done++;prog();await sparkWait(130);
+    }
+    if(fails===ROT_COINS.length)throw Error(firstErr||'모든 코인 수집에 실패했습니다');
+    const res=rotCompute(btc,data,ROT_COINS);
+    const hist=rotHistLoad();rotHistPush(hist,res.rows);rotHistSave(hist);
+    rotLast=res;rotLastOkAt=Date.now();
+    rotRender(res,hist);
+    rotShowError(fails?`일부 코인 수집 실패 (${fails}/${ROT_COINS.length}): ${firstErr}. 다음 갱신에서 다시 시도합니다.`:'');
+    if(live){live.textContent='● LIVE';live.style.color=''}
+  }catch(e){
+    const msg=rotFriendly(e);
+    rotShowError('순환매 데이터 수집 오류: '+msg+(rotLast?` · 마지막 성공(${rotHM(rotLastOkAt)}) 데이터를 표시 중입니다.`:'')+' 잠시 후 자동으로 다시 시도합니다.');
+    if(!rotLast){$('rotVerdict').className='rot-verdict';$('rotVerdict').innerHTML='<b>데이터를 불러오지 못했습니다</b><div class="small">위 오류 메시지를 확인하세요.</div>';$('rotBody').innerHTML='<tr><td colspan="9" class="small" style="text-align:center;padding:16px">데이터 없음</td></tr>'}
+    if(live){live.textContent='● 오류';live.style.color='#d93025'}
+    rotNextAt=Date.now()+60000; // 실패 시 1분 뒤 재시도
+  }finally{
+    rotBusy=false;if(btn)btn.disabled=false;rotSetStatus();
+  }
+}
+function rotInit(){
+  if(!$('rotPanel'))return;
+  $('rotRefreshBtn').addEventListener('click',()=>rotRefresh(true));
+  document.querySelectorAll('[data-rot-sort]').forEach(b=>{
+    b.classList.toggle('on',b.dataset.rotSort===rotSort);
+    b.addEventListener('click',()=>{
+      rotSort=b.dataset.rotSort;localStorage.setItem('rotSortV1',rotSort);
+      document.querySelectorAll('[data-rot-sort]').forEach(x=>x.classList.toggle('on',x===b));
+      if(rotLast)rotRender(rotLast,rotHistLoad());
+    });
+  });
+  W?.addEventListener('change',()=>rotRefresh(true));
+  setInterval(()=>{if(!rotBusy&&Date.now()>=rotNextAt)rotRefresh();else rotSetStatus()},1000);
+  setTimeout(()=>rotRefresh(),800);
+}
+rotInit();
 
 loadRSCandles();
 setInterval(loadMarketUpbit,5000);

@@ -132,7 +132,7 @@
 .rot-table td{padding:8px;border-bottom:1px solid #eef1f5;text-align:right;white-space:nowrap;vertical-align:middle}
 .rot-table th:first-child,.rot-table td:first-child{text-align:left}
 .rot-table th:last-child,.rot-table td:last-child{text-align:center}
-.rot-coin b{font-size:13px}.rot-coin span{display:block;font-size:11px;color:var(--muted)}
+.rot-coin b{font-size:13px;display:inline}.rot-coin span{display:block;font-size:11px;color:var(--muted)}
 .rot-score{display:inline-block;min-width:96px;text-align:left}
 .rot-score b{font-size:15px}
 .rot-score i{display:block;height:4px;border-radius:3px;background:#e5e7eb;margin:3px 0 2px;overflow:hidden}
@@ -149,6 +149,14 @@
 .rot-details{margin-top:8px;font-size:12px;color:var(--muted)}
 .rot-details summary{cursor:pointer;font-weight:700}
 .rot-details ul{margin:6px 0 0;padding-left:18px}
+
+.rot-add{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.rot-add input{border:1px solid var(--line);border-radius:7px;padding:6px 9px;font-size:12px;width:220px;background:#fff;text-transform:uppercase}
+.rot-add input::placeholder{text-transform:none}
+.rot-add button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer}
+.rot-add button:disabled{opacity:.5;cursor:wait}
+.rot-del{border:0;background:transparent;color:#9aa4b2;font-size:15px;line-height:1;padding:0 4px;margin-left:4px;cursor:pointer;border-radius:4px}
+.rot-del:hover{color:var(--red);background:#fff0f0}
 </style>
 </head>
 <body>
@@ -269,7 +277,7 @@
     <section class="panel rot-panel" id="rotPanel">
       <div class="rs-title">🔄 순환매 레이더 · BTC 대비 자금 이동 <span>(추세와 순환매를 분리해서 봅니다)</span><span class="live-dot" id="rotLive">● 대기</span></div>
       <div class="small rot-note">강한 코인이 계속 오르면 추세 점수를 유지하고, 후발 코인의 상대강도·거래량 점유율이 함께 올라올 때만 순환매 유입으로 표시합니다. 매수/매도 신호가 아니라 수동 판단용 관찰 신호이며, Worker의 BUY/SELL 로직에는 영향을 주지 않습니다.</div>
-      <div class="rot-verdict" id="rotVerdict"><b>데이터 수집중…</b><div class="small">BTC와 10개 코인의 5분·1시간 캔들을 불러오는 중입니다. 처음에는 10초 안팎 걸릴 수 있습니다.</div></div>
+      <div class="rot-verdict" id="rotVerdict"><b>데이터 수집중…</b><div class="small">BTC와 등록된 코인의 5분·1시간 캔들을 불러오는 중입니다. 코인 수에 따라 10~30초 걸릴 수 있습니다.</div></div>
       <div class="rot-bar">
         <button id="rotRefreshBtn" type="button">순환매 새로고침</button>
         <button type="button" data-rot-sort="state" class="on">판정순</button>
@@ -277,6 +285,14 @@
         <button type="button" data-rot-sort="rot">순환매순</button>
         <span class="rot-gap"></span>
         <span class="small" id="rotStatus">—</span>
+      </div>
+      <div class="rot-add">
+        <input id="rotAddInput" list="rotCoinList" placeholder="추가할 코인 심볼 (예: SOL, DOGE)" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <datalist id="rotCoinList"></datalist>
+        <button id="rotAddBtn" type="button">코인 추가</button>
+        <button id="rotResetBtn" type="button">기본 10개로</button>
+        <span class="small">등록 <b id="rotCoinCount">—</b> · 행의 ×로 삭제 · 업비트 원화마켓 코인만 가능</span>
+        <span class="small" id="rotAddMsg"></span>
       </div>
       <div class="rot-error" id="rotError" hidden></div>
       <div class="rot-btc" id="rotBtc"></div>
@@ -286,7 +302,7 @@
           <tbody id="rotBody"><tr><td colspan="9" class="small" style="text-align:center;padding:16px">수집중…</td></tr></tbody>
         </table>
       </div>
-      <div class="small rot-foot">추적군 거래량 점유율 = 레이더에 등록된 10개 코인 사이의 상대 비중입니다(전체 시장 점유율 아님, BTC 제외). 괄호 안 수치는 최근 24시간 시간당 평균 대비 변화(%p)입니다. 점수 흐름(94→96→98)은 이 브라우저가 열려 있는 동안 5분마다 기록됩니다.</div>
+      <div class="small rot-foot">추적군 거래량 점유율 = 레이더에 등록된 <span data-rot-count>10</span>개 코인 사이의 상대 비중입니다(전체 시장 점유율 아님, BTC 제외). 코인을 추가·삭제하면 점유율 분모가 바뀌어 수치가 함께 달라집니다. 괄호 안 수치는 최근 24시간 시간당 평균 대비 변화(%p)입니다. 점수 흐름(94→96→98)은 이 브라우저가 열려 있는 동안 5분마다 기록됩니다.</div>
       <details class="rot-details"><summary>점수와 판정 기준</summary>
         <ul>
           <li>추세 점수 = 24h·4h·1h BTC 대비 상대강도, 5분봉 BTC 상회 횟수, 24h 절대 상승률을 합산. 코인이 계속 오르면 유지됩니다.</li>
@@ -331,7 +347,7 @@
 </div>
 
 <script>
-const VERSION='v8.5.0-rotation';
+const VERSION='v8.5.1-rotation';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -1276,7 +1292,17 @@ async function runLocalRegimeScan(showLog=true){
    순환매 레이더 · BTC 대비 자금 이동 (브라우저 계산, Worker /upbit 프록시 사용)
    - Worker BUY/SELL 로직과 무관. 화면 관찰용.
    ========================================================= */
-const ROT_COINS=[['NEAR','니어'],['AAVE','에이브'],['TAO','비트텐서'],['UNI','유니스왑'],['ONDO','온도'],['XLM','스텔라루멘'],['HBAR','헤데라'],['XRP','엑스알피'],['ADA','에이다'],['POL','폴리곤']];
+const ROT_DEFAULT_COINS=[['NEAR','니어'],['AAVE','에이브'],['TAO','비트텐서'],['UNI','유니스왑'],['ONDO','온도'],['XLM','스텔라루멘'],['HBAR','헤데라'],['XRP','엑스알피'],['ADA','에이다'],['POL','폴리곤']];
+const ROT_COINS_KEY='rotCoinsV1',ROT_MAX_COINS=30;
+let ROT_COINS=(()=>{
+  try{
+    const s=JSON.parse(localStorage.getItem(ROT_COINS_KEY)||'null');
+    if(Array.isArray(s)&&s.length&&s.every(x=>Array.isArray(x)&&/^[A-Z0-9]{2,10}$/.test(x[0])&&x[0]!=='BTC'))return s.slice(0,ROT_MAX_COINS).map(x=>[x[0],String(x[1]||x[0])]);
+  }catch(e){}
+  return ROT_DEFAULT_COINS.map(x=>x.slice());
+})();
+const rotSaveCoins=()=>{try{localStorage.setItem(ROT_COINS_KEY,JSON.stringify(ROT_COINS))}catch(e){}};
+let rotRaw=null,rotUniverse=null; // rotRaw={btc,data} 마지막 수집 원본, rotUniverse=Map(심볼→한글명)
 const ROT_REFRESH_MS=5*60*1000,ROT_HIST_KEY='rotHistV1',ROT_HIST_MAX=36;
 const ROT_STATE={INFLOW:{txt:'🔄 순환매 유입',cls:'inflow',ord:0},EXIT:{txt:'⚠ 이탈 경고',cls:'exit',ord:1},STRONG:{txt:'🔥 강한 추세',cls:'strong',ord:2},HOLD:{txt:'추세 유지',cls:'hold',ord:3},WATCH:{txt:'관망',cls:'',ord:4}};
 let rotBusy=false,rotLast=null,rotLastOkAt=0,rotNextAt=Date.now()+ROT_REFRESH_MS,rotSort=localStorage.getItem('rotSortV1')||'state';
@@ -1435,16 +1461,82 @@ function rotRender(res,hist,meta){
   const key={state:(a,b)=>(a.ok?ROT_STATE[a.state].ord:9)-(b.ok?ROT_STATE[b.state].ord:9)||(b.rot||0)-(a.rot||0),trend:(a,b)=>(b.trend??-1)-(a.trend??-1),rot:(a,b)=>(b.rot??-1)-(a.rot??-1)}[rotSort]||null;
   if(key)rows.sort(key);
   $('rotBody').innerHTML=rows.map(x=>{
-    if(!x.ok)return `<tr class="rot-row-fail"><td class="rot-coin"><b>${x.sym}</b><span>${x.name}</span></td><td colspan="7" style="text-align:center" title="${String(x.error).replace(/"/g,'')}">수집 실패 · ${String(x.error).replace(/</g,'')}</td><td>—</td></tr>`;
+    if(!x.ok)return `<tr class="rot-row-fail"><td class="rot-coin"><b>${x.sym}</b><button type="button" class="rot-del" data-rot-del="${x.sym}" title="목록에서 삭제">×</button><span>${x.name}</span></td><td colspan="7" style="text-align:center" title="${String(x.error).replace(/"/g,'')}">수집 실패 · ${String(x.error).replace(/</g,'')}</td><td>—</td></tr>`;
     const st=ROT_STATE[x.state];
     const sh=`${x.shareNow.toFixed(1)}% <span class="${marketCls(x.shareDelta)}">(${x.shareDelta>0?'+':''}${x.shareDelta.toFixed(1)}%p)</span>`;
-    return `<tr><td class="rot-coin"><b>${x.sym}</b><span>${x.name}</span></td>
+    return `<tr><td class="rot-coin"><b>${x.sym}</b><button type="button" class="rot-del" data-rot-del="${x.sym}" title="목록에서 삭제">×</button><span>${x.name}</span></td>
 <td>${rotScoreCell(x.trend,rotTrail(hist,x.sym,'tr'),'#0f9d58')}</td>
 <td>${rotScoreCell(x.rot,rotTrail(hist,x.sym,'ro'),'#7c3aed')}</td>
 <td class="${marketCls(x.rel1)}">${rotPct(x.rel1)}</td><td class="${marketCls(x.rel4)}">${rotPct(x.rel4)}</td><td class="${marketCls(x.rel24)}">${rotPct(x.rel24)}</td>
 <td>${x.wins}/12</td><td>${sh}</td>
 <td><span class="rot-badge ${st.cls}">${st.txt}</span></td></tr>`;
   }).join('');
+}
+
+/* ---- 코인 추가 / 삭제 ---- */
+async function rotLoadUniverse(){
+  if(rotUniverse)return rotUniverse;
+  const rows=await rotUpbit('/v1/market/all?is_details=false',2);
+  const m=new Map();
+  rows.forEach(x=>{if(/^KRW-/.test(x.market))m.set(x.market.slice(4),x.korean_name||x.market.slice(4))});
+  if(!m.size)throw Error('업비트 원화마켓 목록이 비어 있습니다');
+  rotUniverse=m;
+  const dl=$('rotCoinList');
+  if(dl)dl.innerHTML=[...m].filter(([s])=>s!=='BTC').map(([s,n])=>`<option value="${s}">${n}</option>`).join('');
+  return m;
+}
+function rotMsg(t,bad){const e=$('rotAddMsg');if(!e)return;e.textContent=t||'';e.style.color=bad?'#b42318':'var(--muted)'}
+function rotUpdateCount(){
+  const n=ROT_COINS.length;
+  document.querySelectorAll('[data-rot-count]').forEach(e=>e.textContent=n);
+  const c=$('rotCoinCount');if(c)c.textContent=`${n}/${ROT_MAX_COINS}`;
+}
+function rotRecompute(){
+  if(!rotRaw)return;
+  const res=rotCompute(rotRaw.btc,rotRaw.data,ROT_COINS);
+  const hist=rotHistLoad();rotHistPush(hist,res.rows);rotHistSave(hist);
+  rotLast=res;rotRender(res,hist);rotSetStatus();
+}
+async function rotAddCoin(){
+  const inp=$('rotAddInput');if(!inp)return;
+  const sym=inp.value.toUpperCase().replace(/^KRW-/,'').replace(/[^A-Z0-9]/g,'').trim();
+  if(!sym)return rotMsg('추가할 코인 심볼을 입력하세요. 예: SOL',true);
+  if(sym==='BTC')return rotMsg('BTC는 비교 기준이라 목록에 넣을 수 없습니다.',true);
+  if(ROT_COINS.some(x=>x[0]===sym))return rotMsg(sym+'은(는) 이미 목록에 있습니다.',true);
+  if(ROT_COINS.length>=ROT_MAX_COINS)return rotMsg(`최대 ${ROT_MAX_COINS}개까지 추가할 수 있습니다. 하나를 삭제한 뒤 추가하세요.`,true);
+  if(rotBusy)return rotMsg('수집 중입니다. 잠시 뒤 다시 추가하세요.',true);
+  const btn=$('rotAddBtn');btn.disabled=true;rotMsg(sym+' 확인 중…');
+  try{
+    let name=sym;
+    try{
+      const u=await rotLoadUniverse();
+      if(!u.has(sym)){rotMsg(sym+'은(는) 업비트 원화(KRW) 마켓에 없는 코인입니다.',true);return}
+      name=u.get(sym);
+    }catch(e){rotMsg('업비트 코인 목록을 확인하지 못했습니다: '+rotFriendly(e),true);return}
+    rotBusy=true;
+    let d;
+    try{d=await rotLoadCoin(sym)}
+    catch(e){rotBusy=false;rotMsg(sym+' 데이터를 불러오지 못했습니다: '+rotFriendly(e),true);return}
+    rotBusy=false;
+    ROT_COINS.push([sym,name]);rotSaveCoins();rotUpdateCount();inp.value='';
+    if(rotRaw){rotRaw.data[sym]=d;rotRecompute();rotMsg(`${sym} ${name} 추가됨 · 거래량 점유율은 추가된 코인을 포함해 다시 계산됩니다.`)}
+    else{rotMsg(`${sym} ${name} 추가됨`);rotRefresh(true)}
+  }finally{rotBusy=false;btn.disabled=false}
+}
+function rotRemoveCoin(sym){
+  if(rotBusy)return rotMsg('수집 중입니다. 잠시 뒤 삭제하세요.',true);
+  if(ROT_COINS.length<=1)return rotMsg('최소 1개는 남겨야 합니다.',true);
+  ROT_COINS=ROT_COINS.filter(x=>x[0]!==sym);rotSaveCoins();rotUpdateCount();
+  if(rotRaw)delete rotRaw.data[sym];
+  const h=rotHistLoad();delete h[sym];rotHistSave(h);
+  rotMsg(sym+' 삭제됨');
+  rotRecompute();
+}
+function rotResetCoins(){
+  if(rotBusy)return rotMsg('수집 중입니다. 잠시 뒤 다시 시도하세요.',true);
+  if(!confirm('코인 목록을 기본 10개로 되돌릴까요?'))return;
+  ROT_COINS=ROT_DEFAULT_COINS.map(x=>x.slice());rotSaveCoins();rotUpdateCount();
+  rotMsg('기본 10개로 되돌렸습니다.');rotRefresh(true);
 }
 function rotSetStatus(){
   const el=$('rotStatus');if(!el)return;
@@ -1471,6 +1563,7 @@ async function rotRefresh(manual=false){
       done++;prog();await sparkWait(130);
     }
     if(fails===ROT_COINS.length)throw Error(firstErr||'모든 코인 수집에 실패했습니다');
+    rotRaw={btc,data};
     const res=rotCompute(btc,data,ROT_COINS);
     const hist=rotHistLoad();rotHistPush(hist,res.rows);rotHistSave(hist);
     rotLast=res;rotLastOkAt=Date.now();
@@ -1499,6 +1592,12 @@ function rotInit(){
     });
   });
   W?.addEventListener('change',()=>rotRefresh(true));
+  $('rotAddBtn').addEventListener('click',rotAddCoin);
+  $('rotAddInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();rotAddCoin()}});
+  $('rotResetBtn').addEventListener('click',rotResetCoins);
+  $('rotBody').addEventListener('click',e=>{const b=e.target.closest('[data-rot-del]');if(b)rotRemoveCoin(b.dataset.rotDel)});
+  rotUpdateCount();
+  setTimeout(()=>{rotLoadUniverse().catch(()=>{})},2500);
   setInterval(()=>{if(!rotBusy&&Date.now()>=rotNextAt)rotRefresh();else rotSetStatus()},1000);
   setTimeout(()=>rotRefresh(),800);
 }

@@ -1,4 +1,4 @@
-// worker/worker.js — BTC ALT REGIME TRADER v10.7.0-minimal+pin+altseason-v3
+// worker/worker.js — BTC ALT REGIME TRADER v10.7.1-minimal+pin+altseason-v3
 //
 // 단계별 복구 진행 중: /health, /upbit, /market (완료) → PIN 인증 (이번 단계) → KV 포지션 → Telegram → Cron
 // KV(포지션/장부), Telegram 알림, Cron 자동감시는 다음 단계에서 하나씩 다시 붙일 예정입니다.
@@ -291,12 +291,13 @@ function buildGlobalM2(f, ea, jp, uk, curK) {
 function featureRow(k, t, live, c) {
   const lag = addM(k, -1); // 발표지연/룩어헤드 방지: M2는 한 달 전 공개분을 사용
   const y = c.yoy.get(lag) ?? null, y6 = c.yoy.get(addM(lag, -6)) ?? null;
-  const fedNow = lookback(c.fedM, lag, 1), fedPrev = c.fedM.get(addM(lag, -12)) ?? null;
-  const dolNow = lookback(c.dolM, lag, 1), dolPrev = c.dolM.get(addM(lag, -3)) ?? null;
+  const fedNow = lookback(c.fedM, k, 1), fedPrev = c.fedM.get(addM(k, -12)) ?? null;
+  const dolNow = lookback(c.dolM, k, 1), dolPrev = c.dolM.get(addM(k, -3)) ?? null;
   const oilNow = lookback(c.oilM, lag, 1), oilPrev = c.oilM.get(addM(lag, -3)) ?? null;
-  const spNow = lookback(c.spM, lag, 1), spPrev = c.spM.get(addM(lag, -3)) ?? null;
-  const y10Now = lookback(c.y10M, lag, 1), y10Prev = c.y10M.get(addM(lag, -3)) ?? null;
-  const btcNow = lookback(c.btcM, k, 1), btcPrev = c.btcM.get(addM(k, -3)) ?? null;
+  const spNow = lookback(c.spM, k, 1), spPrev = c.spM.get(addM(k, -3)) ?? null;
+  const y10Now = lookback(c.y10M, k, 1), y10Prev = c.y10M.get(addM(k, -3)) ?? null;
+  let btcNow = lookback(c.btcM, k, 1), btcPrev = c.btcM.get(addM(k, -3)) ?? null;
+  if (live && c.btcD && c.btcD.length) { const a = valAt(c.btcD, t, 10 * DAY), b = valAt(c.btcD, t - 90 * DAY, 10 * DAY); if (fin(a) && fin(b)) { btcNow = a; btcPrev = b; } }
   const eb = lookback(c.ethBtcM, k, 1), eb0 = c.ethBtcM.get(addM(k, -3)) ?? null;
   const st = lookback(c.stableM, k, 2), st0 = c.stableM.get(addM(k, -3)) ?? null;
   return {
@@ -323,7 +324,7 @@ async function buildHistory() {
   const btc = bc.ok ? bc.series : (f.cbbtc.ok ? f.cbbtc.series : []);
   const c = {
     yoy: g.yoy, fedM: monthMap(f.fed.series), dolM: monthMap(f.dollar.series), oilM: monthMap(f.oil.series), spM: monthMap(f.sp.series), y10M: monthMap(f.y10.series),
-    btcM: monthLast(btc), cbbtc: f.cbbtc.series, cbeth: f.cbeth.series, ethBtcM: monthLast(f.cbeth.series.map((x,i)=>({t:x.t,v:(x.v/(valAt(f.cbbtc.series,x.t,7*DAY)||NaN))})).filter(x=>fin(x.v))), stableM: monthLast(sc.series)
+    btcD: btc, btcM: monthLast(btc), cbbtc: f.cbbtc.series, cbeth: f.cbeth.series, ethBtcM: monthLast(f.cbeth.series.map((x,i)=>({t:x.t,v:(x.v/(valAt(f.cbbtc.series,x.t,7*DAY)||NaN))})).filter(x=>fin(x.v))), stableM: monthLast(sc.series)
   };
   const rows = [];
   for (let k = "2012-01"; k <= curK; k = addM(k, 1)) rows.push(featureRow(k, k === curK ? now : monthEnd(k), k === curK, c));
@@ -414,11 +415,11 @@ const SCORE_KEYS = Object.keys(MAXPTS);
 const SCORE_LOOKBACK = 60;
 const clamp01 = x => Math.max(0, Math.min(1, x));
 function percentileRank(v, arr, higherBetter=true) {
-  const a = arr.filter(fin).sort((x,y)=>x-y); if (!fin(v) || !a.length) return null;
-  let lo=0, hi=a.length;
-  while(lo<hi){const m=(lo+hi)>>1;if(a[m] < v)lo=m+1;else hi=m;}
-  let first=lo,last=lo; while(first>0 && a[first-1]===v)first--; while(last<a.length-1 && a[last+1]===v)last++;
-  const rank=((first+last)/2)/(a.length-1||1); return higherBetter?rank:1-rank;
+  // mid-rank 백분위: 항상 0~1. (trailing 범위를 벗어난 신고점/신저점도 0 또는 1로 고정)
+  const a = arr.filter(fin); if (!fin(v) || !a.length) return null;
+  let less = 0, eq = 0; for (const x of a) { if (x < v) less++; else if (x === v) eq++; }
+  const rank = (less + eq / 2) / a.length;
+  return higherBetter ? rank : 1 - rank;
 }
 function trailingValues(rows, idx, field, min=12) {
   const from=Math.max(0,idx-SCORE_LOOKBACK), a=[]; for(let i=from;i<idx;i++){const v=rows[i]?.[field];if(fin(v))a.push(v);} return a.length>=min?a:[];
@@ -566,7 +567,7 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.7.0-minimal+pin+altseason-v3",
+        version: "v10.7.1-minimal+pin+altseason-v3",
         service: "BTC ALT REGIME TRADER (minimal)",
         market: "Upbit KRW",
         pinConfigured: !!env.PIN,
@@ -608,7 +609,7 @@ export default {
       // Mayer Multiple = 가격 / 200일 이동평균. workers.dev 에서는 Cache API 가 동작하지 않으므로 KV/메모리 캐시(6시간)를 쓴다.
       const mayerPayload = await cached(env, "macro:mayer:v2", 6*3600, async () => {
         let rows=[],to=null;
-        for(let page=0;page<3;page++){
+        for(let page=0;page<12;page++){
           const url=`https://api.upbit.com/v1/candles/days?market=KRW-BTC&count=200${to?`&to=${encodeURIComponent(to)}`:""}`;
           const r=await fetchJson(url,10000);
           const a=Array.isArray(r.body)?r.body:[];

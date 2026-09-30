@@ -1724,6 +1724,9 @@ function renderAlt(d){
   const se=$('asScore');if(se)se.style.color=asOk(tot)?asColor(tot,bands):'inherit';
   set('asStage',sc.stage?`${sc.stage.emoji} ${sc.stage.label}`:'데이터 부족');
   set('asWatchLab',String(bands.watch));set('asExpandLab',String(bands.expansion));set('asBroadLab',String(bands.broad));
+  {const cuts=[0,bands.watch,bands.expansion,bands.broad,100],zs=document.querySelectorAll('.as-gauge i');
+   zs.forEach((z,i)=>{z.style.width=Math.max(0,cuts[i+1]-cuts[i])+'%'});
+   [['asWatchLab',bands.watch],['asExpandLab',bands.expansion],['asBroadLab',bands.broad]].forEach(([id,v])=>{const e=$(id);if(e)e.style.left=v+'%'})}
   const mk=$('asMarker');if(mk&&asOk(tot))mk.style.left=Math.max(0,Math.min(100,tot))+'%';
   const conf=d.confirmation||{}; const dv0=$('asScoreBadges');
   if(dv0){ const badges=[];
@@ -1743,7 +1746,7 @@ function renderAlt(d){
   }).join('');
   const dr=sc.drivers||{};
   const dv=$('asDrivers');
-  if(dv){ const badges=dv.innerHTML; dv.innerHTML=badges+`<div style="margin-top:6px"><b>우호적</b> ${asEsc((dr.up||[]).join(' · ')||'없음')} &nbsp;|&nbsp; <b>부정적</b> ${asEsc((dr.down||[]).join(' · ')||'없음')}${sc.coverage&&sc.coverage<100?` &nbsp;|&nbsp; <span class="as-warn">일부 항목 데이터 없음 (${sc.coverage}점 기준)</span>`:''}</div>`;}
+  if(dv){ dv.innerHTML=`<div style="margin-top:6px"><b>우호적</b> ${asEsc((dr.up||[]).join(' · ')||'없음')} &nbsp;|&nbsp; <b>부정적</b> ${asEsc((dr.down||[]).join(' · ')||'없음')}${sc.coverage&&sc.coverage<100?` &nbsp;|&nbsp; <span class="as-warn">일부 항목 데이터 없음 (${sc.coverage}점 기준)</span>`:''}</div>`;}
   renderAltLadder(d);renderAltCalib(d);renderAltAnalogs(d);renderAltMetrics(d);renderAltFoot(d);
   drawAlt();
 }
@@ -1778,11 +1781,11 @@ function renderAltMetrics(d){
   const T=v=>asOk(v)?(Number(v)/1000).toFixed(1)+'T':'—';
   const items=[
     ['Global M2',T(i.m2?.value),`YoY ${asF(i.m2?.yoy)} · ${(i.m2?.used||[]).join('+')||'—'}`],
-    ['Fed Funds',asOk(i.fed?.value)?Number(i.fed.value).toFixed(2)+'%':'—',`12개월 ${asF(i.fed?.chg12,2,'%p')}`],
-    ['달러(광의)',asOk(i.dollar?.value)?Number(i.dollar.value).toFixed(1):'—',`3개월 ${asF(i.dollar?.chg3m)}`],
+    ['Fed Funds(월평균)',asOk(i.fed?.value)?Number(i.fed.value).toFixed(2)+'%':'—',`12개월 ${asF(i.fed?.chg12,2,'%p')}`],
+    ['달러(광의·월평균)',asOk(i.dollar?.value)?Number(i.dollar.value).toFixed(1):'—',`3개월 ${asF(i.dollar?.chg3m)}`],
     ['WTI',asOk(i.oil?.value)?'$'+Number(i.oil.value).toFixed(1):'—',`3개월 ${asF(i.oil?.chg3m)}`],
     ['미 10년물',asOk(i.us10y?.value)?Number(i.us10y.value).toFixed(2)+'%':'—',`3개월 ${asF(i.us10y?.chg3m)}`],
-    ['S&P 500',asOk(i.sp?.value)?Math.round(i.sp.value).toLocaleString():'—',`3개월 ${asF(i.sp?.chg3m)}`],
+    ['S&P 500(월평균)',asOk(i.sp?.value)?Math.round(i.sp.value).toLocaleString():'—',`3개월 ${asF(i.sp?.chg3m)}`],
     ['BTC 90일',asF(i.btc?.ret90),`vs S&P ${asF(i.btc?.vsSp,1,'%p')}`],
     ['BTC.D',asOk(i.dom?.value)?Number(i.dom.value).toFixed(1)+'%':'—',`7일 ${asF(i.dom?.d7,1,'%p')} · 30일 ${asF(i.dom?.d30,1,'%p')} · 90일 ${asF(i.dom?.d90,1,'%p')}`],
     ['ETH/BTC 90일',asF(i.ethbtc?.ch90),`30일 ${asF(i.ethbtc?.ch30)}`],

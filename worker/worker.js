@@ -85,9 +85,10 @@ function valueNear(a,dateMs){
 }
 function pctChange(a,n){
   if(!a?.length) return null;
-  const last=a[a.length-1]?.v;
-  const prev=a[Math.max(0,a.length-1-n)]?.v;
-  return Number.isFinite(last)&&Number.isFinite(prev)&&prev!==0?(last/prev-1)*100:null;
+  const last=a[a.length-1]; if(!last||!Number.isFinite(last.v)) return null;
+  const target=Date.parse(last.d)-(n>=300?365.25*86400000:n>=60?90*86400000:n*30.4375*86400000);
+  const prev=valueNear(a,target);
+  return Number.isFinite(prev)&&prev!==0?(last.v/prev-1)*100:null;
 }
 async function fetchFredCsv(series,start="2011-01-01"){
   return fetchText(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${encodeURIComponent(series)}&cosd=${start}`,9000);
@@ -209,9 +210,29 @@ export default {
       // v8.5.1: Global M2 is built from primary-source public series.
       // Method: US M2 + Euro Area M2 + Japan M2 + UK M4, all converted to USD.
       // This is a transparent global-M2 index, not an official IMF "global M2" series.
+      // FRED: fetch all required series in ONE CSV request. This avoids partial failures
+      // caused by firing 8 separate upstream requests from a Cloudflare Worker.
       const fredIds={m2:"M2SL",fed:"EFFR",dollar:"DTWEXBGS",oil:"WTISPLC",sp:"SP500",eurusd:"DEXUSEU",jpyusd:"DEXJPUS",gbpusd:"EXUSUK"};
-      const fredRs=await Promise.all(Object.values(fredIds).map(id=>fetchFredCsv(id,"2011-01-01")));
-      const fred={}; Object.keys(fredIds).forEach((k,i)=>fred[k]=parseFredCsv(fredRs[i].body));
+      function parseFredWide(txt, ids){
+        const out=Object.fromEntries(Object.keys(ids).map(k=>[k,[]]));
+        if(!txt) return out;
+        const lines=txt.trim().split(/\r?\n/);
+        if(!lines.length) return out;
+        const h=lines[0].split(',').map(x=>x.trim().replace(/^"|"$/g,''));
+        const idx={};
+        for(const [k,id] of Object.entries(ids)){ const i=h.findIndex(v=>v===id); if(i>=0)idx[k]=i; }
+        for(const line of lines.slice(1)){
+          const p=line.split(',').map(x=>x.trim().replace(/^"|"$/g,''));
+          const d=p[0]; if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+          for(const [k,i] of Object.entries(idx)){
+            const v=Number(p[i]);
+            if(Number.isFinite(v)) out[k].push({d,v});
+          }
+        }
+        return out;
+      }
+      const fredCombined=await fetchText(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${Object.values(fredIds).join(',')}&cosd=2011-01-01`,12000);
+      const fred=parseFredWide(fredCombined.body,fredIds);
 
       async function fetchRawText(url,ms=12000){ return fetchText(url,ms); }
       function parseLooseCsv(txt){
@@ -262,26 +283,41 @@ export default {
       async function fetchEcbM2(){
         const url='https://data-api.ecb.europa.eu/service/data/BSI/M.U2.Y.V.M20.X.1.U2.2300.Z01.E?startPeriod=2011-01&format=csvdata';
         const r=await fetchRawText(url); if(!r.ok)return [];
-        return parseEcbCsv(r.body).map(x=>({d:x.d,v:x.v/1000}));
+        return parseEcbCsv(r.body).map(x=>({d:x.d,v:x.v/1000000}));
       }
       async function fetchBojM2(){
-        const code=encodeURIComponent("MD02'MAM1NAM2M2MO");
-        const url=`https://www.stat-search.boj.or.jp/api/v1/getDataCode?format=csv&lang=en&db=MD&startDate=201101&endDate=202609&code=${code}`;
-        const r=await fetchRawText(url); if(!r.ok)return [];
-        return parseBojCsv(r.body).map(x=>({d:x.d,v:x.v*0.1}));
+        // BOJ v1 API: db=MD02, code is WITHOUT the MD02' prefix.
+        // M2 unit is 100 million yen; convert to trillion yen by /10,000.
+        try{
+          const url='https://www.stat-search.boj.or.jp/api/v1/getDataCode?format=json&lang=en&db=MD02&startDate=201101&endDate=202609&code=MAM1NAM2M2MO';
+          const r=await fetchRawText(url); if(!r.ok||!r.body)return [];
+          const j=JSON.parse(r.body);
+          const rs=Array.isArray(j?.RESULTSET)?j.RESULTSET[0]:null;
+          const ds=rs?.VALUES?.SURVEY_DATES||[], vs=rs?.VALUES?.VALUES||[], out=[];
+          for(let i=0;i<Math.min(ds.length,vs.length);i++){const d=String(ds[i]);const v=Number(vs[i]);if(/^\d{6}$/.test(d)&&Number.isFinite(v))out.push({d:`${d.slice(0,4)}-${d.slice(4,6)}-01`,v:v/10000});}
+          return out;
+        }catch{return []}
       }
       async function fetchBoeM4(){
         const url='https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2011&Dateto=30/Sep/2026&SeriesCodes=LPMAUYN&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N';
         const r=await fetchRawText(url); if(!r.ok)return [];
-        return parseBoeCsv(r.body,'LPMAUYN').map(x=>({d:x.d,v:x.v/1000}));
+        return parseBoeCsv(r.body,'LPMAUYN').map(x=>({d:x.d,v:x.v/1000000}));
       }
       const [eaM2,jpM2,ukM4]=await Promise.all([fetchEcbM2(),fetchBojM2(),fetchBoeM4()]);
       // Rebuild with date-matched FX rather than array-position assumptions.
-      const globalRows=[]; const keys=new Set([fred.m2,eaM2,jpM2,ukM4].flat().map(x=>x.d.slice(0,7)));
+      const globalRows=[];
+      const keys=new Set([fred.m2,eaM2,jpM2,ukM4].flat().map(x=>x.d.slice(0,7)));
+      const monthVal=(a,k)=>{
+        if(!a?.length)return null;
+        const exact=a.find(x=>x.d.slice(0,7)===k); if(exact)return exact.v;
+        const t=Date.parse(k+'-01'); let best=null,bestDt=Infinity;
+        for(const x of a){const tx=Date.parse(x.d);if(!Number.isFinite(tx))continue;const dt=Math.abs(tx-t);if(dt<bestDt){bestDt=dt;best=x.v}}
+        return bestDt<=45*86400000?best:null;
+      };
       for(const k of [...keys].sort()){
-        const get=(a)=>a.find(x=>x.d.slice(0,7)===k)?.v;
-        const us=get(fred.m2),eu=get(eaM2),jp=get(jpM2),uk=get(ukM4);
-        const fxEu=get(fred.eurusd),fxJp=get(fred.jpyusd),fxUk=get(fred.gbpusd);
+        const us0=monthVal(fred.m2,k),eu=monthVal(eaM2,k),jp=monthVal(jpM2,k),uk=monthVal(ukM4,k);
+        const us=Number.isFinite(us0)?us0/1000:null;
+        const fxEu=monthVal(fred.eurusd,k),fxJp=monthVal(fred.jpyusd,k),fxUk=monthVal(fred.gbpusd,k);
         if(![us,eu,jp,uk,fxEu,fxJp,fxUk].every(Number.isFinite)||fxJp===0||fxUk===0)continue;
         globalRows.push({d:k+'-01',v:us+eu*fxEu+jp/fxJp+uk*fxUk});
       }
@@ -418,7 +454,8 @@ export default {
           oil:{value:lastFinite(fred.oil),change3m:oil3m},
           sp:{value:spNow,change3m:sp3m},
           btc:{value:btcNow,return90d:btc90ret,relativeToSP:btcVsSp,ethBtc:ethBtcNow,ethBtc30dChange:ethBtcChange},
-          globalM2:"Global M2 index · US + Euro Area + Japan + UK (USD) · China excluded"
+          globalM2:"Global M2 index · US + Euro Area + Japan + UK (USD) · China excluded",
+          globalM2Quality:{rows:globalRows.length,us:fred.m2.length,euro:eaM2.length,japan:jpM2.length,uk:ukM4.length,fxEu:fred.eurusd.length,fxJp:fred.jpyusd.length,fxUk:fred.gbpusd.length}
         },
         updatedAt:Date.now()
       });

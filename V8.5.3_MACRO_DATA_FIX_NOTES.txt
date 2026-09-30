@@ -1,0 +1,8 @@
+V8.5.3 MACRO DATA FIX
+
+- FRED 8개 시리즈를 개별 요청하지 않고 단일 wide CSV 요청으로 수집해 Cloudflare 부분 실패 가능성을 줄임.
+- Global M2 단위를 전부 USD trillion으로 통일. US M2(FRED)는 billion USD이므로 /1000 변환 후 유로존/일본/영국과 합산.
+- FRED 변화율 계산을 배열 인덱스가 아닌 실제 날짜 기준으로 보정.
+- Global M2 표시에서 불필요한 /1000 이중 변환 제거.
+- 월별 ALTSEASON 차트 데이터가 아직 없을 때 화면이 비어 보이지 않도록 상태 문구 추가.
+- 기존 구조와 자동매매 기능에는 변경 없음.

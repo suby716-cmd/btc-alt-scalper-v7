@@ -1696,7 +1696,7 @@ function renderAltseason(d){
   set('scoreBtc',`${m.btcScore||0}/10`);
   set('scoreDom',`${m.domScore||0}/20`);
   set('scoreAlt',`${m.altScore||0}/10`);
-  set('macroM2',Number.isFinite(Number(m.m2?.value))?`${(Number(m.m2.value)/1000).toFixed(1)}T`:'—');
+  set('macroM2',Number.isFinite(Number(m.m2?.value))?`${Number(m.m2.value).toFixed(1)}T`:'—');
   set('macroM2Sub',Number.isFinite(Number(m.m2?.yoy))?`12개월 ${m.m2.yoy>=0?'+':''}${m.m2.yoy.toFixed(1)}% · ${m.globalM2}`:'M2 변화 계산 중');
   set('macroFed',Number.isFinite(Number(m.fed?.value))?`${Number(m.fed.value).toFixed(2)}%`:'—');
   set('macroFedSub',Number.isFinite(Number(m.fed?.change12m))?`12개월 ${m.fed.change12m>=0?'+':''}${m.fed.change12m.toFixed(2)}%`:'—');
@@ -1709,7 +1709,7 @@ function renderAltseason(d){
   set('macroRiskFlow',Number.isFinite(Number(m.btc?.relativeToSP))?`${m.btc.relativeToSP>=0?'+':''}${m.btc.relativeToSP.toFixed(1)}%p`:'—');
   set('macroRiskFlowSub',Number.isFinite(Number(m.btc?.return90d))?`BTC 90일 ${m.btc.return90d>=0?'+':''}${m.btc.return90d.toFixed(1)}%`:'—');
   const h=(m.m2?.history||[]).map(x=>Number(x.v)).filter(Number.isFinite);
-  const mh=Array.isArray(m.historicalMonthlyScores)?m.historicalMonthlyScores:[]; if(mh.length>1)drawAltseasonHistory('altseasonChart',mh);
+  const mh=Array.isArray(m.historicalMonthlyScores)?m.historicalMonthlyScores:[]; if(mh.length>1)drawAltseasonHistory('altseasonChart',mh); else { const c=$('altseasonChart'); if(c){ const x=c.getContext('2d'); x.clearRect(0,0,c.width,c.height); x.fillStyle='#64748b'; x.font='12px sans-serif'; x.fillText('월별 역사 데이터 수신 대기 중…',18,30); } }
   const hs=Array.isArray(m.historicalScores)?m.historicalScores:[];
   const he=$('altseasonHistory');
   if(he&&hs.length){

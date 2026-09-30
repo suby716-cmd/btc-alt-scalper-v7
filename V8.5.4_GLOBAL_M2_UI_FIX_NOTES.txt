@@ -1,0 +1,12 @@
+V8.5.4 — Global M2 + Macro UI Fix
+
+- Fixed frontend null.toFixed() crash when macro values are unavailable.
+- Fixed 0.0T display caused by Number(null) being treated as finite.
+- Renamed Global/US M2 card to Global M2.
+- Fixed ECB M2 unit conversion: million EUR -> trillion EUR (/1,000,000).
+- Fixed Bank of England M4 unit conversion: million GBP -> trillion GBP (/1,000,000).
+- Fixed Bank of Japan API request: db=MD02, code=MAM1NAM2M2MO without MD02' prefix.
+- Fixed BOJ M2 unit conversion: 100 million JPY -> trillion JPY (/10,000).
+- Global M2 FX matching now uses exact month or nearest observation within 45 days.
+- Added Global M2 source row-quality metadata.
+- Root worker.js synchronized with worker/worker.js.

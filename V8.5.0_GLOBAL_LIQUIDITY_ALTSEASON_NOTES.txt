@@ -1,0 +1,16 @@
+V8.5.0 GLOBAL LIQUIDITY & ALTSEASON RADAR
+- Existing BTC.D / Mayer / Fear & Greed panel preserved.
+- Added GLOBAL LIQUIDITY & ALTSEASON RADAR panel.
+- Current score 0-100:
+  liquidity 20, rates/dollar 20, BTC trend 10, BTC dominance 20, risk-capital rotation 10.
+- FRED public CSV sources: US M2 (M2SL), Effective Fed Funds (EFFR), Broad Dollar Index (DTWEXBGS), WTI (WTISPLC), S&P 500 (SP500).
+- BTC 90d return is calculated from Upbit KRW-BTC daily candles.
+- BTC dominance uses the existing CoinGecko-only implementation.
+- The dashboard does NOT fabricate a "Global M2" number. The displayed M2 fallback is explicitly labeled US M2 proxy. A licensed/public aggregate global-M2 feed can be wired later.
+- Score is a market-regime diagnostic, not an automatic buy/sell signal.
+- index.html and docs/index.html updated.
+- worker/worker.js and root worker.js updated identically.
+Deployment:
+1) Replace GitHub Pages index.html + docs/index.html.
+2) Deploy worker/worker.js to Cloudflare Worker.
+3) Ctrl+F5.

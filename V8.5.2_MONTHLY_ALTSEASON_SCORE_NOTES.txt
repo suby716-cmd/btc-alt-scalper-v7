@@ -1,0 +1,29 @@
+V8.5.2 — MONTHLY ALTSEASON SCORE HISTORY
+
+목적
+- 2013-04부터 현재까지 월별 ALTSEASON SCORE를 재구성해 차트로 표시
+- 60점(알트 확산) / 75점(광범위한 알트 강세 환경) 기준선을 표시
+- 2017~2018 초 ICO/알트 강세와 2020~2021 DeFi/NFT/알트 확산 구간을 음영으로 표시
+- 연도별 표에는 해당 연도의 월별 SCORE 최고점과 고점 월을 표시
+
+월별 입력
+1) Global M2: US M2 + Euro Area M2 + Japan M2 + UK M4, USD 환산, 월별
+2) Fed Funds: 월별 관측치와 12개월 전 비교
+3) Dollar: 월별 관측치와 약 3개월 전 비교
+4) BTC 3개월 수익률: 공개 월별 BTC 수익률을 3개월 복리 계산
+5) BTC.D: 공개 월별 BTC dominance 데이터 사용, 부족한 월은 연간 공개 평균을 보조값으로 사용
+6) ETH/BTC: 공개 월별 ETH/BTC 자료 사용, 부족한 월은 연간 공개 평균을 보조값으로 사용
+
+중요한 해석
+- 이 차트는 '과거에 이 점수 모델을 그대로 실시간 운용했다면 어떤 점수가 나왔는가'를 보기 위한 역사적 재구성이다.
+- 데이터 제공처와 정의가 서로 다른 시계열을 결합하므로 공식적인 단일 기관 통계가 아니다.
+- 2013~2014처럼 ETH/BTC가 존재하지 않거나 초기 암호화폐 생태계가 지금과 달랐던 시기는 점수의 비교 가능성이 낮다.
+- 2017~2018과 2020~2021의 알트 강세 음영은 역사적 시장 국면 표시이며, 점수 자체가 그 국면을 사후적으로 결정하는 것은 아니다.
+- 매매신호가 아니라 유동성/시장 폭/상대강도 환경을 정량화하는 참고지표다.
+
+공개 참고자료
+- Trade With Renato Global M2 methodology: US M2 + Euro Area M2 + Japan M2 + UK M4, China excluded.
+- CoinGecko BTC dominance history: 2013~2025 annual averages and historical alt-season discussion.
+- CoinLedger monthly BTC dominance table.
+- CoinBoss monthly BTC return table.
+- Visual Capitalist monthly ETH/BTC history (2015~2024).

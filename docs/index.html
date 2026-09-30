@@ -21,7 +21,7 @@
 .badge.sell{background:#fff0f0;color:#c62828;border-color:#ffc9c9}
 .rs-title{font-size:17px;font-weight:800}.rs-title span{font-size:11px;color:var(--muted);font-weight:500}.live-dot{float:right;color:var(--green)!important;font-size:11px!important}
 .rs-controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}.rs-controls select{padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
-.rs-note{margin-top:8px}.rs-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:11px;color:var(--muted)}.rs-chart{width:100%;height:calc(100vh - 190px);min-height:700px;margin-top:7px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff}
+.rs-note{margin-top:8px}.rs-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:11px;color:var(--muted)}.rs-chart{width:100%;height:620px;margin-top:7px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff}
 @media(max-width:1150px){.regime-top{grid-template-columns:repeat(2,1fr)}.rs-controls{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:650px){.regime-top{grid-template-columns:1fr 1fr}.engine-indicators{grid-template-columns:1fr 1fr}.rs-controls{grid-template-columns:1fr 1fr}.rs-chart{height:420px}}
 
 .workspace{display:grid;grid-template-columns:460px minmax(0,1fr);gap:12px;align-items:start}
@@ -72,6 +72,10 @@
 @media(max-width:900px){.macro-strip{grid-template-columns:1fr}}
 .macro-spark{display:block;width:100%;height:54px;margin-top:8px}
 .macro-strip .metric{min-height:132px}
+
+
+.altseason-panel{margin-top:12px}.section-title{font-size:17px;font-weight:800;margin-bottom:10px}.section-title span{font-size:11px;color:var(--muted);font-weight:500;margin-left:5px}.altseason-grid{display:grid;grid-template-columns:220px 1fr;gap:10px}.altseason-score-card{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:13px;text-align:center}.altseason-score{font-size:42px;font-weight:900;line-height:1.1;margin:5px 0}.altseason-stage{font-size:15px;font-weight:800}.altseason-note{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.4}.altseason-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.altseason-metrics>div{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:9px}.altseason-metrics span,.altseason-bars span{font-size:10px;color:var(--muted)}.altseason-metrics b{display:block;font-size:18px;margin-top:3px}.altseason-metrics small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.altseason-bars{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:9px}.altseason-bars>div{border:1px solid var(--line);border-radius:8px;padding:7px;background:var(--panel2)}.altseason-bars b{float:right;font-size:12px}.macro-spark-xl{height:105px;margin-top:10px}.altseason-history-chart{height:240px!important;margin-top:12px}.altseason-chart-note{font-size:10px;color:var(--muted);line-height:1.5;margin-top:5px}.history-wrap{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--panel2)}.history-title{font-size:12px;font-weight:800;margin-bottom:7px}.history-table{font-size:11px;line-height:1.55;overflow:auto}.history-table table{width:100%;border-collapse:collapse}.history-table th,.history-table td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right}.history-table th:first-child,.history-table td:first-child{text-align:left}.history-table tr.hot{font-weight:800}.altseason-context{font-size:11px;color:var(--muted)}
+@media(max-width:760px){.altseason-grid{grid-template-columns:1fr}.altseason-metrics{grid-template-columns:repeat(2,1fr)}.altseason-bars{grid-template-columns:repeat(2,1fr)}}
 
 /* v8.3.9 responsive/mobile polish */
 .macro-strip{align-items:stretch}
@@ -189,7 +193,40 @@
     <div class="card"><div class="label">마지막 완료봉</div><div class="value" id="candle">—</div></div>
   </div>
 
-  <div class="panel">
+  <div class="panel altseason-panel">
+  <div class="section-title">🌍 GLOBAL LIQUIDITY & ALTSEASON RADAR <span>2013~2026 월별 역사 점수 + 현재 알트순환</span></div>
+  <div class="altseason-grid">
+    <div class="altseason-score-card">
+      <div class="label">ALTSEASON SCORE</div>
+      <div class="altseason-score" id="altseasonScore">—</div>
+      <div class="altseason-stage" id="altseasonStage">계산 중…</div>
+      <div class="altseason-note" id="altseasonNote">과거 패턴을 기반으로 한 시장환경 점수 · 매매신호 아님</div>
+    </div>
+    <div class="altseason-metrics">
+      <div><span>Global/US M2</span><b id="macroM2">—</b><small id="macroM2Sub">—</small></div>
+      <div><span>Fed Funds</span><b id="macroFed">—</b><small id="macroFedSub">—</small></div>
+      <div><span>Dollar</span><b id="macroDollar">—</b><small id="macroDollarSub">—</small></div>
+      <div><span>WTI</span><b id="macroOil">—</b><small id="macroOilSub">—</small></div>
+      <div><span>S&P 500</span><b id="macroSP">—</b><small id="macroSPSub">—</small></div>
+      <div><span>BTC vs S&P</span><b id="macroRiskFlow">—</b><small id="macroRiskFlowSub">—</small></div>
+    </div>
+  </div>
+  <div class="altseason-bars">
+    <div><span>유동성</span><b id="scoreLiquidity">—</b></div>
+    <div><span>금리/달러</span><b id="scoreRates">—</b></div>
+    <div><span>BTC 추세</span><b id="scoreBtc">—</b></div>
+    <div><span>BTC.D</span><b id="scoreDom">—</b></div>
+    <div><span>ETH/BTC·알트확산</span><b id="scoreAlt">—</b></div>
+  </div>
+  <canvas class="macro-spark macro-spark-xl altseason-history-chart" id="altseasonChart"></canvas><div class="altseason-chart-note">회색/연한 영역 = 과거 대표 알트 강세 구간 · 점선 = 60/75점 기준 · 월별 점수는 실제 월별 거시자료와 공개 월별 BTC.D·BTC 수익률·ETH/BTC 자료를 결합해 재구성합니다.</div>
+  <div class="history-wrap">
+    <div class="history-title">📊 과거 ALTSEASON SCORE 고점</div>
+    <div id="altseasonHistory" class="history-table">과거 점수 계산 중…</div>
+  </div>
+  <div class="macro-context" id="altseasonContext">Global M2 = 미국 + 유로존 + 일본 + 영국 광의통화의 USD 환산 합산. 중국은 공식 자동수집의 안정성 문제로 제외합니다.</div>
+</div>
+
+<div class="panel">
     <div class="macro-strip">
   <div class="metric card macro-card">
     <div class="label">BTC 도미넌스</div><div class="value" id="btcDom">—</div>
@@ -1190,9 +1227,6 @@ async function loadMarketUpbit(){
     if(!r.ok)throw Error('Upbit '+r.status);
     const rows=await r.json();
     rows.forEach(x=>{const c=MARKET_COINS.find(v=>v[2]===x.market);if(!c)return;MARKET_DATA[c[0]]={...(MARKET_DATA[c[0]]||{}),price:+x.trade_price,change24:+x.signed_change_rate*100,changePrice:+x.signed_change_price,volume24:+x.acc_trade_volume_24h,updated:+x.timestamp}});
-    // 상단 BTC 가격은 Regime 재분석을 기다리지 않고 Upbit 실시간 ticker로 즉시 갱신
-    const liveBtc=Number(MARKET_DATA?.BTC?.price);
-    if(Number.isFinite(liveBtc)) $('btc').textContent=money(liveBtc);
     renderMarketList();updateMarketSelected();
   }catch(e){console.warn('market Upbit:',e.message)}
 }
@@ -1607,12 +1641,29 @@ function rotInit(){
 rotInit();
 
 loadRSCandles();
-setInterval(loadMarketUpbit,3000);
+setInterval(loadMarketUpbit,5000);
 setInterval(loadMarketBinance,10000);
 setInterval(loadMarketFx,600000);
 setInterval(loadMarketCharts,600000);
 setInterval(loadRSCandles,60000);
-// 상단 BTC 가격은 3초 ticker, 5분봉 기반 RSI/5m/Regime은 별도 분석 주기를 유지합니다.
+
+function drawAltseasonHistory(id, rows){
+  const c=$(id); if(!c) return;
+  const data=(rows||[]).filter(x=>Number.isFinite(Number(x.score)));
+  const dpr=window.devicePixelRatio||1,w=Math.max(320,c.clientWidth||720),h=240;
+  c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h);
+  if(data.length<2)return;
+  const pad={l:34,r:10,t:18,b:26}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  const Y=v=>pad.t+ph-(v/100)*ph, X=i=>pad.l+pw*i/(data.length-1);
+  // Historical alt-strength windows: 2017 ICO wave and 2020-2021 DeFi/NFT wave.
+  const bands=[['2017-05','2018-01','2017~18 알트 강세'],['2020-07','2021-12','2020~21 알트 강세']];
+  for(const [a,b,label] of bands){const i1=data.findIndex(q=>q.month>=a),i2=[...data].reverse().findIndex(q=>q.month<=b);const j2=i2<0?-1:data.length-1-i2;if(i1>=0&&j2>=i1){x.fillStyle='rgba(148,163,184,.16)';x.fillRect(X(i1),pad.t,X(j2)-X(i1),ph);x.fillStyle='#64748b';x.font='10px sans-serif';x.fillText(label,X(i1)+4,pad.t+13)}}
+  x.strokeStyle='#cbd5e1';x.lineWidth=1;x.setLineDash([4,4]);[60,75].forEach(v=>{x.beginPath();x.moveTo(pad.l,Y(v));x.lineTo(w-pad.r,Y(v));x.stroke();x.fillStyle='#64748b';x.font='10px sans-serif';x.fillText(v+'점',4,Y(v)+3)});x.setLineDash([]);
+  x.strokeStyle='#111827';x.lineWidth=2;x.beginPath();data.forEach((q,i)=>{const px=X(i),py=Y(Number(q.score));i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();
+  data.forEach((q,i)=>{const s=Number(q.score);if(s>=60){x.fillStyle=s>=75?'#b91c1c':'#2563eb';x.beginPath();x.arc(X(i),Y(s),3,0,Math.PI*2);x.fill()}});
+  x.fillStyle='#64748b';x.font='10px sans-serif'; const years=[...new Set(data.map(q=>q.month.slice(0,4)))]; years.forEach(y=>{const i=data.findIndex(q=>q.month.startsWith(y+'-'));if(i>=0)x.fillText(y,X(i)-12,h-7)});
+  x.fillStyle='#111827';x.font='bold 11px sans-serif';x.fillText('ALTSEASON SCORE / 100',pad.l,pad.t-6);
+}
 
 function drawMacroSpark(id, values, opts={}){
   const c=$(id); if(!c) return;
@@ -1634,9 +1685,51 @@ function pctPoint(v){return `${v>=0?'+':''}${v.toFixed(2)}%p`}
 function fearGreedKo(cls){
   return ({'Extreme Fear':'극단적 공포','Fear':'공포','Neutral':'중립','Greed':'탐욕','Extreme Greed':'극단적 탐욕'})[cls]||cls||'—';
 }
+
+function renderAltseason(d){
+  const m=d?.macroRegime;if(!m)return;
+  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+  set('altseasonScore',Number.isFinite(Number(m.score))?`${m.score}/100`:'—');
+  set('altseasonStage',m.stage||'—');
+  set('scoreLiquidity',`${m.liquidity||0}/20`);
+  set('scoreRates',`${m.rates||0}/20`);
+  set('scoreBtc',`${m.btcScore||0}/10`);
+  set('scoreDom',`${m.domScore||0}/20`);
+  set('scoreAlt',`${m.altScore||0}/10`);
+  set('macroM2',Number.isFinite(Number(m.m2?.value))?`${(Number(m.m2.value)/1000).toFixed(1)}T`:'—');
+  set('macroM2Sub',Number.isFinite(Number(m.m2?.yoy))?`12개월 ${m.m2.yoy>=0?'+':''}${m.m2.yoy.toFixed(1)}% · ${m.globalM2}`:'M2 변화 계산 중');
+  set('macroFed',Number.isFinite(Number(m.fed?.value))?`${Number(m.fed.value).toFixed(2)}%`:'—');
+  set('macroFedSub',Number.isFinite(Number(m.fed?.change12m))?`12개월 ${m.fed.change12m>=0?'+':''}${m.fed.change12m.toFixed(2)}%`:'—');
+  set('macroDollar',Number.isFinite(Number(m.dollar?.value))?Number(m.dollar.value).toFixed(1):'—');
+  set('macroDollarSub',Number.isFinite(Number(m.dollar?.change3m))?`약 3개월 ${m.dollar.change3m>=0?'+':''}${m.dollar.change3m.toFixed(1)}%`:'—');
+  set('macroOil',Number.isFinite(Number(m.oil?.value))?`$${Number(m.oil.value).toFixed(1)}`:'—');
+  set('macroOilSub',Number.isFinite(Number(m.oil?.change3m))?`약 3개월 ${m.oil.change3m>=0?'+':''}${m.oil.change3m.toFixed(1)}%`:'—');
+  set('macroSP',Number.isFinite(Number(m.sp?.value))?Math.round(Number(m.sp.value)).toLocaleString():'—');
+  set('macroSPSub',Number.isFinite(Number(m.sp?.change3m))?`약 3개월 ${m.sp.change3m>=0?'+':''}${m.sp.change3m.toFixed(1)}%`:'—');
+  set('macroRiskFlow',Number.isFinite(Number(m.btc?.relativeToSP))?`${m.btc.relativeToSP>=0?'+':''}${m.btc.relativeToSP.toFixed(1)}%p`:'—');
+  set('macroRiskFlowSub',Number.isFinite(Number(m.btc?.return90d))?`BTC 90일 ${m.btc.return90d>=0?'+':''}${m.btc.return90d.toFixed(1)}%`:'—');
+  const h=(m.m2?.history||[]).map(x=>Number(x.v)).filter(Number.isFinite);
+  const mh=Array.isArray(m.historicalMonthlyScores)?m.historicalMonthlyScores:[]; if(mh.length>1)drawAltseasonHistory('altseasonChart',mh);
+  const hs=Array.isArray(m.historicalScores)?m.historicalScores:[];
+  const he=$('altseasonHistory');
+  if(he&&hs.length){
+    const rows=hs.map(x=>{
+      const s=Number.isFinite(Number(x.score))?`${x.score}`:'—';
+      const g=Number.isFinite(Number(x.globalM2YoY))?`${x.globalM2YoY>=0?'+':''}${Number(x.globalM2YoY).toFixed(1)}%`:'—';
+      const d=Number.isFinite(Number(x.btcD))?`${Number(x.btcD).toFixed(1)}%`:'—';
+      const e=Number.isFinite(Number(x.ethBtc))?Number(x.ethBtc).toFixed(3):'—';
+      const hot=Number.isFinite(Number(x.score))&&Number(x.score)>=60?' class="hot"':'';
+      return `<tr${hot}><td>${x.year}</td><td>${s}</td><td>${x.peakMonth||'—'}</td><td>${g}</td><td>${d}</td><td>${e}</td></tr>`;
+    }).join('');
+    he.innerHTML=`<table><thead><tr><th>연도</th><th>최고 Score</th><th>고점 월</th><th>Global M2 YoY</th><th>BTC.D</th><th>ETH/BTC</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:5px;color:var(--muted)">연간 값은 그 해의 월별 ALTSEASON SCORE 최고점입니다. 2017·2021의 실제 알트 확산 구간과 점수 고점을 직접 비교할 수 있습니다.</div>`;
+  }
+  set('altseasonContext',`현재 ${m.score}/100 · 유동성 ${m.liquidity}/20 · 금리/달러 ${m.rates}/20 · BTC ${m.btcScore}/10 · BTC.D ${m.domScore}/20 · ETH/BTC·알트 ${m.altScore}/10 · ${m.globalM2}`);
+}
+
 async function loadMacroMetrics(){
   try{
     const d=await call('/macro',{});
+    renderAltseason(d);
     if(Number.isFinite(Number(d.btcDominance))){
       const cur=Number(d.btcDominance);
       $('btcDom').textContent=cur.toFixed(2)+'%';

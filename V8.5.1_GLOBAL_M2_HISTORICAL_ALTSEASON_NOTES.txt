@@ -1,0 +1,38 @@
+V8.5.1 GLOBAL M2 + HISTORICAL ALTSEASON CALIBRATION
+
+1. Global M2
+- Global M2 is NOT an official single IMF/FRED series.
+- This version builds a transparent USD monthly index from primary public sources:
+  US M2 + Euro Area M2 + Japan M2 + UK M4.
+- China is excluded because the public automated PBoC endpoint is not stable enough for a dependable browser/Worker pipeline.
+- Formula:
+  Global M2 = US M2 + (Euro Area M2 * USD/EUR) + (Japan M2 / JPY per USD) + (UK M4 * USD/GBP)
+- US M2: FRED M2SL
+- Euro Area M2: ECB Data Portal BSI M2 stocks
+- Japan M2: Bank of Japan Time-Series Data Search API, M2 average outstanding
+- UK M4: Bank of England LPMAUYN, seasonally adjusted monthly M4
+- FX: FRED USD/EUR, JPY/USD, USD/GBP series.
+
+2. Current ALTSEASON SCORE
+- Components are normalized to 100 from the original 80 raw points:
+  Liquidity 20
+  Rates/Dollar 20
+  BTC trend 10
+  BTC Dominance 20
+  ETH/BTC rotation 10
+- Current ETH/BTC is calculated from Upbit KRW-ETH / KRW-BTC prices.
+- Current BTC.D remains CoinGecko-based.
+
+3. Historical ALTSEASON SCORE
+- Annual calibration table is generated for 2011-2026.
+- Global M2 annual growth is calculated from the reconstructed monthly Global M2 series.
+- BTC.D annual averages 2013-2025 use CoinGecko's published historical annual data.
+- ETH/BTC annual averages 2015-2025 use CoinGecko's published historical annual data.
+- BTC annual return anchors are used for the historical BTC-trend component.
+- 2011-2012 are shown as reference only because comparable BTC.D/ETH-BTC alt-market breadth did not yet exist.
+- The historical table is a calibration/backtest view, not a predictive guarantee.
+
+4. Important interpretation
+- The historical score is intended to answer: "When the market actually experienced broad alt strength, how high would this rule-based score have risen?"
+- It should be used to calibrate thresholds, not to claim that a particular score predicts future returns.
+- The next research step would be a monthly/daily full backtest with actual historical BTC.D, ETH/BTC, BTC, alt-market volume and stablecoin liquidity series wherever licensing/public access permits.

@@ -406,6 +406,9 @@ export default {
       const historicalMonthlyScores=[];
       const startYM='2013-04', endYM=new Date().toISOString().slice(0,7);
       const months=[]; {let [yy,mm]=startYM.split('-').map(Number), [ey,em]=endYM.split('-').map(Number); while(yy<ey||(yy===ey&&mm<=em)){months.push(`${yy}-${String(mm).padStart(2,'0')}`);mm++;if(mm>12){mm=1;yy++;}}}
+      // Keep the full 80-point denominator. Missing inputs must never be
+      // re-normalized to 100; expose coverage and gate threshold detection.
+      const HISTORY_TOTAL_WEIGHT=80, HISTORY_MIN_SCORE_WEIGHT=60, HISTORY_MIN_THRESHOLD_COVERAGE=.875;
       for(const k of months){
         const g=monthlyM2YoY(k), l=Number.isFinite(g)?(g<=0?0:g<3?8:g<6?14:20):null;
         const fv=monthlyFredValue(fred.fed,k), fp=priorYearFred(fred.fed,k); let rs=0,rw=0;
@@ -419,16 +422,20 @@ export default {
         const ebPrev=monthlyEthBtc[months[Math.max(0,months.indexOf(k)-3)]]??null;
         let as=Number.isFinite(eb)&&Number.isFinite(ebPrev)&&ebPrev!==0?((eb/ebPrev-1)*100>8?10:(eb/ebPrev-1)*100>3?7:(eb/ebPrev-1)*100>0?4:0):null;
         if(as===null&&Number.isFinite(eb)) as=eb>=0.06?10:eb>=0.045?7:eb>=0.03?4:0;
-        const weights={l:20,r:20,b:10,d:20,a:10}; let raw=0,weight=0; for(const [v,w] of [[l,20],[rs,20],[bs,10],[ds,20],[as,10]]){if(Number.isFinite(v)){raw+=v;weight+=w}}
-        const score=weight>=50?Math.max(0,Math.min(100,Math.round(raw/weight*100))):null;
-        historicalMonthlyScores.push({month:k,score,globalM2YoY:g,btcD:dom,ethBtc:eb,btcReturn3m:br});
+        const components=[['globalM2YoY',l,20],['ratesDollar',rs,20],['btcReturn3m',bs,10],['btcDominance',ds,20],['ethBtcRotation',as,10]];
+        let raw=0,weight=0; const missing=[];
+        for(const [name,v,w] of components){if(Number.isFinite(v)){raw+=v;weight+=w}else missing.push(name)}
+        const coverage=weight/HISTORY_TOTAL_WEIGHT;
+        const score=weight>=HISTORY_MIN_SCORE_WEIGHT?Math.max(0,Math.min(100,Math.round(raw/HISTORY_TOTAL_WEIGHT*100))):null;
+        historicalMonthlyScores.push({month:k,score,coverage:+coverage.toFixed(3),confidence:coverage>=HISTORY_MIN_THRESHOLD_COVERAGE?'normal':coverage>=.75?'partial':'low',missing,globalM2YoY:g,btcD:dom,ethBtc:eb,btcReturn3m:br});
       }
-      const histMax=[...historicalMonthlyScores].filter(x=>Number.isFinite(x.score)).sort((a,b)=>b.score-a.score).slice(0,12);
-      function firstThreshold(th){return historicalMonthlyScores.find(x=>Number.isFinite(x.score)&&x.score>=th)||null;}
-      function firstPersistentThreshold(th,n){for(let i=0;i<=historicalMonthlyScores.length-n;i++){let ok=true;for(let j=0;j<n;j++){const s=historicalMonthlyScores[i+j]?.score;if(!Number.isFinite(s)||s<th){ok=false;break}}if(ok)return historicalMonthlyScores[i];}return null;}
+      const histMax=[...historicalMonthlyScores].filter(x=>Number.isFinite(x.score)&&x.coverage>=HISTORY_MIN_THRESHOLD_COVERAGE).sort((a,b)=>b.score-a.score).slice(0,12);
+      function thresholdEligible(x,th){return Number.isFinite(x?.score)&&x.coverage>=HISTORY_MIN_THRESHOLD_COVERAGE&&x.score>=th;}
+      function firstThreshold(th){return historicalMonthlyScores.find(x=>thresholdEligible(x,th))||null;}
+      function firstPersistentThreshold(th,n){for(let i=0;i<=historicalMonthlyScores.length-n;i++){let ok=true;for(let j=0;j<n;j++){if(!thresholdEligible(historicalMonthlyScores[i+j],th)){ok=false;break}}if(ok)return historicalMonthlyScores[i];}return null;}
       const threshold60=firstThreshold(60), threshold75=firstThreshold(75), threshold60p=firstPersistentThreshold(60,2);
       const histAnnual=[];
-      for(let y=2013;y<=Number(endYM.slice(0,4));y++){const a=historicalMonthlyScores.filter(x=>x.month.startsWith(String(y)));const valid=a.filter(x=>Number.isFinite(x.score));const top=valid.sort((p,q)=>q.score-p.score)[0];histAnnual.push({year:y,score:top?.score??null,peakMonth:top?.month??null,globalM2YoY:a.filter(x=>Number.isFinite(x.globalM2YoY)).at(-1)?.globalM2YoY??null,btcD:top?.btcD??btcDomAnnualRef[y]??null,ethBtc:top?.ethBtc??ethBtcAnnualRef[y]??null,btcReturn:top?.btcReturn3m??null});}
+      for(let y=2013;y<=Number(endYM.slice(0,4));y++){const a=historicalMonthlyScores.filter(x=>x.month.startsWith(String(y)));const valid=a.filter(x=>Number.isFinite(x.score)&&x.coverage>=HISTORY_MIN_THRESHOLD_COVERAGE);const top=valid.sort((p,q)=>q.score-p.score)[0];histAnnual.push({year:y,score:top?.score??null,coverage:top?.coverage??null,peakMonth:top?.month??null,globalM2YoY:a.filter(x=>Number.isFinite(x.globalM2YoY)).at(-1)?.globalM2YoY??null,btcD:top?.btcD??btcDomAnnualRef[y]??null,ethBtc:top?.ethBtc??ethBtcAnnualRef[y]??null,btcReturn:top?.btcReturn3m??null});}
       const macroHistory=globalM2History.slice(-190).map(x=>({d:x.d,v:x.v}));
 
       // No mixed-provider history. Real CoinGecko checkpoints are returned immediately.

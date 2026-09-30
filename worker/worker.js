@@ -1,4 +1,4 @@
-// worker/worker.js — BTC ALT REGIME TRADER v10.6.0-minimal+pin+altseason-v2
+// worker/worker.js — BTC ALT REGIME TRADER v10.7.0-minimal+pin+altseason-v3
 //
 // 단계별 복구 진행 중: /health, /upbit, /market (완료) → PIN 인증 (이번 단계) → KV 포지션 → Telegram → Cron
 // KV(포지션/장부), Telegram 알림, Cron 자동감시는 다음 단계에서 하나씩 다시 붙일 예정입니다.
@@ -90,7 +90,8 @@ function pctChange(a,n){
   return Number.isFinite(last)&&Number.isFinite(prev)&&prev!==0?(last/prev-1)*100:null;
 }
 async function fetchFredCsv(series,start="2011-01-01"){
-  return fetchText(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${encodeURIComponent(series)}&cosd=${start}`,9000);
+  const [base, query=''] = String(start).split('__EXTRA__');
+  return fetchText(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${encodeURIComponent(series)}&cosd=${base}${query}`,9000);
 }
 
 function parseCoinGeckoDominancePage(html) {
@@ -127,6 +128,7 @@ const pctOf = (a, b) => fin(a) && fin(b) && b !== 0 ? (a / b - 1) * 100 : null;
 function bsearchLE(arr, t) { let lo = 0, hi = arr.length - 1, r = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (arr[m].t <= t) { r = m; lo = m + 1; } else hi = m - 1; } return r; }
 function valAt(arr, t, maxAge = Infinity) { if (!arr || !arr.length) return null; const i = bsearchLE(arr, t); if (i < 0) return null; if (t - arr[i].t > maxAge) return null; return arr[i].v; }
 function monthMap(series) { const s = new Map(), c = new Map(); for (const x of series) { const k = mkey(x.t); s.set(k, (s.get(k) || 0) + x.v); c.set(k, (c.get(k) || 0) + 1); } const o = new Map(); for (const [k, v] of s) o.set(k, v / c.get(k)); return o; }
+function monthLast(series) { const o = new Map(); for (const x of (series || []).slice().sort((a,b)=>a.t-b.t)) o.set(mkey(x.t), x.v); return o; }
 function lookback(map, k, n) { for (let i = 0; i <= n; i++) { const v = map.get(addM(k, -i)); if (v != null) return v; } return null; }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -172,8 +174,9 @@ function parseFredFast(txt) {
   }
   return out;
 }
-async function fredSeries(id, start) {
-  let r = await fetchFredCsv(id, start);
+async function fredSeries(id, start, monthly=false, aggregation='avg') {
+  const extra = monthly ? `&fq=Monthly&fam=${encodeURIComponent(aggregation)}` : '';
+  let r = await fetchFredCsv(id, `${start}__EXTRA__${extra}`);
   if (!r.ok || !r.body) { await sleep(400); r = await fetchFredCsv(id, start); }
   const series = parseFredFast(r.body);
   return { ok: series.length > 0, status: r.status, series };
@@ -231,7 +234,8 @@ async function fetchBtcPrice() {
 async function fetchStable() {
   const r = await fetchJson("https://stablecoins.llama.fi/stablecoincharts/all", 15000);
   const a = Array.isArray(r.body) ? r.body : [];
-  const series = a.map(x => ({ t: Number(x.date) * 1000, v: Number(x.totalCirculatingUSD?.peggedUSD ?? x.totalCirculating?.peggedUSD) / 1e9 })).filter(x => fin(x.t) && x.v > 0) // 십억 USD.sort((p, q) => p.t - q.t);
+  const series = a.map(x => ({ t: Number(x.date) * 1000, v: Number(x.totalCirculatingUSD?.peggedUSD ?? x.totalCirculating?.peggedUSD) / 1e9 }))
+    .filter(x => fin(x.t) && x.v > 0).sort((p, q) => p.t - q.t);
   return { ok: series.length > 100, status: r.status, series };
 }
 // 선택 소스: 월별 BTC.D 실측(CoinMarketCap 공개 차트 데이터). 실패하면 연평균 앵커 보간(근사)로 대체된다.
@@ -285,21 +289,22 @@ function buildGlobalM2(f, ea, jp, uk, curK) {
 
 // ---------- 월별 특징 ----------
 function featureRow(k, t, live, c) {
-  const kl = addM(k, -1); // M2 발표 지연 1개월 반영 (백테스트 룩어헤드 완화)
-  const y = c.yoy.get(kl) ?? null, y6 = c.yoy.get(addM(kl, -6)) ?? null;
-  const fedNow = lookback(c.fedM, k, 1), fedPrev = c.fedM.get(addM(k, -12)) ?? null;
-  const dolNow = lookback(c.dolM, k, 1), dolPrev = c.dolM.get(addM(k, -3)) ?? null;
-  const oilNow = lookback(c.oilM, k, 2), oilPrev = c.oilM.get(addM(k, -3)) ?? null;
-  const spNow = lookback(c.spM, k, 1), spPrev = c.spM.get(addM(k, -3)) ?? null;
-  const btcNow = valAt(c.btc, t, 10 * DAY), btcPrev = valAt(c.btc, t - 90 * DAY, 10 * DAY);
-  const ratio = tt => { const e = valAt(c.cbeth, tt, 7 * DAY), b = valAt(c.cbbtc, tt, 7 * DAY); return fin(e) && fin(b) && b > 0 ? e / b : null; };
-  const eb = ratio(t), eb0 = ratio(t - 90 * DAY);
-  const st = valAt(c.stable, t, 10 * DAY), st0 = valAt(c.stable, t - 90 * DAY, 10 * DAY);
+  const lag = addM(k, -1); // 발표지연/룩어헤드 방지: M2는 한 달 전 공개분을 사용
+  const y = c.yoy.get(lag) ?? null, y6 = c.yoy.get(addM(lag, -6)) ?? null;
+  const fedNow = lookback(c.fedM, lag, 1), fedPrev = c.fedM.get(addM(lag, -12)) ?? null;
+  const dolNow = lookback(c.dolM, lag, 1), dolPrev = c.dolM.get(addM(lag, -3)) ?? null;
+  const oilNow = lookback(c.oilM, lag, 1), oilPrev = c.oilM.get(addM(lag, -3)) ?? null;
+  const spNow = lookback(c.spM, lag, 1), spPrev = c.spM.get(addM(lag, -3)) ?? null;
+  const y10Now = lookback(c.y10M, lag, 1), y10Prev = c.y10M.get(addM(lag, -3)) ?? null;
+  const btcNow = lookback(c.btcM, k, 1), btcPrev = c.btcM.get(addM(k, -3)) ?? null;
+  const eb = lookback(c.ethBtcM, k, 1), eb0 = c.ethBtcM.get(addM(k, -3)) ?? null;
+  const st = lookback(c.stableM, k, 2), st0 = c.stableM.get(addM(k, -3)) ?? null;
   return {
     k, t, live,
     m2yoy: r3(y, 2), m2accel: fin(y) && fin(y6) ? r3(y - y6, 2) : null,
     fed12: fin(fedNow) && fin(fedPrev) ? r3(fedNow - fedPrev, 2) : null, fedLvl: r3(fedNow, 2),
     dollar3m: r3(pctOf(dolNow, dolPrev), 2), oil3m: r3(pctOf(oilNow, oilPrev), 2), sp90: r3(pctOf(spNow, spPrev), 2),
+    us10y: r3(y10Now, 2), us10y3m: r3(pctOf(y10Now, y10Prev), 2),
     btc: r3(btcNow, 0), btc90: r3(pctOf(btcNow, btcPrev), 2),
     ethbtc: r3(eb, 5), eth90: r3(pctOf(eb, eb0), 2), stable90: r3(pctOf(st, st0), 2)
   };
@@ -307,24 +312,24 @@ function featureRow(k, t, live, c) {
 
 async function buildHistory() {
   const t0 = Date.now(), now = t0, curK = mkey(now);
-  const ids = { m2: "M2SL", fed: "EFFR", dollar: "DTWEXBGS", oil: "WTISPLC", sp: "SP500", eurusd: "DEXUSEU", jpyusd: "DEXJPUS", gbpusd: "EXUSUK", cbbtc: "CBBTCUSD", cbeth: "CBETHUSD" };
+  const ids = { m2: "M2SL", fed: "EFFR", dollar: "DTWEXBGS", oil: "WTISPLC", sp: "SP500", y10: "DGS10", eurusd: "DEXUSEU", jpyusd: "DEXJPUS", gbpusd: "EXUSUK", cbbtc: "CBBTCUSD", cbeth: "CBETHUSD" };
   const names = Object.keys(ids);
   const [fredArr, ea, jp, uk, bc, sc, cmc] = await Promise.all([
-    Promise.all(names.map(n => fredSeries(ids[n], "2010-06-01"))),
+    Promise.all(names.map(n => fredSeries(ids[n], "2010-06-01", !["cbbtc","cbeth"].includes(n), "avg"))),
     fetchEcbM2(), fetchBojM2(now), fetchBoeM4(now), fetchBtcPrice(), fetchStable(), fetchCmcDominance(now)
   ]);
   const f = {}; names.forEach((n, i) => f[n] = fredArr[i]);
   const g = buildGlobalM2(f, ea, jp, uk, curK);
   const btc = bc.ok ? bc.series : (f.cbbtc.ok ? f.cbbtc.series : []);
   const c = {
-    yoy: g.yoy, fedM: monthMap(f.fed.series), dolM: monthMap(f.dollar.series), oilM: monthMap(f.oil.series), spM: monthMap(f.sp.series),
-    btc, cbbtc: f.cbbtc.series, cbeth: f.cbeth.series, stable: sc.series
+    yoy: g.yoy, fedM: monthMap(f.fed.series), dolM: monthMap(f.dollar.series), oilM: monthMap(f.oil.series), spM: monthMap(f.sp.series), y10M: monthMap(f.y10.series),
+    btcM: monthLast(btc), cbbtc: f.cbbtc.series, cbeth: f.cbeth.series, ethBtcM: monthLast(f.cbeth.series.map((x,i)=>({t:x.t,v:(x.v/(valAt(f.cbbtc.series,x.t,7*DAY)||NaN))})).filter(x=>fin(x.v))), stableM: monthLast(sc.series)
   };
   const rows = [];
   for (let k = "2012-01"; k <= curK; k = addM(k, 1)) rows.push(featureRow(k, k === curK ? now : monthEnd(k), k === curK, c));
   const last = (a) => a.length ? a[a.length - 1].v : null;
   const lvl = {
-    fed: last(f.fed.series), dollar: last(f.dollar.series), oil: last(f.oil.series), sp: last(f.sp.series),
+    fed: last(f.fed.series), dollar: last(f.dollar.series), oil: last(f.oil.series), sp: last(f.sp.series), y10: last(f.y10.series),
     m2: g.lastK ? g.global.get(g.lastK) : null, m2Key: g.lastK, stable: last(sc.series)
   };
   const sources = {
@@ -341,8 +346,8 @@ async function buildHistory() {
 const COIN_GROUPS = [
   { key: "eth", label: "ETH", coins: ["ETH"] },
   { key: "large", label: "대형 알트", coins: ["XRP", "SOL", "ADA", "DOGE", "LINK", "AVAX"] },
-  { key: "mid", label: "중형 알트", coins: ["SUI", "HBAR", "XLM", "UNI", "AAVE", "NEAR"] },
-  { key: "small", label: "소형·고베타", coins: ["ONDO", "TAO"] }
+  { key: "mid", label: "중형 알트", coins: ["SUI", "HBAR", "XLM", "UNI", "AAVE", "NEAR", "APT", "ARB", "INJ"] },
+  { key: "small", label: "소형·고베타", coins: ["ONDO", "TAO", "SEI"] }
 ];
 async function upbitDays(sym, count = 100) {
   const r = await fetchJson(`${UPBIT}/v1/candles/days?market=KRW-${sym}&count=${count}`, 7000);
@@ -367,12 +372,12 @@ async function buildLive() {
   const btc = await upbitDays("BTC");
   const coins = [];
   if (btc.ok) {
-    const b30 = retN(btc.rows, 30), b90 = retN(btc.rows, 90);
+    const b7 = retN(btc.rows, 7), b30 = retN(btc.rows, 30), b90 = retN(btc.rows, 90);
     for (const g of COIN_GROUPS) for (const sym of g.coins) {
       await sleep(120);
       const d = await upbitDays(sym); if (!d.ok) continue;
-      const r30 = retN(d.rows, 30), r90 = retN(d.rows, 90);
-      coins.push({ sym, group: g.key, ret30: r3(r30, 1), ret90: r3(r90, 1), rel30: fin(r30) && fin(b30) ? r3(r30 - b30, 1) : null, rel90: fin(r90) && fin(b90) ? r3(r90 - b90, 1) : null, vol: r3(vol7over30(d.rows), 2), _rows: d.rows });
+      const r7 = retN(d.rows, 7), r30 = retN(d.rows, 30), r90 = retN(d.rows, 90);
+      coins.push({ sym, group: g.key, ret7: r3(r7, 1), ret30: r3(r30, 1), ret90: r3(r90, 1), rel7: fin(r7) && fin(b7) ? r3(r7 - b7, 1) : null, rel30: fin(r30) && fin(b30) ? r3(r30 - b30, 1) : null, rel90: fin(r90) && fin(b90) ? r3(r90 - b90, 1) : null, vol: r3(vol7over30(d.rows), 2), _rows: d.rows });
     }
   }
   // ETH/BTC (원화 비율 → 환율 상쇄)
@@ -387,39 +392,75 @@ async function buildLive() {
   for (const c of coins) { const n = c._rows.length; if (n < 38) continue; s7 += c._rows.slice(n - 7).reduce((s, x) => s + x.v, 0) / 7; s30 += c._rows.slice(n - 37, n - 7).reduce((s, x) => s + x.v, 0) / 30; nv++; }
   const volRatio = nv && s30 > 0 ? r3(s7 / s30, 2) : null;
   coins.forEach(c => delete c._rows);
-  const valid90 = coins.filter(c => fin(c.rel90)), valid30 = coins.filter(c => fin(c.rel30));
+  const valid7 = coins.filter(c => fin(c.rel7)), valid90 = coins.filter(c => fin(c.rel90)), valid30 = coins.filter(c => fin(c.rel30));
+  const pctBeat7 = valid7.length ? r3(valid7.filter(c => c.rel7 > 0).length / valid7.length * 100, 0) : null;
   const pctBeat90 = valid90.length ? r3(valid90.filter(c => c.rel90 > 0).length / valid90.length * 100, 0) : null;
   const pctBeat30 = valid30.length ? r3(valid30.filter(c => c.rel30 > 0).length / valid30.length * 100, 0) : null;
+  const breadthBlend = [pctBeat7,pctBeat30,pctBeat90].filter(fin).length ? r3((pctBeat7??pctBeat30??pctBeat90)*0.2+(pctBeat30??pctBeat90??pctBeat7)*0.3+(pctBeat90??pctBeat30??pctBeat7)*0.5,0) : null;
   const groups = COIN_GROUPS.map(g => { const m = coins.filter(c => c.group === g.key && fin(c.rel30)); const avg = m.length ? m.reduce((s, c) => s + c.rel30, 0) / m.length : null; return { key: g.key, label: g.label, n: m.length, rel30: r3(avg, 1), beat: fin(avg) ? avg > 0 : null }; });
   let reach = 0; for (const g of groups) { if (g.beat === true) reach++; else break; }
   const ok = btc.ok && coins.length >= 6;
-  return { ok, built: Date.now(), ms: Date.now() - t0, dom, btcKrw: btc.ok ? { ret30: r3(retN(btc.rows, 30), 1), ret90: r3(retN(btc.rows, 90), 1) } : null, ethbtc, coins, breadth: { n: coins.length, pctBeat30, pctBeat90, volRatio }, groups, reach,
+  return { ok, built: Date.now(), ms: Date.now() - t0, dom, btcKrw: btc.ok ? { ret7: r3(retN(btc.rows, 7), 1), ret30: r3(retN(btc.rows, 30), 1), ret90: r3(retN(btc.rows, 90), 1) } : null, ethbtc, coins, breadth: { n: coins.length, pctBeat7, pctBeat30, pctBeat90, breadthBlend, volRatio }, groups, reach,
     sources: { coingecko: { ok: !!dom, api: cgApiR.status, page: cgPageR.status }, upbit: { ok: btc.ok, coins: coins.length, total: COIN_GROUPS.reduce((s, g) => s + g.coins.length, 0) } }, error: ok ? undefined : "LIVE_INPUTS_MISSING" };
 }
 
 // ---------- 점수 ----------
-const MAXPTS = { m2: 20, accel: 10, dollar: 10, fed: 10, btc: 10, dom: 20, eth: 10, alt: 10 };
-const MACRO_KEYS = ["m2", "accel", "dollar", "fed", "btc"], FULL_KEYS = ["m2", "accel", "dollar", "fed", "btc", "dom", "eth"], ALL_KEYS = [...FULL_KEYS, "alt"];
-function scoreComps(f) {
-  const p = {}, y = f.m2yoy, a = f.m2accel, d = f.dollar3m, b = f.btc90, dd = f.dom90, e = f.eth90;
-  p.m2 = !fin(y) ? null : y <= 0 ? 0 : y < 2 ? 4 : y < 4 ? 8 : y < 6 ? 12 : y < 8 ? 16 : 20;
-  p.accel = !fin(a) ? null : a >= 2 ? 10 : a >= 1 ? 7 : a > 0 ? 4 : 0;
-  p.dollar = !fin(d) ? null : d <= -3 ? 10 : d <= -1.5 ? 8 : d < 0 ? 5 : d < 1 ? 2 : 0;
-  if (!fin(f.fed12) && !fin(f.fedLvl)) p.fed = null;
-  else { const dl = !fin(f.fed12) ? 0 : f.fed12 <= -1 ? 10 : f.fed12 <= -0.25 ? 7 : f.fed12 < 0.25 ? 3 : 0, lv = !fin(f.fedLvl) ? 0 : f.fedLvl <= 1 ? 7 : f.fedLvl <= 2.5 ? 4 : 0; p.fed = Math.max(dl, lv); }
-  p.btc = !fin(b) ? null : b <= 0 ? 0 : b < 10 ? 4 : b < 25 ? 7 : 10;
-  if (!fin(dd)) p.dom = null;
-  else { const base = dd <= -4 ? 20 : dd <= -2.5 ? 16 : dd <= -1.5 ? 12 : dd <= -0.5 ? 7 : dd < 0.5 ? 3 : 0; const q = !fin(b) ? 1 : b <= -15 ? 0 : b < 0 ? 0.4 : 1; p.dom = Math.round(base * q); } // BTC가 급락해서 BTC.D가 내려간 경우는 감액
-  p.eth = !fin(e) ? null : e >= 25 ? 10 : e >= 12 ? 8 : e >= 5 ? 5 : e > 0 ? 3 : 0;
-  p.alt = fin(f.altPts) ? f.altPts : null;
+// ===== DATA-DRIVEN SCORE ENGINE =====
+// 점수의 임계값을 "몇 %면 10점"처럼 고정하지 않는다.
+// 각 월의 값이 직전 60개월 분포에서 어느 위치인지(percentile)로 환산한다.
+// 따라서 2017/2021 같은 과거 강세장과 2026 현재를 같은 눈금에서 비교할 수 있다.
+const MAXPTS = { m2: 15, accel: 10, dollar: 10, fed: 10, btc: 10, dom: 20, eth: 10, alt: 15 };
+const SCORE_KEYS = Object.keys(MAXPTS);
+const SCORE_LOOKBACK = 60;
+const clamp01 = x => Math.max(0, Math.min(1, x));
+function percentileRank(v, arr, higherBetter=true) {
+  const a = arr.filter(fin).sort((x,y)=>x-y); if (!fin(v) || !a.length) return null;
+  let lo=0, hi=a.length;
+  while(lo<hi){const m=(lo+hi)>>1;if(a[m] < v)lo=m+1;else hi=m;}
+  let first=lo,last=lo; while(first>0 && a[first-1]===v)first--; while(last<a.length-1 && a[last+1]===v)last++;
+  const rank=((first+last)/2)/(a.length-1||1); return higherBetter?rank:1-rank;
+}
+function trailingValues(rows, idx, field, min=12) {
+  const from=Math.max(0,idx-SCORE_LOOKBACK), a=[]; for(let i=from;i<idx;i++){const v=rows[i]?.[field];if(fin(v))a.push(v);} return a.length>=min?a:[];
+}
+function altProxyPct(row, rows, idx){
+  const a=[];
+  const dom=percentileRank(row.dom90,trailingValues(rows,idx,'dom90'),false);
+  const eth=percentileRank(row.eth90,trailingValues(rows,idx,'eth90'),true);
+  const st=percentileRank(row.stable90,trailingValues(rows,idx,'stable90'),true);
+  if(fin(dom))a.push(dom); if(fin(eth))a.push(eth); if(fin(st))a.push(st);
+  return a.length>=2?a.reduce((s,x)=>s+x,0)/a.length:null;
+}
+function dynamicScore(row, rows, idx, altPts=null){
+  const p={};
+  const specs={
+    m2:['m2yoy',true], accel:['m2accel',true], dollar:['dollar3m',false],
+    fed:['fed12',false], btc:['btc90',true], dom:['dom90',false], eth:['eth90',true]
+  };
+  for(const [k,[field,hi]] of Object.entries(specs)){
+    const v=percentileRank(row[field],trailingValues(rows,idx,field),hi); p[k]=fin(v)?Math.round(v*MAXPTS[k]):null;
+  }
+  if(fin(p.dom) && fin(row.btc90) && row.btc90<0) p.dom=Math.round(p.dom*clamp01((row.btc90+15)/15));
+  if(fin(altPts)) p.alt=Math.round(clamp01(altPts/100)*MAXPTS.alt);
+  else {const ap=altProxyPct(row,rows,idx);p.alt=fin(ap)?Math.round(ap*MAXPTS.alt):null;}
   return p;
 }
-function totalOf(p, keys, needAll) {
-  let s = 0, m = 0;
-  for (const k of keys) { if (p[k] == null) { if (needAll) return null; continue; } s += p[k]; m += MAXPTS[k]; }
-  return m ? { score: Math.round(s / m * 100), cover: m } : null;
+function totalOf(p, keys=SCORE_KEYS, needAll=false){
+  let s=0,m=0; for(const k of keys){if(p[k]==null){if(needAll)return null;continue;}s+=p[k];m+=MAXPTS[k];}
+  return m?{score:Math.round(s/m*100),cover:m}:null;
 }
-const stageOf = s => s >= 70 ? { key: "wide", label: "광범위한 알트 강세 조건", emoji: "🔴" } : s >= 40 ? { key: "prep", label: "알트 순환매 준비", emoji: "🟡" } : { key: "btc", label: "BTC 중심 장세", emoji: "🟢" };
+function quantile(a,q){const v=a.filter(fin).sort((x,y)=>x-y);if(!v.length)return null;const p=(v.length-1)*q,i=Math.floor(p),f=p-i;return i+1<v.length?v[i]+(v[i+1]-v[i])*f:v[i];}
+function calibrateBands(rows){
+  const scores=rows.filter(r=>!r.live&&fin(r.s)).map(r=>r.s);
+  return {watch:Math.round(quantile(scores,.60)||40), expansion:Math.round(quantile(scores,.78)||55), broad:Math.round(quantile(scores,.90)||70), distribution:{p50:Math.round(quantile(scores,.5)||50),p75:Math.round(quantile(scores,.75)||60),p90:Math.round(quantile(scores,.9)||70),n:scores.length}};
+}
+function stageOf(s,b){
+  if(!fin(s)||!b)return null;
+  if(s>=b.broad)return {key:'broad',label:'광범위 알트 강세 영역',emoji:'🔴'};
+  if(s>=b.expansion)return {key:'expansion',label:'초기 알트 확산 영역',emoji:'🟠'};
+  if(s>=b.watch)return {key:'watch',label:'알트 순환매 감지 영역',emoji:'🟡'};
+  return {key:'btc',label:'BTC 중심 영역',emoji:'🟢'};
+}
 
 // 과거 실제 알트 강세 구간(사후 정의 · 화면 음영/보정표에 사용). 점수 계산에는 쓰이지 않는다.
 const ALT_WINDOWS = [
@@ -447,19 +488,25 @@ function compose(hist, live) {
       if (fin(liveDom)) { r.dom = liveDom; r.domSrc = "coingecko"; if (fin(live?.dom?.m3)) r.dom90 = r3(liveDom - live.dom.m3, 2); }
       if (fin(live?.ethbtc?.ch90)) { r.eth90 = live.ethbtc.ch90; r.ethbtc = live.ethbtc.now ?? r.ethbtc; }
     }
-    const p = scoreComps(r), full = totalOf(p, FULL_KEYS, true), mac = totalOf(p, MACRO_KEYS, true);
-    r.s = full ? full.score : null; r.mo = mac ? mac.score : null; r._p = p;
+    const p = dynamicScore(r, rows, rows.indexOf(r));
+    const full = totalOf(p, SCORE_KEYS, true);
+    const macro = totalOf(p, ['m2','accel','dollar','fed','btc'], true);
+    r.s = full ? full.score : null; r.mo = macro ? macro.score : null; r._p = p;
   }
-  // 현재 점수 (알트 확산도 포함)
+  // 현재 점수: 역사분포 기반 7개 축 + 실제 알트 breadth/거래대금 확인.
   const br = live?.breadth || {};
-  let altPts = null;
-  if (live?.ok && fin(br.pctBeat90)) { const bS = br.pctBeat90 >= 75 ? 7 : br.pctBeat90 >= 50 ? 5 : br.pctBeat90 >= 30 ? 3 : 0; const vS = !fin(br.volRatio) ? 0 : br.volRatio >= 1.5 ? 3 : br.volRatio >= 1.15 ? 2 : br.volRatio >= 0.9 ? 1 : 0; altPts = bS + vS; }
-  const pNow = scoreComps({ ...cur, altPts }), tot = totalOf(pNow, ALL_KEYS, false), comparable = cur.s;
-  const total = tot ? tot.score : null, stage = total != null ? stageOf(total) : null;
-  const LABEL = { m2: "Global M2 증가", accel: "유동성 가속", dollar: "달러 약세", fed: "Fed 완화", btc: "BTC 상승 추세", dom: "BTC.D 하락(품질보정)", eth: "ETH/BTC 상승", alt: "알트 확산·거래대금" };
+  const altBreadthScore = fin(br.breadthBlend) ? clamp01(br.breadthBlend/100)*100 : null;
+  const altVolumeScore = fin(br.volRatio) ? clamp01((Math.log(Math.max(br.volRatio,0.01))+0.35)/(Math.log(1.75)+0.35))*100 : null;
+  const altScore = fin(altBreadthScore)&&fin(altVolumeScore) ? altBreadthScore*0.75+altVolumeScore*0.25 : altBreadthScore;
+  const pNow = dynamicScore({ ...cur }, rows, rows.length-1, altScore);
+  const tot = totalOf(pNow, SCORE_KEYS, false), comparable = cur.s;
+  const total = tot ? tot.score : null;
+  const bands = calibrateBands(rows);
+  const stage = total != null ? stageOf(total,bands) : null;
+  const LABEL = { m2: "Global M2 증가", accel: "유동성 가속", dollar: "달러 약세", fed: "Fed 완화", btc: "BTC 상승 추세", dom: "BTC.D 하락(품질보정)", eth: "ETH/BTC 상승", alt: "실제 알트 확산" };
   const fm = (v, u = "%", d = 1) => fin(v) ? `${v >= 0 ? "+" : ""}${v.toFixed(d)}${u}` : "—";
-  const DETAIL = { m2: `YoY ${fm(cur.m2yoy)}`, accel: `6개월 전 대비 ${fm(cur.m2accel, "%p")}`, dollar: `3개월 ${fm(cur.dollar3m)}`, fed: `12개월 ${fm(cur.fed12, "%p", 2)} · 현재 ${fin(cur.fedLvl) ? cur.fedLvl.toFixed(2) + "%" : "—"}`, btc: `90일 ${fm(cur.btc90)}`, dom: `90일 ${fm(cur.dom90, "%p")}${cur.btc90 < 0 && fin(cur.dom90) && cur.dom90 < 0 ? " · BTC 하락 동반→감액" : ""}`, eth: `90일 ${fm(cur.eth90)}`, alt: fin(br.pctBeat90) ? `90일 BTC 초과 ${br.pctBeat90}% · 거래대금 x${fin(br.volRatio) ? br.volRatio : "—"}` : "데이터 없음" };
-  const comps = ALL_KEYS.map(k => ({ key: k, label: LABEL[k], pts: pNow[k], max: MAXPTS[k], detail: DETAIL[k] }));
+  const DETAIL = { m2: `YoY ${fm(cur.m2yoy)}`, accel: `6개월 전 대비 ${fm(cur.m2accel, "%p")}`, dollar: `3개월 ${fm(cur.dollar3m)}`, fed: `12개월 ${fm(cur.fed12, "%p", 2)} · 현재 ${fin(cur.fedLvl) ? cur.fedLvl.toFixed(2) + "%" : "—"}`, btc: `90일 ${fm(cur.btc90)}`, dom: `90일 ${fm(cur.dom90, "%p")}${cur.btc90 < 0 && fin(cur.dom90) && cur.dom90 < 0 ? " · BTC 하락 동반→감액" : ""}`, eth: `90일 ${fm(cur.eth90)}`, alt: fin(br.breadthBlend) ? `7/30/90일 혼합 ${br.breadthBlend}% · 90일 ${fin(br.pctBeat90)?br.pctBeat90:'—'}% · 거래대금 x${fin(br.volRatio) ? br.volRatio : "—"}` : "데이터 없음" };
+  const comps = SCORE_KEYS.map(k => ({ key: k, label: LABEL[k], pts: pNow[k], max: MAXPTS[k], detail: DETAIL[k] }));
   const drivers = { up: comps.filter(c => c.pts != null && c.pts / c.max >= 0.7).map(c => c.label), down: comps.filter(c => c.pts != null && c.pts / c.max <= 0.3).map(c => c.label) };
   // 추세/지속성 (과거와 동일 기준인 comparable 사용)
   const seq = rows.filter(r => r.s != null).map(r => ({ k: r.k, s: r.s }));
@@ -471,7 +518,7 @@ function compose(hist, live) {
   const outside = done.filter(r => !ALT_WINDOWS.some(w => k2(r.k, w)));
   function k2(k, w) { return monthsBetween(w.from, k) >= -2 && monthsBetween(k, w.to) >= -2; }
   const inRows = done.filter(r => inWindow(r.k));
-  const calibration = [40, 50, 60, 70].map(T => {
+  const calibration = [bands.watch, bands.expansion, bands.broad].map(T => {
     const hit = inRows.length ? inRows.filter(r => r.s >= T).length / inRows.length * 100 : null;
     const fa = outside.length ? outside.filter(r => r.s >= T).length / outside.length * 100 : null;
     const leads = ALT_WINDOWS.map(w => { const c = done.find(r => monthsBetween(w.from, r.k) >= -8 && monthsBetween(r.k, w.to) >= 0 && r.s >= T); return { id: w.id, firstCross: c ? c.k : null, leadMonths: c ? monthsBetween(c.k, w.from) : null }; });
@@ -499,12 +546,15 @@ function compose(hist, live) {
   }
   const L = hist.levels || {};
   return {
-    ok: true, version: "altseason-v2", updatedAt: Date.now(), cache: { hist: hist.cache, live: live?.cache }, staleReason: hist.staleReason || live?.staleReason,
-    score: { total, comparable, stage, coverage: tot ? tot.cover : null, components: comps, drivers, path, momentum: { m1: ago(1) != null && comparable != null ? comparable - ago(1) : null, m3: ago(3) != null && comparable != null ? comparable - ago(3) : null }, streak: { over40: streak(40), over70: streak(70) } },
-    inputs: { m2: { value: L.m2, key: L.m2Key, yoy: cur.m2yoy, accel: cur.m2accel, used: hist.m2.used, rejected: hist.m2.rejected }, fed: { value: L.fed, chg12: cur.fed12 }, dollar: { value: L.dollar, chg3m: cur.dollar3m }, oil: { value: L.oil, chg3m: cur.oil3m }, sp: { value: L.sp, chg3m: cur.sp90 }, btc: { usd: cur.btc, ret90: cur.btc90, vsSp: r3(rel, 1) }, dom: { value: fin(liveDom) ? liveDom : cur.dom, src: fin(liveDom) ? "coingecko" : cur.domSrc, d7: live?.dom?.d7 != null && fin(liveDom) ? r3(liveDom - live.dom.d7, 2) : null, d30: live?.dom?.m1 != null && fin(liveDom) ? r3(liveDom - live.dom.m1, 2) : null, d90: cur.dom90 }, ethbtc: { value: cur.ethbtc, ch30: live?.ethbtc?.ch30 ?? null, ch90: cur.eth90 }, stable: { value: L.stable, g90: cur.stable90 } },
+    ok: true, version: "altseason-v3", updatedAt: Date.now(), cache: { hist: hist.cache, live: live?.cache }, staleReason: hist.staleReason || live?.staleReason,
+    score: { total, comparable, stage, coverage: tot ? tot.cover : null, components: comps, drivers, path, momentum: { m1: ago(1) != null && comparable != null ? comparable - ago(1) : null, m3: ago(3) != null && comparable != null ? comparable - ago(3) : null }, streak: { overWatch: streak(bands.watch), overExpansion: streak(bands.expansion), overBroad: streak(bands.broad) }, bands, methodology: 'rolling-60m-percentile' },
+    inputs: { m2: { value: L.m2, key: L.m2Key, yoy: cur.m2yoy, accel: cur.m2accel, used: hist.m2.used, rejected: hist.m2.rejected }, fed: { value: L.fed, chg12: cur.fed12 }, dollar: { value: L.dollar, chg3m: cur.dollar3m }, oil: { value: L.oil, chg3m: cur.oil3m }, us10y: { value: cur.us10y, chg3m: cur.us10y3m }, sp: { value: L.sp, chg3m: cur.sp90 }, btc: { usd: cur.btc, ret90: cur.btc90, vsSp: r3(rel, 1) }, dom: { value: fin(liveDom) ? liveDom : cur.dom, src: fin(liveDom) ? "coingecko" : cur.domSrc, d7: live?.dom?.d7 != null && fin(liveDom) ? r3(liveDom - live.dom.d7, 2) : null, d30: live?.dom?.m1 != null && fin(liveDom) ? r3(liveDom - live.dom.m1, 2) : null, d90: cur.dom90 }, ethbtc: { value: cur.ethbtc, ch30: live?.ethbtc?.ch30 ?? null, ch90: cur.eth90 }, stable: { value: L.stable, g90: cur.stable90 } },
     breadth: live ? { ...live.breadth, coins: live.coins, groups: live.groups, reach: live.reach } : null, rotation, analogs,
+    confirmation: { score: total, bands, breadth90: br.pctBeat90 ?? null, breadthBlend: br.breadthBlend ?? null, eth90: cur.eth90 ?? null, dom90: cur.dom90 ?? null, volumeRatio: br.volRatio ?? null,
+      broadScore: total != null && total >= bands.broad, breadthConfirmed: fin(br.pctBeat90) && br.pctBeat90 >= 75, rotationConfirmed: fin(cur.eth90)&&cur.eth90>0&&fin(cur.dom90)&&cur.dom90<0,
+      broadConfirmed: total != null && total >= bands.broad && fin(br.pctBeat90) && br.pctBeat90 >= 75 && fin(cur.eth90) && cur.eth90 > 0 && fin(cur.dom90) && cur.dom90 < 0 },
     history: { months: rows.map(r => ({ k: r.k, s: r.s, mo: r.mo, m2: r.m2yoy, d: fin(r.dom) ? r3(r.dom, 1) : null, ds: r.domSrc, e: r.ethbtc, b: r.btc90 })), windows: ALT_WINDOWS, windowStats: windows, calibration },
-    sources: src, notes: { domApprox: !hist.cmcDom, m2Lag: "M2는 발표 지연을 반영해 1개월 전 값을 사용" }
+    sources: src, notes: { domApprox: !hist.cmcDom, m2Lag: "M2는 발표 지연을 반영해 1개월 전 공개분을 사용", scoring: "각 점수는 직전 60개월 분포의 percentile로 산출하며, 현재 breadth는 7/30/90일 혼합을 사용", historicalAltProxy: "과거 알트확산 15점은 BTC.D·ETH/BTC·스테이블코인 증가율의 회전 proxy로 대체" }
   };
 }
 
@@ -516,7 +566,7 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.6.0-minimal+pin+altseason-v2",
+        version: "v10.7.0-minimal+pin+altseason-v3",
         service: "BTC ALT REGIME TRADER (minimal)",
         market: "Upbit KRW",
         pinConfigured: !!env.PIN,
@@ -558,7 +608,7 @@ export default {
       // Mayer Multiple = 가격 / 200일 이동평균. workers.dev 에서는 Cache API 가 동작하지 않으므로 KV/메모리 캐시(6시간)를 쓴다.
       const mayerPayload = await cached(env, "macro:mayer:v2", 6*3600, async () => {
         let rows=[],to=null;
-        for(let page=0;page<20;page++){
+        for(let page=0;page<3;page++){
           const url=`https://api.upbit.com/v1/candles/days?market=KRW-BTC&count=200${to?`&to=${encodeURIComponent(to)}`:""}`;
           const r=await fetchJson(url,10000);
           const a=Array.isArray(r.body)?r.body:[];
@@ -599,9 +649,13 @@ export default {
     if (u.pathname === "/altseason") {
       if (req.method !== "POST" && req.method !== "GET") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
       const force = u.searchParams.get("force") === "1", part = u.searchParams.get("part");
-      const hist = await cached(env, "as:hist:v2", 6*3600, buildHistory, v=>v&&v.ok, force);
-      if (part === "hist") return json({ ok: !!hist.ok, part: "hist", cache: hist.cache, ms: hist.ms, sources: hist.sources, error: hist.error });
-      const live = await cached(env, "as:live:v2", 600, buildLive, v=>v&&v.ok, force);
+      if (part === "live") {
+        const live = await cached(env, "as:live:v3", 600, buildLive, v=>v&&v.ok, force);
+        return json({ ok:!!live?.ok, part:"live", cache:live?.cache, ...live });
+      }
+      const hist = await cached(env, "as:hist:v3", 12*3600, buildHistory, v=>v&&v.ok, force);
+      if (part === "hist") return json({ ok: !!hist.ok, part: "hist", cache: hist.cache, ms: hist.ms, sources: hist.sources, error: hist.error, history: hist.rows, levels: hist.levels, m2: hist.m2, cmcDom: hist.cmcDom });
+      const live = await cached(env, "as:live:v3", 600, buildLive, v=>v&&v.ok, force);
       return json(compose(hist, live));
     }
 

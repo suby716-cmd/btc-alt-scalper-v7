@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v8.4.4</title>
+<title>BTC ALT REGIME TRADER v10.7.0</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -165,7 +165,7 @@
 .as-top{display:grid;grid-template-columns:230px 1fr;gap:10px}
 .as-scorecard{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:13px;text-align:center}
 .as-score{font-size:44px;font-weight:900;line-height:1.1;margin:4px 0}.as-stage{font-size:14px;font-weight:800}
-.as-gauge{position:relative;height:9px;border-radius:5px;overflow:hidden;display:flex;margin:10px 4px 2px}.as-gauge i{display:block;height:100%}.as-gauge .g1{width:40%;background:#bfe6cf}.as-gauge .g2{width:30%;background:#f6df9f}.as-gauge .g3{width:30%;background:#f3b3ad}
+.as-gauge{position:relative;height:9px;border-radius:5px;overflow:hidden;display:flex;margin:10px 4px 2px}.as-gauge i{display:block;height:100%}.as-gauge .g1{width:25%;background:#bfe6cf}.as-gauge .g2{width:25%;background:#f6df9f}.as-gauge .g3{width:25%;background:#f3c6a2}.as-gauge .g4{width:25%;background:#f3b3ad}.as-gauge-lab{position:relative;height:15px;font-size:10px;color:var(--muted)}.as-gauge-lab span{position:absolute;transform:translateX(-50%)}.as-gauge-lab span:first-child{left:0;transform:none}.as-gauge-lab span:last-child{right:0;left:auto;transform:none}.as-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.as-badge{display:inline-block;padding:3px 7px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:10px;font-weight:700}.as-badge.ok{border-color:#b7ddc5;background:#f3fbf6;color:#197a42}.as-badge.warn{border-color:#ead6a0;background:#fffaf0;color:#8a6410}.as-badge.bad{border-color:#e4b5b0;background:#fff5f4;color:#a12620}
 .as-gauge b{position:absolute;top:-2px;width:3px;height:13px;background:#111827;border-radius:2px;left:0;transform:translateX(-1px)}
 .as-gauge-lab{position:relative;height:13px;font-size:10px;color:var(--muted);margin:0 4px}.as-gauge-lab span{position:absolute;transform:translateX(-50%)}.as-gauge-lab span:first-child{left:0;transform:none}.as-gauge-lab span:last-child{right:0;left:auto;transform:none}
 .as-path{font-size:12px;margin-top:6px;font-weight:700}.as-mom{font-size:11px;color:var(--muted);margin-top:2px;min-height:15px}
@@ -189,7 +189,7 @@
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v8.4.4</h1><div class="sub">Upbit KRW · 실시간 24H 순위 + 미니차트 · 일봉/15분/5분 Regime + Pattern · Cloudflare Cron · Telegram 수동매매 알림</div></div>
+    <div class="title"><h1>⚡ BTC ALT REGIME TRADER v10.7.0</h1><div class="sub">Upbit KRW · 실시간 24H 순위 + 미니차트 · 일봉/15분/5분 Regime + Pattern · Cloudflare Cron · Telegram 수동매매 알림</div></div>
     <div class="status"><span class="dot" id="dot"></span><span id="status">연결 준비중</span></div>
   </div>
 
@@ -217,18 +217,19 @@
   </div>
 
   <div class="panel as-panel" id="asPanel">
-  <div class="section-title">🌍 GLOBAL LIQUIDITY & ALTSEASON RADAR <span id="asSub">월별 역사 재구성 + 현재 알트 확산도</span>
+  <div class="section-title">🌍 GLOBAL LIQUIDITY & ALTSEASON RADAR <span id="asSub">유동성 · BTC.D · ETH/BTC · 실제 알트 확산을 함께 보는 데이터 기반 레이더</span>
     <button class="btn mini-btn as-reload" id="asReload" type="button">새로고침</button></div>
   <div class="as-top">
     <div class="as-scorecard">
       <div class="label">ALTSEASON SCORE</div>
       <div class="as-score" id="asScore">—</div>
       <div class="as-stage" id="asStage">계산 중…</div>
-      <div class="as-gauge"><i class="g1"></i><i class="g2"></i><i class="g3"></i><b id="asMarker"></b></div>
-      <div class="as-gauge-lab"><span>0</span><span style="left:40%">40</span><span style="left:70%">70</span><span>100</span></div>
+      <div class="as-gauge"><i class="g1"></i><i class="g2"></i><i class="g3"></i><i class="g4"></i><b id="asMarker"></b></div>
+      <div class="as-gauge-lab"><span>0</span><span id="asWatchLab">—</span><span id="asExpandLab">—</span><span id="asBroadLab">—</span><span>100</span></div>
       <div class="as-path" id="asPath">—</div>
       <div class="as-mom" id="asMom"></div>
-      <div class="altseason-note">과거 패턴 기반 환경 진단 · 매매신호 아님</div>
+      <div class="as-badges" id="asScoreBadges"></div>
+      <div class="altseason-note">임의의 40/70 고정점수가 아니라 과거 60개월 분포로 자동 보정 · 매매신호 아님</div>
     </div>
     <div class="as-comps" id="asComps"></div>
   </div>
@@ -1713,20 +1714,28 @@ var AS={data:null,mode:'score',hoverIdx:null,timer:null};
 function asOk(v){return v!=null&&Number.isFinite(Number(v))}
 function asF(v,d=1,u='%',sign=true){if(!asOk(v))return '—';let t=Number(v).toFixed(d);if(/^-0(\.0+)?$/.test(t))t=t.slice(1);return `${sign&&Number(t)>=0?'+':''}${t}${u}`}
 function asEsc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-function asColor(s){return s>=70?'#d93025':s>=40?'#b7791f':'#0f9d58'}
+function asColor(s,b){b=b||{watch:40,expansion:60,broad:75};return s>=b.broad?'#d93025':s>=b.expansion?'#d97706':s>=b.watch?'#b7791f':'#0f9d58'}
 
 function renderAlt(d){
   AS.data=d;
   const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
-  const sc=d.score||{},tot=sc.total;
+  const sc=d.score||{},tot=sc.total,bands=sc.bands||{watch:40,expansion:60,broad:75};
   set('asScore',asOk(tot)?String(tot):'—');
-  const se=$('asScore');if(se)se.style.color=asOk(tot)?asColor(tot):'inherit';
+  const se=$('asScore');if(se)se.style.color=asOk(tot)?asColor(tot,bands):'inherit';
   set('asStage',sc.stage?`${sc.stage.emoji} ${sc.stage.label}`:'데이터 부족');
+  set('asWatchLab',String(bands.watch));set('asExpandLab',String(bands.expansion));set('asBroadLab',String(bands.broad));
   const mk=$('asMarker');if(mk&&asOk(tot))mk.style.left=Math.max(0,Math.min(100,tot))+'%';
+  const conf=d.confirmation||{}; const dv0=$('asScoreBadges');
+  if(dv0){ const badges=[];
+    badges.push(`<span class="as-badge ${conf.breadthConfirmed?'ok':'warn'}">90일 breadth ${asOk(conf.breadth90)?conf.breadth90+'%':'—'} ${conf.breadthConfirmed?'확산':'미확인'}</span>`);
+    badges.push(`<span class="as-badge ${conf.rotationConfirmed?'ok':'warn'}">BTC.D↓ + ETH/BTC↑ ${conf.rotationConfirmed?'동시확인':'대기'}</span>`);
+    badges.push(`<span class="as-badge ${conf.broadConfirmed?'ok':'warn'}">광범위 확산 ${conf.broadConfirmed?'확인':'미확인'}</span>`);
+    dv0.innerHTML=badges.join(' ');
+  }
   const pth=(sc.path||[]).map(p=>p.s);
   set('asPath',pth.length?pth.join(' → '):'—');
   const mo=sc.momentum||{};
-  set('asMom',asOk(tot)?`1개월 ${asF(mo.m1,0,'',true)} · 3개월 ${asF(mo.m3,0,'',true)} · 40점↑ ${sc.streak?.over40||0}개월 연속 · 70점↑ ${sc.streak?.over70||0}개월`:'');
+  set('asMom',asOk(tot)?`1개월 ${asF(mo.m1,0,'',true)} · 3개월 ${asF(mo.m3,0,'',true)} · Watch↑ ${sc.streak?.overWatch||0}개월 · 확산↑ ${sc.streak?.overExpansion||0}개월 · 광범위↑ ${sc.streak?.overBroad||0}개월`:'');
   const comps=$('asComps');
   if(comps)comps.innerHTML=(sc.components||[]).map(c=>{
     const has=asOk(c.pts),w=has?Math.round(c.pts/c.max*100):0;
@@ -1734,7 +1743,7 @@ function renderAlt(d){
   }).join('');
   const dr=sc.drivers||{};
   const dv=$('asDrivers');
-  if(dv)dv.innerHTML=`<b>우호적</b> ${asEsc((dr.up||[]).join(' · ')||'없음')} &nbsp;|&nbsp; <b>부정적</b> ${asEsc((dr.down||[]).join(' · ')||'없음')}${sc.coverage&&sc.coverage<100?` &nbsp;|&nbsp; <span class="as-warn">일부 항목 데이터 없음 (${sc.coverage}점 만점 기준 환산)</span>`:''}`;
+  if(dv){ const badges=dv.innerHTML; dv.innerHTML=badges+`<div style="margin-top:6px"><b>우호적</b> ${asEsc((dr.up||[]).join(' · ')||'없음')} &nbsp;|&nbsp; <b>부정적</b> ${asEsc((dr.down||[]).join(' · ')||'없음')}${sc.coverage&&sc.coverage<100?` &nbsp;|&nbsp; <span class="as-warn">일부 항목 데이터 없음 (${sc.coverage}점 기준)</span>`:''}</div>`;}
   renderAltLadder(d);renderAltCalib(d);renderAltAnalogs(d);renderAltMetrics(d);renderAltFoot(d);
   drawAlt();
 }
@@ -1749,7 +1758,7 @@ function renderAltLadder(d){
   });
   el.innerHTML=h;
   const names=['BTC 중심','ETH까지 확산','대형 알트까지 확산','중형 알트까지 확산','소형·고베타까지 전 구간 확산'];
-  if(nt)nt.innerHTML=`${names[b.reach||0]} · 90일 기준 BTC를 이긴 알트 <b>${asOk(b.pctBeat90)?b.pctBeat90+'%':'—'}</b> (75%↑ = CMC식 알트시즌) · 30일 <b>${asOk(b.pctBeat30)?b.pctBeat30+'%':'—'}</b> · 알트 거래대금 7일/30일 <b>x${asOk(b.volRatio)?b.volRatio:'—'}</b>`;
+  if(nt)nt.innerHTML=`${names[b.reach||0]} · 90일 기준 BTC를 이긴 알트 <b>${asOk(b.pctBeat90)?b.pctBeat90+'%':'—'}</b> (75%↑ = 이 레이더의 광범위 확산 확인선) · 30일 <b>${asOk(b.pctBeat30)?b.pctBeat30+'%':'—'}</b> · 알트 거래대금 7일/30일 <b>x${asOk(b.volRatio)?b.volRatio:'—'}</b>`;
 }
 function renderAltCalib(d){
   const h=d.history||{},el=$('asCalib'),wl=$('asWin');if(!el)return;
@@ -1772,6 +1781,7 @@ function renderAltMetrics(d){
     ['Fed Funds',asOk(i.fed?.value)?Number(i.fed.value).toFixed(2)+'%':'—',`12개월 ${asF(i.fed?.chg12,2,'%p')}`],
     ['달러(광의)',asOk(i.dollar?.value)?Number(i.dollar.value).toFixed(1):'—',`3개월 ${asF(i.dollar?.chg3m)}`],
     ['WTI',asOk(i.oil?.value)?'$'+Number(i.oil.value).toFixed(1):'—',`3개월 ${asF(i.oil?.chg3m)}`],
+    ['미 10년물',asOk(i.us10y?.value)?Number(i.us10y.value).toFixed(2)+'%':'—',`3개월 ${asF(i.us10y?.chg3m)}`],
     ['S&P 500',asOk(i.sp?.value)?Math.round(i.sp.value).toLocaleString():'—',`3개월 ${asF(i.sp?.chg3m)}`],
     ['BTC 90일',asF(i.btc?.ret90),`vs S&P ${asF(i.btc?.vsSp,1,'%p')}`],
     ['BTC.D',asOk(i.dom?.value)?Number(i.dom.value).toFixed(1)+'%':'—',`7일 ${asF(i.dom?.d7,1,'%p')} · 30일 ${asF(i.dom?.d30,1,'%p')} · 90일 ${asF(i.dom?.d90,1,'%p')}`],
@@ -1789,14 +1799,15 @@ function renderAltFoot(d){
   const notes=[];
   if(d.notes?.domApprox)notes.push('과거 BTC.D는 월별 실측이 아닌 연평균 앵커 보간(근사)이라 점선으로 표시됩니다.');
   if(rej.length)notes.push('Global M2에서 제외된 항목: '+rej.join(', ')+' → 남은 항목으로 계산');
-  notes.push('M2는 발표 지연을 감안해 1개월 전 값을 사용. 과거 점수는 알트 확산도(10점) 없이 90점 만점을 100으로 환산.');
+  notes.push(d.notes?.scoring||'점수는 과거 60개월 percentile 기반이며 임계값도 과거 분포에서 자동 보정됩니다.');
+  if(d.notes?.historicalAltProxy)notes.push(d.notes.historicalAltProxy);
   if(d.staleReason)notes.push('최신 갱신 실패로 캐시 데이터를 표시 중 ('+d.staleReason+')');
   el.innerHTML=`<b>데이터 상태</b> ${parts.join(' · ')}<br>${notes.map(asEsc).join('<br>')}<br>갱신 ${new Date(d.updatedAt).toLocaleString('ko-KR')} · Global M2 = 미국+유로존+일본+영국(USD 환산), 중국 제외 · 매매신호 아님`;
 }
 
 // ----- chart -----
 function asSeries(mode,months){
-  if(mode==='score')return {a:months.map(m=>m.s),b:months.map(m=>m.mo),min:0,max:100,fmt:v=>Math.round(v),refs:[[40,'#b7791f','40 순환매 준비'],[70,'#d93025','70 광범위 강세']],main:'#7c3aed',name:'ALTSEASON SCORE'};
+  if(mode==='score'){const b=AS.data?.score?.bands||{watch:40,expansion:60,broad:75};return {a:months.map(m=>m.s),b:months.map(m=>m.mo),min:0,max:100,fmt:v=>Math.round(v),refs:[[b.watch,'#b7791f',b.watch+' Watch'],[b.expansion,'#d97706',b.expansion+' 확산'],[b.broad,'#d93025',b.broad+' 광범위']],main:'#7c3aed',name:'ALTSEASON SCORE'};}
   if(mode==='m2')return {a:months.map(m=>m.m2),refs:[[0,'#94a3b8','0%']],main:'#1976d2',fmt:v=>v.toFixed(1)+'%',name:'Global M2 YoY (%)'};
   if(mode==='dom')return {a:months.map(m=>m.d),approx:months.map(m=>m.ds==='anchor'),refs:[[50,'#94a3b8','50%']],main:'#111827',fmt:v=>v.toFixed(1)+'%',name:'BTC.D (%)'};
   return {a:months.map(m=>m.e),refs:[],main:'#0f9d58',fmt:v=>v.toFixed(4),name:'ETH/BTC (Coinbase)'};
@@ -1837,7 +1848,7 @@ function drawAlt(){
   if(S.b)line(S.b,'#b6c0cc',1.3,null);   // 거시 3요소만 본 점수 (2012~)
   line(S.a,S.main,2,S.approx?(i=>S.approx[i]):(AS.mode==='score'?(i=>months[i].ds==='anchor'):null));
   // 70점 이상 표시 및 현재점
-  if(AS.mode==='score')months.forEach((m,i)=>{if(asOk(m.s)&&m.s>=70){x.fillStyle='#d93025';x.beginPath();x.arc(X(i),Y(m.s),2.4,0,7);x.fill()}});
+  if(AS.mode==='score'){const bb=AS.data?.score?.bands||{broad:75};months.forEach((m,i)=>{if(asOk(m.s)&&m.s>=bb.broad){x.fillStyle='#d93025';x.beginPath();x.arc(X(i),Y(m.s),2.4,0,7);x.fill()}});}
   const li=(()=>{for(let i=n-1;i>=0;i--)if(asOk(S.a[i]))return i;return -1})();
   if(li>=0){x.fillStyle=S.main;x.beginPath();x.arc(X(li),Y(Number(S.a[li])),4,0,7);x.fill()}
   x.fillStyle='#111827';x.font='bold 11px sans-serif';x.fillText(S.name,pad.l,12);
@@ -1845,7 +1856,7 @@ function drawAlt(){
   const hi2=AS.hoverIdx;
   if(hi2!=null&&hi2>=0&&hi2<n){x.strokeStyle='#64748b';x.lineWidth=1;x.beginPath();x.moveTo(X(hi2),pad.t);x.lineTo(X(hi2),pad.t+ph);x.stroke()}
   const lg=$('asLegend');
-  if(lg)lg.innerHTML=AS.mode==='score'?`<i style="background:#7c3aed"></i>SCORE(전체 7개 항목, ${(months.find(m=>asOk(m.s))||{}).k||'—'}부터) <i style="background:#b6c0cc"></i>거시 3요소만(M2·달러·Fed·BTC, 2012~) <i style="background:rgba(124,58,237,.25)"></i>과거 알트 강세 구간 · 점선 구간 = BTC.D 근사값 사용`:AS.mode==='dom'?`점선 = 월별 실측이 아닌 연평균 앵커 보간(근사)`:'';
+  if(lg)lg.innerHTML=AS.mode==='score'?`<i style="background:#7c3aed"></i>SCORE(rolling-60m percentile, ${(months.find(m=>asOk(m.s))||{}).k||'—'}부터) <i style="background:#b6c0cc"></i>거시 기반 점수(M2·달러·Fed·BTC, 데이터 확보 구간) <i style="background:rgba(124,58,237,.25)"></i>과거 알트 강세 구간 · 점선 구간 = BTC.D 근사값 사용`:AS.mode==='dom'?`점선 = 월별 실측이 아닌 연평균 앵커 보간(근사)`:'';
 }
 function asCaption(i){
   const d=AS.data,m=d?.history?.months?.[i],cp=$('asCaption');if(!m||!cp)return;

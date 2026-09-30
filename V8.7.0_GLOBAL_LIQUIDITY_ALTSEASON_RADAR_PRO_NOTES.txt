@@ -1,0 +1,66 @@
+V8.7.0 — GLOBAL LIQUIDITY & ALTSEASON RADAR PRO
+
+핵심 개선
+1. 고정 임계값 제거
+   - 기존 "M2 +4%, BTC.D -2.5%면 몇 점" 방식 대신 각 지표를 직전 60개월 분포의 percentile로 환산.
+   - 2017/2021/현재를 같은 0~100 눈금에서 비교할 수 있도록 과거/현재 스코어링을 통일.
+   - 현재 ALTSEASON 단계의 Watch / Expansion / Broad 경계도 과거 점수 분포(60/78/90 percentile)에서 자동 보정.
+
+2. 실제 알트 확산을 별도 확인축으로 강화
+   - Upbit KRW 19개 대표 알트 바스켓(실제 지원 종목만 계산).
+   - BTC 대비 7일/30일/90일 초과수익 비율을 20/30/50 가중으로 혼합.
+   - 알트 거래대금 7일/이전 30일 비율을 보조 확인.
+   - 90일 breadth 75% 이상은 이 레이더의 "광범위 확산 확인선"으로 표시(고정 SCORE 임계값과 분리).
+   - ETH/BTC 상승 + BTC.D 하락 + breadth 75% 이상이 동시에 맞는지 별도 확인 배지 제공.
+
+3. 과거 데이터의 룩어헤드 완화
+   - M2는 발표 지연을 감안해 한 달 전 공개분을 사용.
+   - 각 월의 percentile은 그 월 이전 60개월 데이터만 사용.
+   - 현재 월은 현재 실시간 BTC.D/ETH/BTC/breadth를 별도 반영.
+
+4. 역사 데이터 품질 개선
+   - FRED의 일별 거시자료는 월평균 집계 옵션을 사용해 불필요한 데이터량/CPU를 줄임.
+   - US 10Y는 별도 컨텍스트 지표로 추가.
+   - Stablecoin 성장률을 과거 알트확산 proxy의 한 축으로 사용.
+   - 과거 BTC.D는 CMC 실측 우선, 실패 시 연평균 anchor 보간이며 화면에서 근사값을 구분.
+
+5. Worker 안정성
+   - /altseason?part=live, /altseason?part=hist 분리 지원.
+   - 역사 캐시 12시간, 실시간 알트 캐시 10분.
+   - Mayer 계산을 최대 3페이지(약 600일)로 축소해 /macro 지연/예외 가능성을 낮춤.
+   - Stablecoin 시계열 정렬 버그 수정.
+   - /macro와 /altseason을 분리해 한 지표 실패가 전체 레이더를 죽이지 않도록 유지.
+
+6. 화면 개선
+   - 40/70 고정 라벨 대신 자동 보정된 Watch / Expansion / Broad 점수 표시.
+   - 90일 breadth, BTC.D↓+ETH/BTC↑, 광범위 확산 확인 여부를 상단 배지로 표시.
+   - Global M2/Fed/Dollar/WTI/S&P/US10Y/BTC/BTC.D/ETH/BTC/Stablecoin을 한눈에 표시.
+   - 데이터 상태와 proxy/근사 여부를 하단에 명시.
+
+점수 구성(100)
+- Global M2 YoY 15
+- M2 가속 10
+- 달러 10
+- Fed 10
+- BTC 90일 추세 10
+- BTC.D 90일 변화 20
+- ETH/BTC 90일 변화 10
+- 실제 알트 확산 15
+
+중요한 해석 규칙
+- 점수 자체가 매매신호가 아님.
+- "Broad"는 역사분포상 높은 영역이라는 뜻이고, 실제 광범위 알트 확산 확인은 breadth/ETH-BTC/BTC.D 배지를 함께 봄.
+- 과거 알트 확산 15점은 당시 전체 알트 breadth를 직접 재현할 수 없어 BTC.D·ETH/BTC·스테이블코인 증가율 기반 proxy를 사용.
+- 과거 BTC.D는 무료 공개 데이터 제약으로 일부 근사.
+- Global M2는 현재 공개 자동화 경로가 안정적인 미국·유로존·일본·영국 합산(USD)이며 중국은 자동화 공식 소스 안정성 문제로 제외. 화면에 구성국을 표시.
+
+배포
+- Cloudflare: worker/worker.js
+- GitHub Pages: docs/index.html (필요하면 루트 index.html도 동기화)
+- wrangler.toml의 SCALPER_KV 바인딩은 기존 값 유지
+
+검증
+- node --check worker/worker.js 통과
+- tests/run.mjs nokv 합성데이터 파이프라인 통과
+
+버전: v10.7.0 / ALTSEASON RADAR v3

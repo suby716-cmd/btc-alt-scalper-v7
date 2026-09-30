@@ -1,4 +1,4 @@
-// worker/worker.js — BTC ALT REGIME TRADER v10.7.2-minimal+pin+altseason-v3 (routes normalized, JSON 404, deploy check in /health)
+// worker/worker.js — BTC ALT REGIME TRADER v10.8.0-minimal+pin+altseason-v3 (routes normalized, JSON 404, deploy check in /health)
 //
 // 단계별 복구 진행 중: /health, /upbit, /market (완료) → PIN 인증 (이번 단계) → KV 포지션 → Telegram → Cron
 // KV(포지션/장부), Telegram 알림, Cron 자동감시는 다음 단계에서 하나씩 다시 붙일 예정입니다.
@@ -30,12 +30,12 @@ function requirePin(req, env) {
 
 let ENV_REF = null; // 요청마다 갱신 (FRED_API_KEY 선택 사용)
 
-async function fetchJson(url, ms = 5000) {
+async function fetchJson(url, ms = 5000, hdr = null) {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), ms);
   try {
     const r = await fetch(url, {
-      headers: { Accept: "application/json", "User-Agent": "BTC-ALT-REGIME-TRADER/10.4.0-minimal" },
+      headers: hdr || { Accept: "application/json", "User-Agent": "BTC-ALT-REGIME-TRADER/10.4.0-minimal" },
       signal: c.signal,
     });
     let body = null;
@@ -199,8 +199,9 @@ async function fredSeries(id, start, monthly=false, aggregation='avg') {
   // 2) 공개 CSV: 월평균 변환 → 실패 시 원본 → 한 번 더 대기 후 재시도
   const extra = monthly ? `&fq=Monthly&fam=${encodeURIComponent(aggregation)}` : '';
   let r = await fetchFredCsv(id, `${start}__EXTRA__${extra}`);
-  if (!r.ok || !r.body) { await sleep(500); r = await fetchFredCsv(id, start); }
-  if (!r.ok || !r.body) { await sleep(1200); r = await fetchFredCsv(id, start); }
+  const blocked = x => !x.ok && (x.status === 403 || x.status === 429 || x.status >= 500);
+  if ((!r.ok || !r.body) && !blocked(r)) { await sleep(500); r = await fetchFredCsv(id, start); }
+  if ((!r.ok || !r.body) && !blocked(r) && r.status !== 404) { await sleep(1200); r = await fetchFredCsv(id, start); }
   const series = parseFredFast(r.body);
   return { ok: series.length > 0, status: r.status, series, via: "csv", snip: r.snip, error: r.error };
 }
@@ -225,10 +226,14 @@ async function fetchBojM2(nowMs) {
   let status = 0;
   for (const url of urls) {
     const r = await fetchText(url, 12000, CSV_HDR); status = r.status; const map = new Map();
-    if (r.ok) for (const line of r.body.trim().split(/\r?\n/)) {
-      const p = splitCsv(line); if (p.length < 2) continue;
-      const m = p[0].match(/^(\d{4})[\/-]?(\d{2})$/); const v = Number(p[p.length - 1]);
-      if (m && +m[2] >= 1 && +m[2] <= 12 && fin(v)) map.set(`${m[1]}-${m[2]}`, v * 0.1); // 억엔 → 십억엔
+    if (r.ok) {
+      const rows = r.body.trim().split(/\r?\n/).map(splitCsv);
+      for (const p of rows) {           // 행 형식: ..., 202501, 1234.5
+        for (let i = 0; i < p.length - 1; i++) { const m = p[i].match(/^(\d{4})[\/-]?(\d{2})$/); const v = Number(p[i + 1]); if (m && +m[2] >= 1 && +m[2] <= 12 && fin(v) && p[i + 1] !== "") map.set(`${m[1]}-${m[2]}`, v * 0.1); }
+      }
+      if (!map.size) {                  // 열 형식: 날짜 행 + 값 행
+        for (let i = 0; i < rows.length - 1; i++) { const d = rows[i].filter(x => /^\d{6}$/.test(x)); if (d.length > 10) { const vals = rows[i + 1].filter(x => x !== "" && fin(Number(x))).slice(-d.length); if (vals.length === d.length) d.forEach((x, k) => map.set(`${x.slice(0, 4)}-${x.slice(4)}`, Number(vals[k]) * 0.1)); } }
+      }
     }
     if (map.size) return { ok: true, status, map };
   }
@@ -333,34 +338,107 @@ function featureRow(k, t, live, c) {
   };
 }
 
+// ---------- FRED 없이 쓰는 대체 소스 (가입/키 불필요) ----------
+//  S&P500·달러지수·WTI·미 10년물: Yahoo Finance 월봉 → 실패 시 Stooq 월봉
+//  연방기금금리: 뉴욕연은 EFFR API → 실패 시 Yahoo ^IRX(13주 T-bill) 근사
+//  환율(EUR/JPY/GBP→USD): ECB 환율 CSV (M2 USD 환산용)
+//  ETH/BTC: Yahoo ETH-BTC 월봉 → 실패 시 CryptoCompare 일봉
+const YH = { "Accept": "application/json,text/plain,*/*", "User-Agent": CSV_HDR["User-Agent"] };
+const SINCE = Date.UTC(2010, 5, 1);
+async function yahooMonthly(sym) {
+  const r = await fetchJson(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=max&interval=1mo`, 12000, YH);
+  const res = r.body?.chart?.result?.[0]; const ts = res?.timestamp || [], cl = res?.indicators?.quote?.[0]?.close || [];
+  const series = []; for (let i = 0; i < ts.length; i++) { const v = Number(cl[i]), t = ts[i] * 1000; if (fin(v) && v > 0 && t >= SINCE) series.push({ t, v }); }
+  return { ok: series.length > 12, status: r.status, series, via: "yahoo:" + sym };
+}
+async function stooqMonthly(sym) {
+  const r = await fetchText(`https://stooq.com/q/d/l/?s=${encodeURIComponent(sym)}&i=m`, 12000, CSV_HDR);
+  const series = [];
+  if (r.ok) for (const line of r.body.trim().split(/\r?\n/).slice(1)) { const p = line.split(","); const t = Date.parse(p[0]), v = Number(p[4]); if (fin(t) && fin(v) && v > 0 && t >= SINCE) series.push({ t, v }); }
+  return { ok: series.length > 12, status: r.status, series, via: "stooq:" + sym };
+}
+async function nyFedEffr() {
+  const end = new Date().toISOString().slice(0, 10);
+  const r = await fetchJson(`https://markets.newyorkfed.org/api/rates/unsecured/effr/search.json?startDate=2010-06-01&endDate=${end}&type=rate`, 15000, YH);
+  const a = Array.isArray(r.body?.refRates) ? r.body.refRates : [];
+  const series = a.map(x => ({ t: Date.parse(x.effectiveDate), v: Number(x.percentRate) })).filter(x => fin(x.t) && fin(x.v)).sort((p, q) => p.t - q.t);
+  return { ok: series.length > 100, status: r.status, series, via: "nyfed" };
+}
+async function ecbFxDaily(cur) {
+  const r = await fetchText(`https://data-api.ecb.europa.eu/service/data/EXR/D.${cur}.EUR.SP00.A?startPeriod=2010-06-01&format=csvdata`, 15000, CSV_HDR);
+  const m = new Map();
+  if (r.ok) { const lines = r.body.trim().split(/\r?\n/).map(splitCsv); const h = lines.findIndex(x => x.includes("TIME_PERIOD") && x.includes("OBS_VALUE")); if (h >= 0) { const hi = lines[h].indexOf("TIME_PERIOD"), vi = lines[h].indexOf("OBS_VALUE"); for (const x of lines.slice(h + 1)) { const v = Number(x[vi]); if (x[hi] && fin(v) && v > 0) m.set(x[hi], v); } } }
+  return { ok: m.size > 100, status: r.status, map: m };
+}
+async function ecbFx() {
+  const [u, j, g] = await Promise.all([ecbFxDaily("USD"), ecbFxDaily("JPY"), ecbFxDaily("GBP")]);
+  const mk = (f) => [...u.map.keys()].sort().map(d => { const v = f(d); return fin(v) ? { t: Date.parse(d), v } : null; }).filter(Boolean);
+  return {
+    eurusd: { ok: u.ok, status: u.status, via: "ecb", series: mk(d => u.map.get(d)) },
+    jpyusd: { ok: u.ok && j.ok, status: j.status, via: "ecb", series: mk(d => j.map.get(d) / u.map.get(d)) },   // JPY per USD
+    gbpusd: { ok: u.ok && g.ok, status: g.status, via: "ecb", series: mk(d => u.map.get(d) / g.map.get(d)) }   // USD per GBP
+  };
+}
+async function ethBtcAlt() {
+  let r = await yahooMonthly("ETH-BTC"); if (r.ok) return r;
+  const a = await fetchJson("https://min-api.cryptocompare.com/data/v2/histoday?fsym=ETH&tsym=BTC&limit=2000", 15000, YH);
+  const arr = a.body?.Data?.Data || [];
+  const series = arr.map(x => ({ t: x.time * 1000, v: Number(x.close) })).filter(x => fin(x.v) && x.v > 0);
+  return { ok: series.length > 100, status: a.status, series, via: "cryptocompare" };
+}
+async function altSeries(name, fx) {
+  const both = async (y, st) => { const r = await yahooMonthly(y); return r.ok ? r : (await stooqMonthly(st)); };
+  if (name === "sp") return both("^GSPC", "^spx");
+  if (name === "dollar") return both("DX-Y.NYB", "dx.f");
+  if (name === "oil") return both("CL=F", "cl.f");
+  if (name === "y10") { const r = await both("^TNX", "10usy.b"); if (r.ok && r.series.length && r.series[r.series.length - 1].v > 25) r.series = r.series.map(x => ({ t: x.t, v: x.v / 10 })); return r; }
+  if (name === "fed") { const r = await nyFedEffr(); return r.ok ? r : yahooMonthly("^IRX"); }
+  if (fx && fx[name]) return fx[name];
+  return { ok: false, status: 0, series: [], via: null };
+}
+
 // FRED는 동시 요청이 많으면 거절하는 경우가 있어 3개씩 끊어서 받는다.
+// FRED_API_KEY가 없으면 FRED 공개 CSV(Workers IP를 520으로 거절하는 경우가 많음)는 M2 한 개만 1회 시도한다.
 async function fredLimited(names, ids) {
+  const hasKey = !!(ENV_REF && ENV_REF.FRED_API_KEY);
   const out = new Array(names.length);
+  const todo = names.map((n, i) => i).filter(i => hasKey || names[i] === "m2");
+  names.forEach((n, i) => { if (!todo.includes(i)) out[i] = { ok: false, status: 0, series: [], via: "skipped" }; });
   let next = 0;
   const worker = async () => {
-    while (next < names.length) {
-      const i = next++, n = names[i];
+    while (next < todo.length) {
+      const i = todo[next++], n = names[i];
       out[i] = await fredSeries(ids[n], "2010-06-01", !["cbbtc","cbeth"].includes(n), "avg");
     }
   };
   await Promise.all([worker(), worker(), worker()]);
   return out;
 }
+// FRED에서 못 받은 항목을 대체 소스로 채운다.
+async function fillAlt(names, arr) {
+  const need = names.filter((n, i) => !arr[i].ok && !["m2", "cbbtc", "cbeth"].includes(n));
+  if (!need.length) return arr;
+  const fx = need.some(n => ["eurusd", "jpyusd", "gbpusd"].includes(n)) ? await ecbFx() : null;
+  const res = await Promise.all(need.map(n => altSeries(n, fx)));
+  need.forEach((n, k) => { arr[names.indexOf(n)] = { ...res[k], via: res[k].via || "alt" }; });
+  return arr;
+}
 
 async function buildHistory() {
   const t0 = Date.now(), now = t0, curK = mkey(now);
   const ids = { m2: "M2SL", fed: "EFFR", dollar: "DTWEXBGS", oil: "WTISPLC", sp: "SP500", y10: "DGS10", eurusd: "DEXUSEU", jpyusd: "DEXJPUS", gbpusd: "EXUSUK", cbbtc: "CBBTCUSD", cbeth: "CBETHUSD" };
   const names = Object.keys(ids);
-  const [fredArr, ea, jp, uk, bc, sc, cmc] = await Promise.all([
+  const [fredArr0, ea, jp, uk, bc, sc, cmc, ethAlt] = await Promise.all([
     fredLimited(names, ids),
-    fetchEcbM2(), fetchBojM2(now), fetchBoeM4(now), fetchBtcPrice(), fetchStable(), fetchCmcDominance(now)
+    fetchEcbM2(), fetchBojM2(now), fetchBoeM4(now), fetchBtcPrice(), fetchStable(), fetchCmcDominance(now), ethBtcAlt()
   ]);
+  const fredArr = await fillAlt(names, fredArr0);
   const f = {}; names.forEach((n, i) => f[n] = fredArr[i]);
   const g = buildGlobalM2(f, ea, jp, uk, curK);
   const btc = bc.ok ? bc.series : (f.cbbtc.ok ? f.cbbtc.series : []);
   const c = {
     yoy: g.yoy, fedM: monthMap(f.fed.series), dolM: monthMap(f.dollar.series), oilM: monthMap(f.oil.series), spM: monthMap(f.sp.series), y10M: monthMap(f.y10.series),
-    btcM: monthLast(btc), cbbtc: f.cbbtc.series, cbeth: f.cbeth.series, ethBtcM: monthLast(f.cbeth.series.map((x,i)=>({t:x.t,v:(x.v/(valAt(f.cbbtc.series,x.t,7*DAY)||NaN))})).filter(x=>fin(x.v))), stableM: monthLast(sc.series)
+    btcM: monthLast(btc), cbbtc: f.cbbtc.series, cbeth: f.cbeth.series, ethBtcM: ethAlt.ok ? monthLast(ethAlt.series) : monthLast(f.cbeth.series.map((x,i)=>({t:x.t,v:(x.v/(valAt(f.cbbtc.series,x.t,7*DAY)||NaN))})).filter(x=>fin(x.v))), stableM: monthLast(sc.series)
   };
   const rows = [];
   for (let k = "2012-01"; k <= curK; k = addM(k, 1)) rows.push(featureRow(k, k === curK ? now : monthEnd(k), k === curK, c));
@@ -370,7 +448,7 @@ async function buildHistory() {
     m2: g.lastK ? g.global.get(g.lastK) : null, m2Key: g.lastK, stable: last(sc.series)
   };
   const sources = {
-    fred: { ok: fredArr.filter(x => x.ok).length, total: names.length, failed: names.filter((n, i) => !fredArr[i].ok), via: fredArr.find(x => x.ok)?.via || null, status: Object.fromEntries(names.map((n, i) => [n, fredArr[i].status])), hint: fredArr.find(x => !x.ok)?.snip || fredArr.find(x => !x.ok)?.error || undefined },
+    fred: { ok: fredArr.filter(x => x.ok).length, total: names.length, failed: names.filter((n, i) => !fredArr[i].ok), via: fredArr.find(x => x.ok && x.via === "csv" || x.via === "api")?.via || null, alt: Object.fromEntries(names.map((n, i) => [n, fredArr[i].via || null])), ethbtc: { ok: ethAlt.ok, via: ethAlt.via, status: ethAlt.status }, status: Object.fromEntries(names.map((n, i) => [n, fredArr[i].status])), hint: fredArr.find(x => !x.ok)?.snip || fredArr.find(x => !x.ok)?.error || undefined },
     ecb: { ok: ea.ok, status: ea.status }, boj: { ok: jp.ok, status: jp.status }, boe: { ok: uk.ok, status: uk.status },
     btcPrice: { ok: bc.ok, status: bc.status, fallback: !bc.ok && f.cbbtc.ok }, stablecoin: { ok: sc.ok, status: sc.status },
     cmcDominance: { ok: cmc.ok, status: cmc.status }
@@ -606,7 +684,7 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.7.2-minimal+pin+altseason-v3",
+        version: "v10.8.0-minimal+pin+altseason-v3",
         routes: ["/health","/macro","/altseason","/candles","/upbit","/market"],
         altseason: true,
         service: "BTC ALT REGIME TRADER (minimal)",
@@ -698,11 +776,18 @@ export default {
         const res = await Promise.all([
           t("fred_csv", fetchText(fredUrl, 12000, CSV_HDR)),
           t("fred_csv_html_accept", fetchText(fredUrl, 12000)),
+          t("fred_api", env.FRED_API_KEY ? fetchText(`https://api.stlouisfed.org/fred/series/observations?series_id=M2SL&api_key=${encodeURIComponent(env.FRED_API_KEY)}&file_type=json&observation_start=2026-01-01`, 12000, CSV_HDR) : Promise.resolve({ ok: false, status: 0, error: "FRED_API_KEY 없음" })),
           t("ecb", fetchText("https://data-api.ecb.europa.eu/service/data/BSI/M.U2.Y.V.M20.X.1.U2.2300.Z01.E?startPeriod=2025-01&format=csvdata", 12000, CSV_HDR)),
           t("boj", fetchText("https://www.stat-search.boj.or.jp/api/v1/getDataCode?format=csv&lang=en&db=MD02&startDate=202501&endDate=202608&code=MAM1NAM2M2MO", 12000, CSV_HDR)),
           t("boe", fetchText("https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2025&Dateto=28/Aug/2026&SeriesCodes=LPMAUYN&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N", 12000, CSV_HDR))
         ]);
-        return json({ ok: true, part: "diag", fredApiKey: !!env.FRED_API_KEY, results: Object.fromEntries(res) });
+        const fxd = await ecbFx();
+        const summ = async (name, p) => { const t0 = Date.now(); let r; try { r = await p; } catch (e) { r = { ok: false, error: String(e?.message || e) }; } const a = r.series || []; return [name, { ok: !!r.ok, status: r.status, via: r.via, n: a.length || (r.map ? r.map.size : 0), last: a.length ? a[a.length - 1].v : null, ms: Date.now() - t0 }]; };
+        const alt = await Promise.all([
+          summ("sp", altSeries("sp")), summ("dollar", altSeries("dollar")), summ("oil", altSeries("oil")), summ("y10", altSeries("y10")), summ("fed", altSeries("fed")),
+          summ("eurusd", Promise.resolve(fxd.eurusd)), summ("jpyusd", Promise.resolve(fxd.jpyusd)), summ("gbpusd", Promise.resolve(fxd.gbpusd)), summ("ethbtc", ethBtcAlt()), summ("boj_m2", fetchBojM2(Date.now())), summ("ecb_m2", fetchEcbM2())
+        ]);
+        return json({ ok: true, part: "diag", fredApiKey: !!env.FRED_API_KEY, results: Object.fromEntries(res), alt: Object.fromEntries(alt) });
       }
       if (part === "live") {
         const live = await cached(env, "as:live:v3", 600, buildLive, v=>v&&v.ok, force);

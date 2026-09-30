@@ -1,0 +1,51 @@
+V8.5.6 — EARLY ALTSEASON RADAR
+
+목표
+- 이미 알트불장이 시작된 뒤 확인하는 지표가 아니라,
+  BTC -> ETH/BTC -> BTC.D -> Alt breadth 순환이 서서히 확산되는 초기 구간을 먼저 포착.
+- 기존 고정 60/75 기준 제거.
+- 현재 점수와 과거 월별 점수를 같은 0~100 프레임으로 정규화.
+
+현재 점수 100점 구성
+- Global M2 / 유동성: 20
+  * 3개월 + 6개월 변화
+- 금리·달러·유가: 15
+  * Fed 12개월 변화, Dollar 3개월 변화, WTI 3개월 변화
+- BTC 추세: 10
+  * 30일 + 90일
+- BTC Dominance: 20
+  * 현재 수준 + 30일 변화 + 90일 변화
+- ETH/BTC: 15
+  * 7일 + 30일 + 90일 변화
+- Alt Breadth: 20
+  * Top 50 alt 중 BTC를 이기는 비율을 7/30/90일로 계산
+
+초기 탐지 설계
+- 90일 breadth 75%는 '알트시즌 확인'에 가까운 지표로 취급.
+- 그보다 앞서 7일/30일 breadth 개선, ETH/BTC 상승, BTC.D 하락,
+  유동성 개선이 동시에 나타나면 점수를 먼저 올림.
+- 따라서 점수 상승 자체가 '서서히 오는 순환매'를 보여주도록 설계.
+
+과거 보정
+- 2013~현재 월별 raw input을 각각 역사적 percentile로 변환.
+- 각 percentile을 위의 6개 가중치로 합산.
+- 고정 60/75 경계 대신 현재까지의 실제 점수 분포에서 watch/expansion/broad 경계를 자동 산출.
+- 2017~18 및 2020~21 대표 알트강세 구간을 calibration anchor로 사용.
+- 2013~2016 등 데이터가 불완전한 구간은 confidence를 낮게 표시할 수 있도록 구조화.
+
+중요한 데이터 한계
+- 단일 '공식 Global M2'는 존재하지 않음.
+- 현재 Global M2 Composite는 US + Euro Area + Japan + UK 광의통화를 USD 환산해 합산.
+- 중국은 현재 자동수집 안정성 문제로 제외.
+- 2013년 이후 동일한 Top-50 breadth 시계열을 확보하기 어려워 역사 점수에서는 BTC.D + ETH/BTC 기반 rotation proxy를 사용.
+- 현재 시장에서는 실제 Top-50 breadth를 사용.
+
+현재 화면 해석
+- 점수가 높아지는 것보다 '어떤 구성요소가 먼저 올라오는가'가 중요.
+- 특히 ETH/BTC, BTC.D, 7/30일 breadth가 먼저 개선되고 90일 breadth가 뒤따르는지를 확인.
+- 핵심 데이터가 빠지면 완전한 점수로 표시하지 않으며, 부분 데이터 여부를 화면에 표시.
+
+배포
+- 실제 Cloudflare Worker 배포 원본: worker/worker.js
+- GitHub Pages 화면: docs/index.html
+- 루트 index.html도 동일한 UI로 갱신.

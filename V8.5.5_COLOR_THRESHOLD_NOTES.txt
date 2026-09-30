@@ -1,0 +1,11 @@
+V8.5.5 — ALTSEASON SCORE COLOR / THRESHOLD UPGRADE
+
+- 0~39: gray, BTC 중심
+- 40~59: amber, 순환매 준비
+- 60~74: blue, 알트 확산 후보
+- 75~100: red, 광범위한 알트 강세 후보
+- Chart now marks first 60 crossing, first 60 two-month persistence, first 75 crossing.
+- Annual historical table rows are color-coded by score zone.
+- Score card border/background follows current score zone.
+- Thresholds are validation/reference levels, not trading guarantees.
+- Missing data remains missing; no fabricated values are introduced.

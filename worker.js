@@ -424,6 +424,9 @@ export default {
         historicalMonthlyScores.push({month:k,score,globalM2YoY:g,btcD:dom,ethBtc:eb,btcReturn3m:br});
       }
       const histMax=[...historicalMonthlyScores].filter(x=>Number.isFinite(x.score)).sort((a,b)=>b.score-a.score).slice(0,12);
+      function firstThreshold(th){return historicalMonthlyScores.find(x=>Number.isFinite(x.score)&&x.score>=th)||null;}
+      function firstPersistentThreshold(th,n){for(let i=0;i<=historicalMonthlyScores.length-n;i++){let ok=true;for(let j=0;j<n;j++){const s=historicalMonthlyScores[i+j]?.score;if(!Number.isFinite(s)||s<th){ok=false;break}}if(ok)return historicalMonthlyScores[i];}return null;}
+      const threshold60=firstThreshold(60), threshold75=firstThreshold(75), threshold60p=firstPersistentThreshold(60,2);
       const histAnnual=[];
       for(let y=2013;y<=Number(endYM.slice(0,4));y++){const a=historicalMonthlyScores.filter(x=>x.month.startsWith(String(y)));const valid=a.filter(x=>Number.isFinite(x.score));const top=valid.sort((p,q)=>q.score-p.score)[0];histAnnual.push({year:y,score:top?.score??null,peakMonth:top?.month??null,globalM2YoY:a.filter(x=>Number.isFinite(x.globalM2YoY)).at(-1)?.globalM2YoY??null,btcD:top?.btcD??btcDomAnnualRef[y]??null,ethBtc:top?.ethBtc??ethBtcAnnualRef[y]??null,btcReturn:top?.btcReturn3m??null});}
       const macroHistory=globalM2History.slice(-190).map(x=>({d:x.d,v:x.v}));
@@ -449,6 +452,11 @@ export default {
           score:total,stage,liquidity,rates,btcScore,domScore,altScore,
           m2:{value:lastFinite(globalRows),yoy:m2YoY,history:macroHistory},
           historicalScores:histAnnual,historicalMonthlyScores,
+          thresholds:{
+            first60:threshold60?{month:threshold60.month,score:threshold60.score}:null,
+            first60Persist2:threshold60p?{month:threshold60p.month,score:threshold60p.score}:null,
+            first75:threshold75?{month:threshold75.month,score:threshold75.score}:null
+          },
           fed:{value:lastFinite(fred.fed),change12m:fed12},
           dollar:{value:lastFinite(fred.dollar),change3m:dollar3m},
           oil:{value:lastFinite(fred.oil),change3m:oil3m},

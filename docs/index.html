@@ -1654,7 +1654,8 @@ setInterval(loadRSCandles,60000);
 
 function drawAltseasonHistory(id, rows){
   const c=$(id); if(!c) return;
-  const data=(rows||[]).filter(x=>Number.isFinite(Number(x.score)));
+  const finite=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
+  const data=(rows||[]).filter(x=>finite(x?.score));
   const dpr=window.devicePixelRatio||1,w=Math.max(320,c.clientWidth||720),h=250;
   c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h);
   if(data.length<2)return;
@@ -1711,11 +1712,11 @@ function renderAltseason(d){
   set('altseasonStage',m.stage||'—');
   const scoreCard=$('altseasonScore')?.closest('.altseason-score-card');
   if(scoreCard){scoreCard.style.borderColor=Number.isFinite(scoreNum)&&scoreNum>=75?'#dc2626':Number.isFinite(scoreNum)&&scoreNum>=60?'#2563eb':Number.isFinite(scoreNum)&&scoreNum>=40?'#f59e0b':'#cbd5e1';scoreCard.style.background=Number.isFinite(scoreNum)&&scoreNum>=75?'#fef2f2':Number.isFinite(scoreNum)&&scoreNum>=60?'#eff6ff':Number.isFinite(scoreNum)&&scoreNum>=40?'#fffbeb':'var(--panel2)';}
-  set('scoreLiquidity',`${m.liquidity||0}/20`);
-  set('scoreRates',`${m.rates||0}/20`);
-  set('scoreBtc',`${m.btcScore||0}/10`);
-  set('scoreDom',`${m.domScore||0}/20`);
-  set('scoreAlt',`${m.altScore||0}/10`);
+  set('scoreLiquidity',N(m.liquidity)?`${m.liquidity}/20`:'—');
+  set('scoreRates',N(m.rates)?`${m.rates}/20`:'—');
+  set('scoreBtc',N(m.btcScore)?`${m.btcScore}/10`:'—');
+  set('scoreDom',N(m.domScore)?`${m.domScore}/20`:'—');
+  set('scoreAlt',N(m.altScore)?`${m.altScore}/10`:'—');
   set('macroM2',N(m.m2?.value)?`${F(m.m2.value,1)}T`:'—');
   set('macroM2Sub',N(m.m2?.yoy)?`12개월 ${Number(m.m2.yoy)>=0?'+':''}${F(m.m2.yoy,1)}% · ${m.globalM2}`:'Global M2 계산 대기');
   set('macroFed',N(m.fed?.value)?`${F(m.fed.value,2)}%`:'—');
@@ -1734,12 +1735,12 @@ function renderAltseason(d){
   const he=$('altseasonHistory');
   if(he&&hs.length){
     const rows=hs.map(x=>{
-      const s=Number.isFinite(Number(x.score))?`${x.score}`:'—';
-      const g=Number.isFinite(Number(x.globalM2YoY))?`${x.globalM2YoY>=0?'+':''}${Number(x.globalM2YoY).toFixed(1)}%`:'—';
-      const d=Number.isFinite(Number(x.btcD))?`${Number(x.btcD).toFixed(1)}%`:'—';
-      const e=Number.isFinite(Number(x.ethBtc))?Number(x.ethBtc).toFixed(3):'—';
-      const sx=Number(x.score);
-      const cls=Number.isFinite(sx)?(sx>=75?'hot':sx>=60?'alt':sx>=40?'watch':'') : '';
+      const s=N(x.score)?`${x.score}`:'—';
+      const g=N(x.globalM2YoY)?`${x.globalM2YoY>=0?'+':''}${Number(x.globalM2YoY).toFixed(1)}%`:'—';
+      const d=N(x.btcD)?`${Number(x.btcD).toFixed(1)}%`:'—';
+      const e=N(x.ethBtc)?Number(x.ethBtc).toFixed(3):'—';
+      const sx=N(x.score)?Number(x.score):null;
+      const cls=sx===null?'':(sx>=75?'hot':sx>=60?'alt':sx>=40?'watch':'');
       return `<tr class="${cls}"><td>${x.year}</td><td>${s}</td><td>${x.peakMonth||'—'}</td><td>${g}</td><td>${d}</td><td>${e}</td></tr>`;
     }).join('');
     const th=m.thresholds||{}; const first60=th.first60?.month||'미관측', first60p=th.first60Persist2?.month||'미관측', first75=th.first75?.month||'미관측';

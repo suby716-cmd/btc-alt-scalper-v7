@@ -203,7 +203,7 @@
       <div class="altseason-note" id="altseasonNote">과거 패턴을 기반으로 한 시장환경 점수 · 매매신호 아님</div>
     </div>
     <div class="altseason-metrics">
-      <div><span>Global/US M2</span><b id="macroM2">—</b><small id="macroM2Sub">—</small></div>
+      <div><span>Global M2</span><b id="macroM2">—</b><small id="macroM2Sub">—</small></div>
       <div><span>Fed Funds</span><b id="macroFed">—</b><small id="macroFedSub">—</small></div>
       <div><span>Dollar</span><b id="macroDollar">—</b><small id="macroDollarSub">—</small></div>
       <div><span>WTI</span><b id="macroOil">—</b><small id="macroOilSub">—</small></div>
@@ -1688,6 +1688,8 @@ function fearGreedKo(cls){
 
 function renderAltseason(d){
   const m=d?.macroRegime;if(!m)return;
+  const N=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
+  const F=(v,n=1)=>N(v)?Number(v).toFixed(n):'—';
   const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
   set('altseasonScore',Number.isFinite(Number(m.score))?`${m.score}/100`:'—');
   set('altseasonStage',m.stage||'—');
@@ -1696,20 +1698,20 @@ function renderAltseason(d){
   set('scoreBtc',`${m.btcScore||0}/10`);
   set('scoreDom',`${m.domScore||0}/20`);
   set('scoreAlt',`${m.altScore||0}/10`);
-  set('macroM2',Number.isFinite(Number(m.m2?.value))?`${(Number(m.m2.value)/1000).toFixed(1)}T`:'—');
-  set('macroM2Sub',Number.isFinite(Number(m.m2?.yoy))?`12개월 ${m.m2.yoy>=0?'+':''}${m.m2.yoy.toFixed(1)}% · ${m.globalM2}`:'M2 변화 계산 중');
-  set('macroFed',Number.isFinite(Number(m.fed?.value))?`${Number(m.fed.value).toFixed(2)}%`:'—');
-  set('macroFedSub',Number.isFinite(Number(m.fed?.change12m))?`12개월 ${m.fed.change12m>=0?'+':''}${m.fed.change12m.toFixed(2)}%`:'—');
-  set('macroDollar',Number.isFinite(Number(m.dollar?.value))?Number(m.dollar.value).toFixed(1):'—');
-  set('macroDollarSub',Number.isFinite(Number(m.dollar?.change3m))?`약 3개월 ${m.dollar.change3m>=0?'+':''}${m.dollar.change3m.toFixed(1)}%`:'—');
-  set('macroOil',Number.isFinite(Number(m.oil?.value))?`$${Number(m.oil.value).toFixed(1)}`:'—');
-  set('macroOilSub',Number.isFinite(Number(m.oil?.change3m))?`약 3개월 ${m.oil.change3m>=0?'+':''}${m.oil.change3m.toFixed(1)}%`:'—');
-  set('macroSP',Number.isFinite(Number(m.sp?.value))?Math.round(Number(m.sp.value)).toLocaleString():'—');
-  set('macroSPSub',Number.isFinite(Number(m.sp?.change3m))?`약 3개월 ${m.sp.change3m>=0?'+':''}${m.sp.change3m.toFixed(1)}%`:'—');
-  set('macroRiskFlow',Number.isFinite(Number(m.btc?.relativeToSP))?`${m.btc.relativeToSP>=0?'+':''}${m.btc.relativeToSP.toFixed(1)}%p`:'—');
-  set('macroRiskFlowSub',Number.isFinite(Number(m.btc?.return90d))?`BTC 90일 ${m.btc.return90d>=0?'+':''}${m.btc.return90d.toFixed(1)}%`:'—');
+  set('macroM2',N(m.m2?.value)?`${F(m.m2.value,1)}T`:'—');
+  set('macroM2Sub',N(m.m2?.yoy)?`12개월 ${Number(m.m2.yoy)>=0?'+':''}${F(m.m2.yoy,1)}% · ${m.globalM2}`:'Global M2 계산 대기');
+  set('macroFed',N(m.fed?.value)?`${F(m.fed.value,2)}%`:'—');
+  set('macroFedSub',N(m.fed?.change12m)?`12개월 ${Number(m.fed.change12m)>=0?'+':''}${F(m.fed.change12m,2)}%`:'—');
+  set('macroDollar',N(m.dollar?.value)?F(m.dollar.value,1):'—');
+  set('macroDollarSub',N(m.dollar?.change3m)?`약 3개월 ${Number(m.dollar.change3m)>=0?'+':''}${F(m.dollar.change3m,1)}%`:'—');
+  set('macroOil',N(m.oil?.value)?`$${F(m.oil.value,1)}`:'—');
+  set('macroOilSub',N(m.oil?.change3m)?`약 3개월 ${Number(m.oil.change3m)>=0?'+':''}${F(m.oil.change3m,1)}%`:'—');
+  set('macroSP',N(m.sp?.value)?Math.round(Number(m.sp.value)).toLocaleString():'—');
+  set('macroSPSub',N(m.sp?.change3m)?`약 3개월 ${Number(m.sp.change3m)>=0?'+':''}${F(m.sp.change3m,1)}%`:'—');
+  set('macroRiskFlow',N(m.btc?.relativeToSP)?`${Number(m.btc.relativeToSP)>=0?'+':''}${F(m.btc.relativeToSP,1)}%p`:'—');
+  set('macroRiskFlowSub',N(m.btc?.return90d)?`BTC 90일 ${Number(m.btc.return90d)>=0?'+':''}${F(m.btc.return90d,1)}%`:'—');
   const h=(m.m2?.history||[]).map(x=>Number(x.v)).filter(Number.isFinite);
-  const mh=Array.isArray(m.historicalMonthlyScores)?m.historicalMonthlyScores:[]; if(mh.length>1)drawAltseasonHistory('altseasonChart',mh);
+  const mh=Array.isArray(m.historicalMonthlyScores)?m.historicalMonthlyScores:[]; if(mh.length>1)drawAltseasonHistory('altseasonChart',mh); else { const c=$('altseasonChart'); if(c){ const x=c.getContext('2d'); x.clearRect(0,0,c.width,c.height); x.fillStyle='#64748b'; x.font='12px sans-serif'; x.fillText('월별 역사 데이터 수신 대기 중…',18,30); } }
   const hs=Array.isArray(m.historicalScores)?m.historicalScores:[];
   const he=$('altseasonHistory');
   if(he&&hs.length){

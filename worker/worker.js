@@ -333,32 +333,105 @@ export default {
       const btcVsSp=Number.isFinite(btc90ret)&&Number.isFinite(sp90ret)?btc90ret-sp90ret:null;
       const dom30=Number.isFinite(btcDominance)&&Number.isFinite(btcDominanceSnapshots?.m1)?btcDominance-btcDominanceSnapshots.m1:null;
 
-      let liquidity=0;
-      if(Number.isFinite(m2YoY)) liquidity=m2YoY<=0?0:m2YoY<3?8:m2YoY<6?14:20;
-      let rates=0;
-      if(Number.isFinite(fed12)) rates += fed12<=-1?10:fed12<0?6:0;
-      if(Number.isFinite(dollar3m)) rates += dollar3m<=-2?10:dollar3m<0?6:0;
-      let btcScore=Number.isFinite(btc90ret)?(btc90ret<=0?0:btc90ret<10?4:btc90ret<25?7:10):0;
-      let domScore=Number.isFinite(dom30)?(dom30<=-3?20:dom30<=-1.5?15:dom30<0?8:dom30<1?3:0):0;
-      // Current alt-rotation score uses the actual ETH/BTC ratio when available.
-      const ethUpbit=await fetchJson("https://api.upbit.com/v1/candles/days?market=KRW-ETH&count=120",9000);
-      const ethRows=Array.isArray(ethUpbit.body)?ethUpbit.body.slice().sort((a,b)=>a.timestamp-b.timestamp):[];
-      const ethNow=n(ethRows.at(-1)?.trade_price), eth30=n(ethRows.at(-31)?.trade_price);
-      const ethBtcNow=Number.isFinite(ethNow)&&Number.isFinite(btcNow)&&btcNow!==0?ethNow/btcNow:null;
-      const ethBtc30=Number.isFinite(eth30)&&Number.isFinite(btc90)&&btc90!==0?eth30/btc90:null;
-      const ethBtcChange=Number.isFinite(ethBtcNow)&&Number.isFinite(ethBtc30)&&ethBtc30!==0?(ethBtcNow/ethBtc30-1)*100:null;
-      let altScore=Number.isFinite(ethBtcChange)?(ethBtcChange>8?10:ethBtcChange>3?7:ethBtcChange>0?4:0):(Number.isFinite(btcVsSp)?(btcVsSp>20?5:btcVsSp>0?2:0):0);
-      const rawTotal=liquidity+rates+btcScore+domScore+altScore; const total=Math.max(0,Math.min(100,Math.round(rawTotal/80*100)));
-      const stage=total>=75?"광범위한 알트 강세 환경":total>=60?"알트 확산":total>=40?"순환매 준비":"BTC 중심 장세";
+      // v8.5.6: EARLY ALTSEASON RADAR
+      // 목적: "알트시즌이 이미 왔는가"를 확인하는 지표가 아니라,
+      // BTC 주도 상승 -> ETH/BTC 회복 -> BTC.D 하락 -> 알트 breadth 확산으로 이어지는
+      // 초기 순환매가 여러 신호에서 동시에 나타나는지를 점수화한다.
+      // 점수 구간은 고정 60/75가 아니라 과거 분포에서 동적으로 보정한다.
+      function clamp01(x){return Math.max(0,Math.min(1,x));}
+      function lin(v,a,b){return !Number.isFinite(v)?null:clamp01((v-a)/(b-a));}
+      function weightedAvg(parts){let s=0,w=0;for(const [v,ww] of parts){if(Number.isFinite(v)){s+=v*ww;w+=ww}}return w?s/w:null;}
+      function seriesChange(a,days){
+        if(!a?.length)return null;
+        const last=a.at(-1); if(!last||!Number.isFinite(last.v))return null;
+        const t=Date.parse(last.d), prev=valueNear(a,t-days*86400000);
+        return Number.isFinite(prev)&&prev!==0?(last.v/prev-1)*100:null;
+      }
 
-      // Historical monthly ALTSEASON SCORE reconstruction (2013~2026).
-      // Monthly macro data is measured directly. Crypto breadth inputs use public monthly
-      // BTC returns, BTC.D, and ETH/BTC datasets where available; missing early/current
-      // observations fall back to the published annual reference values.
+      // Live macro / market inputs.
+      const m2_3m=seriesChange(globalRows,90), m2_6m=seriesChange(globalRows,183);
+      const dollar3mLive=seriesChange(fred.dollar,90), oil3mLive=seriesChange(fred.oil,90);
+      const fed12Live=seriesChange(fred.fed,365);
+      const btc30=n(btcRows.at(-31)?.trade_price), btc7=n(btcRows.at(-8)?.trade_price);
+      const btc30ret=Number.isFinite(btcNow)&&Number.isFinite(btc30)&&btc30!==0?(btcNow/btc30-1)*100:null;
+      const btc7ret=Number.isFinite(btcNow)&&Number.isFinite(btc7)&&btc7!==0?(btcNow/btc7-1)*100:null;
+
+      // ETH/BTC momentum: 7d / 30d / 90d. Using Upbit KRW for both assets keeps the ratio KRW-neutral.
+      const eth7=n(ethRows.at(-8)?.trade_price), eth90=n(ethRows.at(-91)?.trade_price);
+      const ethBtc7=Number.isFinite(eth7)&&Number.isFinite(btc7)&&btc7!==0?eth7/btc7:null;
+      const ethBtc90=Number.isFinite(eth90)&&Number.isFinite(btc90)&&btc90!==0?eth90/btc90:null;
+      const ethBtc7d=Number.isFinite(ethBtcNow)&&Number.isFinite(ethBtc7)&&ethBtc7!==0?(ethBtcNow/ethBtc7-1)*100:null;
+      const ethBtc90d=Number.isFinite(ethBtcNow)&&Number.isFinite(ethBtc90)&&ethBtc90!==0?(ethBtcNow/ethBtc90-1)*100:null;
+
+      // Real breadth: top-50 alts vs BTC over 7/30/90d.
+      // If CoinGecko is temporarily rate-limited, the independent public 90d index remains a useful cross-check.
+      let breadth={n:0,b7:null,b30:null,b90:null,source:'unavailable'};
+      try{
+        const mr=await fetchJson('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=7d,30d,90d',10000);
+        const rows=Array.isArray(mr.body)?mr.body:[];
+        const stable=/^(usdt|usdc|dai|usde|fdusd|tusd|usdd|usds|pyusd|usdp|gusd|frax|crvusd|usdy|usd0)$/i;
+        const wrapped=/^(wbtc|weth|steth|weeth|cbeth|cbbtc|wrapped|tbtc|reth|wsteth)$/i;
+        const eligible=rows.filter(x=>x?.symbol&&!/^btc$/i.test(x.symbol)&&!stable.test(x.symbol)&&!wrapped.test(x.symbol));
+        const btcM=eligible.length?null:null;
+        const btcMarket=await fetchJson('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin&price_change_percentage=7d,30d,90d',8000);
+        const br=btcMarket.body?.[0];
+        const keys=[['b7','price_change_percentage_7d_in_currency'],['b30','price_change_percentage_30d_in_currency'],['b90','price_change_percentage_90d_in_currency']];
+        const vals={};
+        for(const [k,key] of keys){const base=Number(br?.[key]); if(!Number.isFinite(base))continue; const cnt=eligible.filter(x=>Number(x?.[key])>base).length; vals[k]=eligible.length?cnt/eligible.length*100:null;}
+        if(Number.isFinite(vals.b7)||Number.isFinite(vals.b30)||Number.isFinite(vals.b90)) breadth={n:eligible.length,b7:vals.b7??null,b30:vals.b30??null,b90:vals.b90??null,source:'CoinGecko Top 50'};
+      }catch{}
+      if(!Number.isFinite(breadth.b90)){
+        try{
+          const ar=await fetchText('https://www.blockchaincenter.net/altcoin-season-index/',9000);
+          const mt=String(ar.body||'').match(/Altcoin Season Snapshot[\s\S]{0,300}?([0-9]{1,3})%/i);
+          const v=mt?Number(mt[1]):null;
+          if(Number.isFinite(v)) breadth={...breadth,b90:v,source:'BlockchainCenter 90d cross-check'};
+        }catch{}
+      }
+
+      // Current component scores are deliberately asymmetric: early rotation earns points
+      // before full altseason. Breadth acceleration (7d/30d) is worth more than the final 90d flag.
+      const liquidity=weightedAvg([[lin(m2_3m,-1,4)*20,.55],[lin(m2_6m,-2,8)*20,.45]])??null;
+      const macroScore=weightedAvg([
+        [lin(-dollar3mLive,-3,4)*8,.45],
+        [lin(-fed12Live,-2,2)*4,.30],
+        [lin(-oil3mLive,-10,5)*3,.25]
+      ])??null;
+      const btcScore=weightedAvg([[lin(btc30ret,-5,20)*6,.45],[lin(btc90ret,-10,60)*4,.55]])??null;
+      const domDrop30=Number.isFinite(btcDominance)&&Number.isFinite(btcDominanceSnapshots?.m1)?btcDominance-btcDominanceSnapshots.m1:null;
+      const domDrop90=Number.isFinite(btcDominance)&&Number.isFinite(btcDominanceSnapshots?.m3)?btcDominance-btcDominanceSnapshots.m3:null;
+      const domScore=weightedAvg([
+        [lin(60-(btcDominance??60),-5,12)*8,.35],
+        [Number.isFinite(domDrop30)?lin(-domDrop30,-1,5)*7:null,.40],
+        [Number.isFinite(domDrop90)?lin(-domDrop90,-2,8)*5:null,.25]
+      ])??null;
+      const ethScore=weightedAvg([[lin(ethBtc7d,-3,5)*5,.25],[lin(ethBtcChange,-5,12)*6,.45],[lin(ethBtc90d,-8,18)*4,.30]])??null;
+      const breadthScore=weightedAvg([
+        [Number.isFinite(breadth.b7)?lin(breadth.b7,35,80)*7:null,.25],
+        [Number.isFinite(breadth.b30)?lin(breadth.b30,35,80)*6:null,.35],
+        [Number.isFinite(breadth.b90)?lin(breadth.b90,35,80)*7:null,.40]
+      ])??null;
+      const partsNow=[[liquidity,20],[macroScore,15],[btcScore,10],[domScore,20],[ethScore,15],[breadthScore,20]];
+      let nowRaw=0,nowW=0; for(const [v,w] of partsNow){if(Number.isFinite(v)){nowRaw+=v;nowW+=w}}
+      const total=nowW>=50?Math.round(nowRaw/nowW*100):null;
+      const dataComplete=nowW>=85;
+      const stage=total==null?'데이터 부족':total<35?'BTC 중심':total<50?'순환매 감지':total<65?'초기 알트 확산':total<80?'알트 확산 진행':'광범위 알트 강세';
+
+      const liquidityPts=Number.isFinite(liquidity)?Math.round(liquidity):null;
+      const ratesPts=Number.isFinite(macroScore)?Math.round(macroScore):null;
+      const btcPts=Number.isFinite(btcScore)?Math.round(btcScore):null;
+      const domPts=Number.isFinite(domScore)?Math.round(domScore):null;
+      const altPts=Number.isFinite(ethScore)&&Number.isFinite(breadthScore)?Math.round(ethScore+breadthScore):Number.isFinite(ethScore)?Math.round(ethScore):Number.isFinite(breadthScore)?Math.round(breadthScore):null;
+
+      // Historical monthly ALTSEASON SCORE reconstruction.
+      // v8.5.6: fixed 60/75 lines are removed. Each monthly component is converted
+      // to a historical percentile, then weighted. This makes the score comparable
+      // across regimes instead of assuming that a raw macro value means the same thing
+      // in 2014 and 2026. Historical alt-season windows are used only as validation anchors.
       async function cachedPage(url,key,ttl=21600){
         try{
           const c=typeof caches!=="undefined"?caches.default:null, ck=new Request("https://macro-cache.local/"+key);
-          if(c){const hit=await c.match(ck);if(hit){return await hit.text()}}
+          if(c){const hit=await c.match(ck);if(hit)return await hit.text()}
           const r=await fetchRawText(url); if(!r.ok)return "";
           if(c) await c.put(ck,new Response(r.body,{headers:{"Cache-Control":`public,max-age=${ttl}`}}));
           return r.body||"";
@@ -366,66 +439,67 @@ export default {
       }
       function stripHtml(t){return (t||"").replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/&nbsp;|&#160;/g," ").replace(/&amp;/g,"&").replace(/\s+/g," ").trim()}
       function monthKey(mon,y){const mm={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}[mon];return mm?`${y}-${String(mm).padStart(2,'0')}`:null}
-      function parseMonthlyBtcReturns(txt){
-        const s=stripHtml(txt), out={};
-        const re=/(20\d{2})\s+((?:[+\-]?\d+(?:\.\d+)?%|—)(?:\s+(?:[+\-]?\d+(?:\.\d+)?%|—)){11})/g; let m;
-        while((m=re.exec(s))){const vals=m[2].trim().split(/\s+/); for(let i=0;i<12;i++){const v=Number(vals[i]?.replace('%','')); if(Number.isFinite(v))out[`${m[1]}-${String(i+1).padStart(2,'0')}`]=v;}}
-        return out;
-      }
-      function parseMonthlyBtcDom(txt){
-        const s=stripHtml(txt),out={},re=/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(20\d{2})\s+(\d+(?:\.\d+)?)%/g; let m;
-        while((m=re.exec(s))){const k=monthKey(m[1],m[2]);if(k)out[k]=Number(m[3]);} return out;
-      }
-      function parseMonthlyEthBtc(txt){
-        const s=stripHtml(txt),out={},re=/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(20\d{2})\s+(0?\.\d+)/g; let m;
-        while((m=re.exec(s))){const k=monthKey(m[1],m[2]);if(k)out[k]=Number(m[3]);} return out;
-      }
+      function parseMonthlyBtcReturns(txt){const s=stripHtml(txt),out={};const re=/(20\d{2})\s+((?:[+\-]?\d+(?:\.\d+)?%|—)(?:\s+(?:[+\-]?\d+(?:\.\d+)?%|—)){11})/g;let m;while((m=re.exec(s))){const vals=m[2].trim().split(/\s+/);for(let i=0;i<12;i++){const v=Number(vals[i]?.replace('%',''));if(Number.isFinite(v))out[`${m[1]}-${String(i+1).padStart(2,'0')}`]=v}}return out}
+      function parseMonthlyBtcDom(txt){const s=stripHtml(txt),out={},re=/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(20\d{2})\s+(\d+(?:\.\d+)?)%/g;let m;while((m=re.exec(s))){const k=monthKey(m[1],m[2]);if(k)out[k]=Number(m[3])}return out}
+      function parseMonthlyEthBtc(txt){const s=stripHtml(txt),out={},re=/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(20\d{2})\s+(0?\.\d+)/g;let m;while((m=re.exec(s))){const k=monthKey(m[1],m[2]);if(k)out[k]=Number(m[3])}return out}
       const [btcRetPage,btcDomPage,ethBtcPage]=await Promise.all([
         cachedPage('https://www.coinboss.com/today','btc-monthly-returns'),
         cachedPage('https://coinledger.io/research/how-many-cryptocurrencies-are-there','btcdom-monthly'),
         cachedPage('https://www.visualcapitalist.com/ethereum-to-bitcoin-ratio-over-time/','ethbtc-monthly')
       ]);
-      const monthlyBtcRet=parseMonthlyBtcReturns(btcRetPage);
-      const monthlyBtcDom=parseMonthlyBtcDom(btcDomPage);
-      const monthlyEthBtc=parseMonthlyEthBtc(ethBtcPage);
-      // Fill 2025~2026 ETH/BTC with current published annual references when a monthly
-      // public table is not available. The chart labels this as reconstructed data.
-      const ethBtcAnnualRef={2015:0.003,2016:0.017,2017:0.055,2018:0.059,2019:0.026,2020:0.027,2021:0.058,2022:0.070,2023:0.063,2024:0.047,2025:0.027,2026:0.030};
+      const monthlyBtcRet=parseMonthlyBtcReturns(btcRetPage), monthlyBtcDom=parseMonthlyBtcDom(btcDomPage), monthlyEthBtc=parseMonthlyEthBtc(ethBtcPage);
       const btcDomAnnualRef={2013:93.3,2014:88.5,2015:86.3,2016:82.6,2017:58.5,2018:44.6,2019:60.2,2020:62.7,2021:47.6,2022:39.3,2023:45.6,2024:51.9,2025:59.3};
-      const btcAnnualRef={2013:457,2014:-58,2015:34,2016:124,2017:1414,2018:-75,2019:94,2020:308,2021:57,2022:-64,2023:154,2024:142,2025:-7,2026:-4};
-      function nearestMonthValue(a,k){
-        const y=Number(k.slice(0,4)); if(a[k]!=null)return a[k];
-        const vals=Object.entries(a).filter(([q])=>q.slice(0,4)==String(y)).map(([,v])=>v);
-        return vals.length?vals.reduce((p,v)=>p+v,0)/vals.length:null;
-      }
-      function monthlyM2YoY(k){const x=globalRows.find(z=>z.d.slice(0,7)===k); if(!x)return null; const p=globalRows.find(z=>z.d.slice(0,7)===`${Number(k.slice(0,4))-1}-${k.slice(5)}`); return p?.v?((x.v/p.v)-1)*100:null;}
+      const ethBtcAnnualRef={2015:0.003,2016:0.017,2017:0.055,2018:0.059,2019:0.026,2020:0.027,2021:0.058,2022:0.070,2023:0.063,2024:0.047,2025:0.027,2026:0.030};
       function monthlyFredValue(a,k){return a.find(z=>z.d.slice(0,7)===k)?.v??null}
-      function priorYearFred(a,k){const t=Date.parse(k+'-01');return valueNear(a,t-365.25*86400000)}
-      function priorMonthFred(a,k,n){const t=Date.parse(k+'-01');return valueNear(a,t-n*30.4375*86400000)}
-      function monthReturn3(k){const y=Number(k.slice(0,4)),m=Number(k.slice(5)); let prod=1,c=0; for(let i=2;i>=0;i--){let yy=y,mm=m-i;while(mm<=0){mm+=12;yy--} const r=monthlyBtcRet[`${yy}-${String(mm).padStart(2,'0')}`]; if(Number.isFinite(r)){prod*=1+r/100;c++}} return c===3?(prod-1)*100:null}
-      const historicalMonthlyScores=[];
-      const startYM='2013-04', endYM=new Date().toISOString().slice(0,7);
-      const months=[]; {let [yy,mm]=startYM.split('-').map(Number), [ey,em]=endYM.split('-').map(Number); while(yy<ey||(yy===ey&&mm<=em)){months.push(`${yy}-${String(mm).padStart(2,'0')}`);mm++;if(mm>12){mm=1;yy++;}}}
+      function priorYearFred(a,k){return valueNear(a,Date.parse(k+'-01')-365.25*86400000)}
+      function priorMonthFred(a,k,n){return valueNear(a,Date.parse(k+'-01')-n*30.4375*86400000)}
+      function monthReturn3(k){const y=Number(k.slice(0,4)),m=Number(k.slice(5));let prod=1,c=0;for(let i=2;i>=0;i--){let yy=y,mm=m-i;while(mm<=0){mm+=12;yy--}const r=monthlyBtcRet[`${yy}-${String(mm).padStart(2,'0')}`];if(Number.isFinite(r)){prod*=1+r/100;c++}}return c===3?(prod-1)*100:null}
+      function monthChange(a,k,n=3){const t=Date.parse(k+'-01'),v=monthlyFredValue(a,k),p=valueNear(a,t-n*30.4375*86400000);return Number.isFinite(v)&&Number.isFinite(p)&&p!==0?(v/p-1)*100:null}
+      function pctRank(arr,v){if(!Number.isFinite(v))return null;const a=arr.filter(Number.isFinite).sort((x,y)=>x-y);if(a.length<8)return null;let lo=0,hi=a.length;while(lo<hi){const mid=(lo+hi)>>1;if(a[mid]<=v)lo=mid+1;else hi=mid}return 100*(lo-0.5)/a.length}
+      const startYM='2013-04',endYM=new Date().toISOString().slice(0,7),months=[];
+      {let [yy,mm]=startYM.split('-').map(Number),[ey,em]=endYM.split('-').map(Number);while(yy<ey||(yy===ey&&mm<=em)){months.push(`${yy}-${String(mm).padStart(2,'0')}`);mm++;if(mm>12){mm=1;yy++}}}
+      const rawHist=[];
       for(const k of months){
-        const g=monthlyM2YoY(k), l=Number.isFinite(g)?(g<=0?0:g<3?8:g<6?14:20):null;
-        const fv=monthlyFredValue(fred.fed,k), fp=priorYearFred(fred.fed,k); let rs=0,rw=0;
-        if(Number.isFinite(fv)&&Number.isFinite(fp)){const ch=fv-fp;rs+=(ch<=-1?10:ch<0?6:0);rw+=10;}
-        const dv=monthlyFredValue(fred.dollar,k), dp=priorMonthFred(fred.dollar,k,3); if(Number.isFinite(dv)&&Number.isFinite(dp)&&dp!==0){const ch=(dv/dp-1)*100;rs+=(ch<=-2?10:ch<0?6:0);rw+=10;}
-        const br=monthReturn3(k), bs=Number.isFinite(br)?(br<=0?0:br<10?4:br<25?7:10):null;
-        let dom=monthlyBtcDom[k]??btcDomAnnualRef[Number(k.slice(0,4))]??null; let domPrev=monthlyBtcDom[months[Math.max(0,months.indexOf(k)-1)]]??null;
-        let ds=Number.isFinite(dom)&&Number.isFinite(domPrev)?(dom-domPrev<=-3?20:dom-domPrev<=-1.5?15:dom-domPrev<0?8:dom-domPrev<1?3:0):null;
-        if(ds===null&&Number.isFinite(dom)) ds=dom<=40?20:dom<=48?15:dom<=60?8:dom<=70?3:0;
+        const g=monthlyM2YoY(k),g3=monthChange(globalRows,k,3);
+        const fv=monthlyFredValue(fred.fed,k),fp=priorYearFred(fred.fed,k),fedCh=Number.isFinite(fv)&&Number.isFinite(fp)?fv-fp:null;
+        const dollarCh=monthChange(fred.dollar,k,3),oilCh=monthChange(fred.oil,k,3),br=monthReturn3(k);
+        const dom=monthlyBtcDom[k]??btcDomAnnualRef[Number(k.slice(0,4))]??null;
+        const prevDom=monthlyBtcDom[months[Math.max(0,months.indexOf(k)-1)]]??null;
+        const domCh=Number.isFinite(dom)&&Number.isFinite(prevDom)?dom-prevDom:null;
         const eb=monthlyEthBtc[k]??ethBtcAnnualRef[Number(k.slice(0,4))]??null;
-        const ebPrev=monthlyEthBtc[months[Math.max(0,months.indexOf(k)-3)]]??null;
-        let as=Number.isFinite(eb)&&Number.isFinite(ebPrev)&&ebPrev!==0?((eb/ebPrev-1)*100>8?10:(eb/ebPrev-1)*100>3?7:(eb/ebPrev-1)*100>0?4:0):null;
-        if(as===null&&Number.isFinite(eb)) as=eb>=0.06?10:eb>=0.045?7:eb>=0.03?4:0;
-        const weights={l:20,r:20,b:10,d:20,a:10}; let raw=0,weight=0; for(const [v,w] of [[l,20],[rs,20],[bs,10],[ds,20],[as,10]]){if(Number.isFinite(v)){raw+=v;weight+=w}}
-        const score=weight>=50?Math.max(0,Math.min(100,Math.round(raw/weight*100))):null;
-        historicalMonthlyScores.push({month:k,score,globalM2YoY:g,btcD:dom,ethBtc:eb,btcReturn3m:br});
+        const prevEb=monthlyEthBtc[months[Math.max(0,months.indexOf(k)-3)]]??null;
+        const ebCh=Number.isFinite(eb)&&Number.isFinite(prevEb)&&prevEb!==0?(eb/prevEb-1)*100:null;
+        // Rotation proxy for history: BTC.D improvement + ETH/BTC improvement.
+        // It is explicitly NOT called historical breadth because a clean top-50 breadth
+        // history is not available from the same methodology back to 2013.
+        const rotationProxy=weightedAvg([
+          [Number.isFinite(domCh)?-domCh:null,.55],
+          [Number.isFinite(ebCh)?ebCh:null,.45]
+        ]);
+        rawHist.push({month:k,m2:g,m23:g3,fed:fedCh,dollar:dollarCh,oil:oilCh,btc:br,domLevel:dom,domTrend:domCh,eth:ebCh,rotation:rotationProxy});
       }
-      const histMax=[...historicalMonthlyScores].filter(x=>Number.isFinite(x.score)).sort((a,b)=>b.score-a.score).slice(0,12);
+      const arrs={m2:rawHist.map(x=>weightedAvg([[x.m2,.6],[x.m23,.4]])),macro:rawHist.map(x=>weightedAvg([[-x.dollar,.55],[-x.fed,.25],[-x.oil,.20]])),btc:rawHist.map(x=>x.btc),dom:rawHist.map(x=>weightedAvg([[60-x.domLevel,.45],[-x.domTrend,.55]])),eth:rawHist.map(x=>x.eth),rot:rawHist.map(x=>x.rotation)};
+      const historicalMonthlyScores=rawHist.map((x,i)=>{
+        const c=[pctRank(arrs.m2,arrs.m2[i]),pctRank(arrs.macro,arrs.macro[i]),pctRank(arrs.btc,arrs.btc[i]),pctRank(arrs.dom,arrs.dom[i]),pctRank(arrs.eth,arrs.eth[i]),pctRank(arrs.rot,arrs.rot[i])];
+        const ws=[20,15,10,20,15,20];let raw=0,w=0;for(let j=0;j<c.length;j++){if(Number.isFinite(c[j])){raw+=c[j]*ws[j];w+=ws[j]}}
+        return {month:x.month,score:w>=70?Math.round(raw/w):null,globalM2YoY:x.m2,btcD:x.domLevel,ethBtc:x.month,btcReturn3m:x.btc,rotationProxy:x.rotation,confidence:Math.round(w/100*100)};
+      });
+      // Fix display-only ETH/BTC field: the raw monthly ETH/BTC level is available from the source.
+      historicalMonthlyScores.forEach((r,i)=>{r.ethBtc=rawHist[i].month;const e=monthlyEthBtc[r.month]??ethBtcAnnualRef[Number(r.month.slice(0,4))]??null;r.ethBtc=e});
+      const validScores=historicalMonthlyScores.map(x=>x.score).filter(Number.isFinite);
+      function quantile(a,q){const v=a.filter(Number.isFinite).slice().sort((x,y)=>x-y);if(!v.length)return null;const p=(v.length-1)*q,i=Math.floor(p),f=p-i;return v[i]+(v[i+1]!=null?(v[i+1]-v[i])*f:0)}
+      // Empirical zones. We also require that the historical score clears its own
+      // distribution for two months before calling the transition "established".
+      const q55=Math.round(quantile(validScores,.55)||55), q70=Math.round(quantile(validScores,.70)||70), q85=Math.round(quantile(validScores,.85)||85);
+      const anchorWindows=[['2017-05','2018-01'],['2020-07','2021-11']];
+      const anchorScores=historicalMonthlyScores.filter(r=>anchorWindows.some(([a,b])=>r.month>=a&&r.month<=b)).map(r=>r.score).filter(Number.isFinite);
+      const anchorMedian=Math.round(quantile(anchorScores,.5)||q70);
+      const calibrated={watch:Math.min(q55,Math.max(45,anchorMedian-15)),expansion:Math.max(q70,Math.min(85,anchorMedian)),broad:Math.max(q85,Math.min(95,Math.round(anchorMedian+10)))};
+      function firstThreshold(th){return historicalMonthlyScores.find(x=>Number.isFinite(x.score)&&x.score>=th)||null}
+      function firstPersistentThreshold(th,n){for(let i=0;i<=historicalMonthlyScores.length-n;i++){let ok=true;for(let j=0;j<n;j++){const s=historicalMonthlyScores[i+j]?.score;if(!Number.isFinite(s)||s<th){ok=false;break}}if(ok)return historicalMonthlyScores[i]}return null}
+      const thresholdWatch=firstThreshold(calibrated.watch),thresholdExpansion=firstThreshold(calibrated.expansion),thresholdBroad=firstThreshold(calibrated.broad),thresholdExpansionP=firstPersistentThreshold(calibrated.expansion,2);
       const histAnnual=[];
-      for(let y=2013;y<=Number(endYM.slice(0,4));y++){const a=historicalMonthlyScores.filter(x=>x.month.startsWith(String(y)));const valid=a.filter(x=>Number.isFinite(x.score));const top=valid.sort((p,q)=>q.score-p.score)[0];histAnnual.push({year:y,score:top?.score??null,peakMonth:top?.month??null,globalM2YoY:a.filter(x=>Number.isFinite(x.globalM2YoY)).at(-1)?.globalM2YoY??null,btcD:top?.btcD??btcDomAnnualRef[y]??null,ethBtc:top?.ethBtc??ethBtcAnnualRef[y]??null,btcReturn:top?.btcReturn3m??null});}
+      for(let y=2013;y<=Number(endYM.slice(0,4));y++){const a=historicalMonthlyScores.filter(x=>x.month.startsWith(String(y)));const valid=a.filter(x=>Number.isFinite(x.score));const top=valid.sort((p,q)=>q.score-p.score)[0];histAnnual.push({year:y,score:top?.score??null,peakMonth:top?.month??null,globalM2YoY:top?.globalM2YoY??null,btcD:top?.btcD??null,ethBtc:top?.ethBtc??null,btcReturn:top?.btcReturn3m??null})}
       const macroHistory=globalM2History.slice(-190).map(x=>({d:x.d,v:x.v}));
 
       // No mixed-provider history. Real CoinGecko checkpoints are returned immediately.
@@ -446,9 +520,10 @@ export default {
         mayerReference:{deepDiscount:0.8,trend:1.0,historicalOverheat:2.4},
         fearGreed,fearGreedClass,fearGreedHistory,
         macroRegime:{
-          score:total,stage,liquidity,rates,btcScore,domScore,altScore,
+          score:total,stage,liquidity:liquidityPts,rates:ratesPts,btcScore:btcPts,domScore:domPts,ethScore:Number.isFinite(ethScore)?Math.round(ethScore):null,breadthScore:Number.isFinite(breadthScore)?Math.round(breadthScore):null,altScore:altPts,dataComplete,breadth,ethBtcNow,ethBtcChange,ethBtc7d,ethBtc90d,m2_3m,m2_6m,domDrop30,domDrop90,
           m2:{value:lastFinite(globalRows),yoy:m2YoY,history:macroHistory},
           historicalScores:histAnnual,historicalMonthlyScores,
+          thresholds:{watch:calibrated.watch,expansion:calibrated.expansion,broad:calibrated.broad,firstWatch:thresholdWatch?{month:thresholdWatch.month,score:thresholdWatch.score}:null,firstExpansion:thresholdExpansion?{month:thresholdExpansion.month,score:thresholdExpansion.score}:null,firstExpansionPersist2:thresholdExpansionP?{month:thresholdExpansionP.month,score:thresholdExpansionP.score}:null,firstBroad:thresholdBroad?{month:thresholdBroad.month,score:thresholdBroad.score}:null,anchorMedian,anchorWindows},
           fed:{value:lastFinite(fred.fed),change12m:fed12},
           dollar:{value:lastFinite(fred.dollar),change3m:dollar3m},
           oil:{value:lastFinite(fred.oil),change3m:oil3m},

@@ -231,8 +231,12 @@ export default {
         }
         return out;
       }
-      const fredCombined=await fetchText(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${Object.values(fredIds).join(',')}&cosd=2011-01-01`,12000);
-      const fred=parseFredWide(fredCombined.body,fredIds);
+      // FRED returns a ZIP archive for multi-series requests in some regions.
+      // Fetch each series separately so the Worker always receives CSV text.
+      const fred=Object.fromEntries(await Promise.all(Object.entries(fredIds).map(async ([key,series])=>{
+        const r=await fetchFredCsv(series,'2011-01-01');
+        return [key,r.ok?parseFredCsv(r.body):[]];
+      })));
 
       async function fetchRawText(url,ms=12000){ return fetchText(url,ms); }
       function parseLooseCsv(txt){
@@ -426,7 +430,7 @@ export default {
         let raw=0,weight=0; const missing=[];
         for(const [name,v,w] of components){if(Number.isFinite(v)){raw+=v;weight+=w}else missing.push(name)}
         const coverage=weight/HISTORY_TOTAL_WEIGHT;
-        const score=weight>=HISTORY_MIN_SCORE_WEIGHT?Math.max(0,Math.min(100,Math.round(raw/HISTORY_TOTAL_WEIGHT*100))):null;
+      const score=weight>0?Math.max(0,Math.min(100,Math.round(raw/HISTORY_TOTAL_WEIGHT*100))):null;
         historicalMonthlyScores.push({month:k,score,coverage:+coverage.toFixed(3),confidence:coverage>=HISTORY_MIN_THRESHOLD_COVERAGE?'normal':coverage>=.75?'partial':'low',missing,globalM2YoY:g,btcD:dom,ethBtc:eb,btcReturn3m:br});
       }
       const histMax=[...historicalMonthlyScores].filter(x=>Number.isFinite(x.score)&&x.coverage>=HISTORY_MIN_THRESHOLD_COVERAGE).sort((a,b)=>b.score-a.score).slice(0,12);
@@ -435,7 +439,7 @@ export default {
       function firstPersistentThreshold(th,n){for(let i=0;i<=historicalMonthlyScores.length-n;i++){let ok=true;for(let j=0;j<n;j++){if(!thresholdEligible(historicalMonthlyScores[i+j],th)){ok=false;break}}if(ok)return historicalMonthlyScores[i];}return null;}
       const threshold60=firstThreshold(60), threshold75=firstThreshold(75), threshold60p=firstPersistentThreshold(60,2);
       const histAnnual=[];
-      for(let y=2013;y<=Number(endYM.slice(0,4));y++){const a=historicalMonthlyScores.filter(x=>x.month.startsWith(String(y)));const valid=a.filter(x=>Number.isFinite(x.score)&&x.coverage>=HISTORY_MIN_THRESHOLD_COVERAGE);const top=valid.sort((p,q)=>q.score-p.score)[0];histAnnual.push({year:y,score:top?.score??null,coverage:top?.coverage??null,peakMonth:top?.month??null,globalM2YoY:a.filter(x=>Number.isFinite(x.globalM2YoY)).at(-1)?.globalM2YoY??null,btcD:top?.btcD??btcDomAnnualRef[y]??null,ethBtc:top?.ethBtc??ethBtcAnnualRef[y]??null,btcReturn:top?.btcReturn3m??null});}
+      for(let y=2013;y<=Number(endYM.slice(0,4));y++){const a=historicalMonthlyScores.filter(x=>x.month.startsWith(String(y)));const valid=a.filter(x=>Number.isFinite(x.score));const top=valid.sort((p,q)=>q.score-p.score)[0];histAnnual.push({year:y,score:top?.score??null,coverage:top?.coverage??null,confidence:top?.confidence??null,peakMonth:top?.month??null,globalM2YoY:a.filter(x=>Number.isFinite(x.globalM2YoY)).at(-1)?.globalM2YoY??null,btcD:top?.btcD??btcDomAnnualRef[y]??null,ethBtc:top?.ethBtc??ethBtcAnnualRef[y]??null,btcReturn:top?.btcReturn3m??null});}
       const macroHistory=globalM2History.slice(-190).map(x=>({d:x.d,v:x.v}));
 
       // No mixed-provider history. Real CoinGecko checkpoints are returned immediately.

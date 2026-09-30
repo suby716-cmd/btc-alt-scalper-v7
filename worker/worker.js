@@ -1,4 +1,4 @@
-// worker/worker.js — BTC ALT REGIME TRADER v10.7.1-minimal+pin+altseason-v3 (routes normalized, JSON 404, deploy check in /health)
+// worker/worker.js — BTC ALT REGIME TRADER v10.7.2-minimal+pin+altseason-v3 (routes normalized, JSON 404, deploy check in /health)
 //
 // 단계별 복구 진행 중: /health, /upbit, /market (완료) → PIN 인증 (이번 단계) → KV 포지션 → Telegram → Cron
 // KV(포지션/장부), Telegram 알림, Cron 자동감시는 다음 단계에서 하나씩 다시 붙일 예정입니다.
@@ -28,6 +28,8 @@ function requirePin(req, env) {
   return !!env.PIN && pin === env.PIN;
 }
 
+let ENV_REF = null; // 요청마다 갱신 (FRED_API_KEY 선택 사용)
+
 async function fetchJson(url, ms = 5000) {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), ms);
@@ -49,17 +51,23 @@ async function fetchJson(url, ms = 5000) {
 }
 
 
-async function fetchText(url, ms = 8000) {
+async function fetchText(url, ms = 8000, hdr = null) {
   const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
   try {
-    const r = await fetch(url, {headers:{
+    const r = await fetch(url, { headers: hdr || {
       "Accept":"text/html,application/xhtml+xml",
       "User-Agent":"Mozilla/5.0 (compatible; BTC-ALT-REGIME-TRADER/8.4.4)"
-    },signal:c.signal});
-    return {ok:r.ok,status:r.status,body:r.ok?await r.text():""};
-  } catch(e) { return {ok:false,status:0,error:String(e?.message||e),body:""}; }
+    }, signal:c.signal });
+    const tx = await r.text().catch(() => "");
+    return { ok: r.ok, status: r.status, body: r.ok ? tx : "", snip: r.ok ? "" : tx.slice(0, 120) };
+  } catch(e) { return { ok:false, status:0, error:String(e?.message||e), body:"" }; }
   finally { clearTimeout(t); }
 }
+// CSV/데이터 API용 헤더 (ECB 등은 Accept: text/html 이면 406을 돌려준다)
+const CSV_HDR = {
+  "Accept": "text/csv,text/plain,application/json;q=0.9,*/*;q=0.8",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+};
 
 function parseFredCsv(txt){
   const out=[];
@@ -91,7 +99,7 @@ function pctChange(a,n){
 }
 async function fetchFredCsv(series,start="2011-01-01"){
   const [base, query=''] = String(start).split('__EXTRA__');
-  return fetchText(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${encodeURIComponent(series)}&cosd=${base}${query}`,9000);
+  return fetchText(`https://fred.stlouisfed.org/graph/fredgraph.csv?id=${encodeURIComponent(series)}&cosd=${base}${query}`,12000,CSV_HDR);
 }
 
 function parseCoinGeckoDominancePage(html) {
@@ -174,18 +182,33 @@ function parseFredFast(txt) {
   }
   return out;
 }
+async function fredApiSeries(id, start, monthly, aggregation) {
+  const key = ENV_REF && ENV_REF.FRED_API_KEY;
+  if (!key) return null;
+  const extra = monthly ? `&frequency=m&aggregation_method=${encodeURIComponent(aggregation)}` : "";
+  const r = await fetchJson(`https://api.stlouisfed.org/fred/series/observations?series_id=${encodeURIComponent(id)}&api_key=${encodeURIComponent(key)}&file_type=json&observation_start=${start}${extra}`, 12000);
+  const obs = Array.isArray(r.body?.observations) ? r.body.observations : [];
+  const series = [];
+  for (const o of obs) { const v = parseFloat(o.value); const t = Date.parse(o.date); if (v === v && t === t) series.push({ t, v }); }
+  return { ok: series.length > 0, status: r.status, series, via: "api" };
+}
 async function fredSeries(id, start, monthly=false, aggregation='avg') {
+  // 1) (선택) FRED_API_KEY가 있으면 공식 API 먼저
+  const api = await fredApiSeries(id, start, monthly, aggregation);
+  if (api && api.ok) return api;
+  // 2) 공개 CSV: 월평균 변환 → 실패 시 원본 → 한 번 더 대기 후 재시도
   const extra = monthly ? `&fq=Monthly&fam=${encodeURIComponent(aggregation)}` : '';
   let r = await fetchFredCsv(id, `${start}__EXTRA__${extra}`);
-  if (!r.ok || !r.body) { await sleep(400); r = await fetchFredCsv(id, start); }
+  if (!r.ok || !r.body) { await sleep(500); r = await fetchFredCsv(id, start); }
+  if (!r.ok || !r.body) { await sleep(1200); r = await fetchFredCsv(id, start); }
   const series = parseFredFast(r.body);
-  return { ok: series.length > 0, status: r.status, series };
+  return { ok: series.length > 0, status: r.status, series, via: "csv", snip: r.snip, error: r.error };
 }
 const splitCsv = line => line.split(",").map(v => v.trim().replace(/^"|"$/g, ""));
 const MON = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
 async function fetchEcbM2() {
   const url = "https://data-api.ecb.europa.eu/service/data/BSI/M.U2.Y.V.M20.X.1.U2.2300.Z01.E?startPeriod=2011-01&format=csvdata";
-  const r = await fetchText(url, 12000); const map = new Map();
+  const r = await fetchText(url, 12000, CSV_HDR); const map = new Map();
   if (r.ok) {
     const lines = r.body.trim().split(/\r?\n/).map(splitCsv);
     const h = lines.findIndex(x => x.includes("TIME_PERIOD") && x.includes("OBS_VALUE"));
@@ -201,7 +224,7 @@ async function fetchBojM2(nowMs) {
   ];
   let status = 0;
   for (const url of urls) {
-    const r = await fetchText(url, 12000); status = r.status; const map = new Map();
+    const r = await fetchText(url, 12000, CSV_HDR); status = r.status; const map = new Map();
     if (r.ok) for (const line of r.body.trim().split(/\r?\n/)) {
       const p = splitCsv(line); if (p.length < 2) continue;
       const m = p[0].match(/^(\d{4})[\/-]?(\d{2})$/); const v = Number(p[p.length - 1]);
@@ -214,7 +237,7 @@ async function fetchBojM2(nowMs) {
 async function fetchBoeM4(nowMs) {
   const d = new Date(nowMs), mon = Object.keys(MON)[d.getUTCMonth()];
   const url = `https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2011&Dateto=28/${mon}/${d.getUTCFullYear()}&SeriesCodes=LPMAUYN&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N`;
-  const r = await fetchText(url, 12000); const map = new Map();
+  const r = await fetchText(url, 12000, CSV_HDR); const map = new Map();
   if (r.ok) {
     const lines = r.body.trim().split(/\r?\n/).map(splitCsv);
     const h = lines.findIndex(x => x.some(v => v.includes("LPMAUYN")));
@@ -310,12 +333,26 @@ function featureRow(k, t, live, c) {
   };
 }
 
+// FRED는 동시 요청이 많으면 거절하는 경우가 있어 3개씩 끊어서 받는다.
+async function fredLimited(names, ids) {
+  const out = new Array(names.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < names.length) {
+      const i = next++, n = names[i];
+      out[i] = await fredSeries(ids[n], "2010-06-01", !["cbbtc","cbeth"].includes(n), "avg");
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  return out;
+}
+
 async function buildHistory() {
   const t0 = Date.now(), now = t0, curK = mkey(now);
   const ids = { m2: "M2SL", fed: "EFFR", dollar: "DTWEXBGS", oil: "WTISPLC", sp: "SP500", y10: "DGS10", eurusd: "DEXUSEU", jpyusd: "DEXJPUS", gbpusd: "EXUSUK", cbbtc: "CBBTCUSD", cbeth: "CBETHUSD" };
   const names = Object.keys(ids);
   const [fredArr, ea, jp, uk, bc, sc, cmc] = await Promise.all([
-    Promise.all(names.map(n => fredSeries(ids[n], "2010-06-01", !["cbbtc","cbeth"].includes(n), "avg"))),
+    fredLimited(names, ids),
     fetchEcbM2(), fetchBojM2(now), fetchBoeM4(now), fetchBtcPrice(), fetchStable(), fetchCmcDominance(now)
   ]);
   const f = {}; names.forEach((n, i) => f[n] = fredArr[i]);
@@ -333,7 +370,7 @@ async function buildHistory() {
     m2: g.lastK ? g.global.get(g.lastK) : null, m2Key: g.lastK, stable: last(sc.series)
   };
   const sources = {
-    fred: { ok: fredArr.filter(x => x.ok).length, total: names.length, failed: names.filter((n, i) => !fredArr[i].ok) },
+    fred: { ok: fredArr.filter(x => x.ok).length, total: names.length, failed: names.filter((n, i) => !fredArr[i].ok), via: fredArr.find(x => x.ok)?.via || null, status: Object.fromEntries(names.map((n, i) => [n, fredArr[i].status])), hint: fredArr.find(x => !x.ok)?.snip || fredArr.find(x => !x.ok)?.error || undefined },
     ecb: { ok: ea.ok, status: ea.status }, boj: { ok: jp.ok, status: jp.status }, boe: { ok: uk.ok, status: uk.status },
     btcPrice: { ok: bc.ok, status: bc.status, fallback: !bc.ok && f.cbbtc.ok }, stablecoin: { ok: sc.ok, status: sc.status },
     cmcDominance: { ok: cmc.ok, status: cmc.status }
@@ -560,6 +597,7 @@ function compose(hist, live) {
 
 export default {
   async fetch(req, env) {
+    ENV_REF = env;
     const u = new URL(req.url);
     // 끝의 슬래시(/altseason/)나 중복 슬래시를 정리해 라우트가 어긋나지 않게 한다.
     if (u.pathname.length > 1) u.pathname = u.pathname.replace(/\/{2,}/g, "/").replace(/\/+$/, "") || "/";
@@ -568,7 +606,7 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.7.1-minimal+pin+altseason-v3",
+        version: "v10.7.2-minimal+pin+altseason-v3",
         routes: ["/health","/macro","/altseason","/candles","/upbit","/market"],
         altseason: true,
         service: "BTC ALT REGIME TRADER (minimal)",
@@ -653,6 +691,19 @@ export default {
     if (u.pathname === "/altseason") {
       if (req.method !== "POST" && req.method !== "GET") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
       const force = u.searchParams.get("force") === "1", part = u.searchParams.get("part");
+      if (part === "diag") {
+        // 데이터 소스별 접속 상태만 빠르게 점검 (계산 없음)
+        const t = async (name, p) => { const t0 = Date.now(); const r = await p; return [name, { ok: r.ok, status: r.status, ms: Date.now() - t0, head: (r.body || r.snip || r.error || "").slice(0, 100) }]; };
+        const fredUrl = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=M2SL&cosd=2024-01-01";
+        const res = await Promise.all([
+          t("fred_csv", fetchText(fredUrl, 12000, CSV_HDR)),
+          t("fred_csv_html_accept", fetchText(fredUrl, 12000)),
+          t("ecb", fetchText("https://data-api.ecb.europa.eu/service/data/BSI/M.U2.Y.V.M20.X.1.U2.2300.Z01.E?startPeriod=2025-01&format=csvdata", 12000, CSV_HDR)),
+          t("boj", fetchText("https://www.stat-search.boj.or.jp/api/v1/getDataCode?format=csv&lang=en&db=MD02&startDate=202501&endDate=202608&code=MAM1NAM2M2MO", 12000, CSV_HDR)),
+          t("boe", fetchText("https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp?csv.x=yes&Datefrom=01/Jan/2025&Dateto=28/Aug/2026&SeriesCodes=LPMAUYN&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N", 12000, CSV_HDR))
+        ]);
+        return json({ ok: true, part: "diag", fredApiKey: !!env.FRED_API_KEY, results: Object.fromEntries(res) });
+      }
       if (part === "live") {
         const live = await cached(env, "as:live:v3", 600, buildLive, v=>v&&v.ok, force);
         return json({ ok:!!live?.ok, part:"live", cache:live?.cache, ...live });

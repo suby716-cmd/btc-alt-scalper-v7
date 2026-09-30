@@ -74,7 +74,7 @@
 .macro-strip .metric{min-height:132px}
 
 
-.altseason-panel{margin-top:12px}.section-title{font-size:17px;font-weight:800;margin-bottom:10px}.section-title span{font-size:11px;color:var(--muted);font-weight:500;margin-left:5px}.altseason-grid{display:grid;grid-template-columns:220px 1fr;gap:10px}.altseason-score-card{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:13px;text-align:center}.altseason-score{font-size:42px;font-weight:900;line-height:1.1;margin:5px 0}.altseason-stage{font-size:15px;font-weight:800}.altseason-note{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.4}.altseason-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.altseason-metrics>div{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:9px}.altseason-metrics span,.altseason-bars span{font-size:10px;color:var(--muted)}.altseason-metrics b{display:block;font-size:18px;margin-top:3px}.altseason-metrics small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.altseason-bars{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:9px}.altseason-bars>div{border:1px solid var(--line);border-radius:8px;padding:7px;background:var(--panel2)}.altseason-bars b{float:right;font-size:12px}.macro-spark-xl{height:105px;margin-top:10px}.altseason-history-chart{height:240px!important;margin-top:12px}.altseason-chart-note{font-size:10px;color:var(--muted);line-height:1.5;margin-top:5px}.altseason-legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;font-size:10px}.altseason-legend .lz{display:inline-block;padding:3px 7px;border-radius:999px;font-weight:700;border:1px solid transparent}.lz-calm{background:#f1f5f9;color:#475569;border-color:#cbd5e1}.lz-watch{background:#fef3c7;color:#92400e;border-color:#f59e0b}.lz-alt{background:#dbeafe;color:#1d4ed8;border-color:#60a5fa}.lz-hot{background:#fee2e2;color:#b91c1c;border-color:#f87171}.history-table tr.watch{background:#fffbeb}.history-table tr.alt{background:#eff6ff}.history-table tr.hot{background:#fef2f2;font-weight:800}.threshold-box{margin-top:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);font-size:11px;line-height:1.5}.history-wrap{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--panel2)}.history-title{font-size:12px;font-weight:800;margin-bottom:7px}.history-table{font-size:11px;line-height:1.55;overflow:auto}.history-table table{width:100%;border-collapse:collapse}.history-table th,.history-table td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right}.history-table th:first-child,.history-table td:first-child{text-align:left}.history-table tr.hot{font-weight:800}.altseason-context{font-size:11px;color:var(--muted)}
+.altseason-panel{margin-top:12px}.section-title{font-size:17px;font-weight:800;margin-bottom:10px}.section-title span{font-size:11px;color:var(--muted);font-weight:500;margin-left:5px}.altseason-grid{display:grid;grid-template-columns:220px 1fr;gap:10px}.altseason-score-card{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:13px;text-align:center}.altseason-score{font-size:42px;font-weight:900;line-height:1.1;margin:5px 0}.altseason-stage{font-size:15px;font-weight:800}.altseason-note{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.4}.altseason-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.altseason-metrics>div{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:9px}.altseason-metrics span,.altseason-bars span{font-size:10px;color:var(--muted)}.altseason-metrics b{display:block;font-size:18px;margin-top:3px}.altseason-metrics small{display:block;color:var(--muted);font-size:10px;margin-top:2px}.altseason-bars{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:9px}.altseason-bars>div{border:1px solid var(--line);border-radius:8px;padding:7px;background:var(--panel2)}.altseason-bars b{float:right;font-size:12px}.macro-spark-xl{height:105px;margin-top:10px}.altseason-history-chart{height:240px!important;margin-top:12px}.altseason-chart-note{font-size:10px;color:var(--muted);line-height:1.5;margin-top:5px}.history-wrap{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--panel2)}.history-title{font-size:12px;font-weight:800;margin-bottom:7px}.history-table{font-size:11px;line-height:1.55;overflow:auto}.history-table table{width:100%;border-collapse:collapse}.history-table th,.history-table td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right}.history-table th:first-child,.history-table td:first-child{text-align:left}.history-table tr.hot{font-weight:800}.altseason-context{font-size:11px;color:var(--muted)}
 @media(max-width:760px){.altseason-grid{grid-template-columns:1fr}.altseason-metrics{grid-template-columns:repeat(2,1fr)}.altseason-bars{grid-template-columns:repeat(2,1fr)}}
 
 /* v8.3.9 responsive/mobile polish */
@@ -161,6 +161,29 @@
 .rot-add button:disabled{opacity:.5;cursor:wait}
 .rot-del{border:0;background:transparent;color:#9aa4b2;font-size:15px;line-height:1;padding:0 4px;margin-left:4px;cursor:pointer;border-radius:4px}
 .rot-del:hover{color:var(--red);background:#fff0f0}
+.as-panel{margin-top:12px}.as-reload{float:right;font-size:12px;padding:5px 9px}
+.as-top{display:grid;grid-template-columns:230px 1fr;gap:10px}
+.as-scorecard{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:13px;text-align:center}
+.as-score{font-size:44px;font-weight:900;line-height:1.1;margin:4px 0}.as-stage{font-size:14px;font-weight:800}
+.as-gauge{position:relative;height:9px;border-radius:5px;overflow:hidden;display:flex;margin:10px 4px 2px}.as-gauge i{display:block;height:100%}.as-gauge .g1{width:40%;background:#bfe6cf}.as-gauge .g2{width:30%;background:#f6df9f}.as-gauge .g3{width:30%;background:#f3b3ad}
+.as-gauge b{position:absolute;top:-2px;width:3px;height:13px;background:#111827;border-radius:2px;left:0;transform:translateX(-1px)}
+.as-gauge-lab{position:relative;height:13px;font-size:10px;color:var(--muted);margin:0 4px}.as-gauge-lab span{position:absolute;transform:translateX(-50%)}.as-gauge-lab span:first-child{left:0;transform:none}.as-gauge-lab span:last-child{right:0;left:auto;transform:none}
+.as-path{font-size:12px;margin-top:6px;font-weight:700}.as-mom{font-size:11px;color:var(--muted);margin-top:2px;min-height:15px}
+.as-comps{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 10px;align-content:start}
+.as-comp{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:6px 9px}.as-comp .r{display:flex;justify-content:space-between;font-size:12px;font-weight:700}.as-comp .r span:last-child{font-variant-numeric:tabular-nums}
+.as-bar{height:6px;border-radius:3px;background:#e8edf3;margin:4px 0 3px;overflow:hidden}.as-bar i{display:block;height:100%;border-radius:3px;background:var(--violet)}.as-comp small{font-size:10px;color:var(--muted)}
+.as-drivers{font-size:12px;margin:9px 0 2px;color:var(--muted)}.as-drivers b{color:var(--text)}
+.as-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 6px}.as-tabs button{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:5px 10px;border-radius:999px;font-size:12px;cursor:pointer}.as-tabs button.on{background:var(--violet);border-color:var(--violet);color:#fff}
+.as-chart{width:100%;height:270px;display:block;border:1px solid var(--line);border-radius:10px;background:#fff;touch-action:pan-y}
+.as-caption{font-size:12px;margin-top:5px;min-height:18px;font-variant-numeric:tabular-nums}.as-legend{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.6}.as-legend i{display:inline-block;width:14px;height:8px;border-radius:2px;margin:0 4px 0 9px;vertical-align:baseline}
+.as-mute{font-size:11px;color:var(--muted);font-weight:500;margin-left:4px}
+.as-ladder-box{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:10px}
+.as-ladder{display:flex;align-items:stretch;gap:0;margin:8px 0 5px;flex-wrap:wrap}.as-node{flex:1 1 90px;min-width:84px;border:1px solid var(--line);border-radius:9px;padding:7px 6px;text-align:center;background:#fff}.as-node b{display:block;font-size:16px;margin-top:2px}.as-node small{font-size:10px;color:var(--muted)}.as-node.hit{border-color:#e7b5b0;background:#fff5f4}.as-node.miss{border-color:#bcd3ee;background:#f3f8fd}.as-arrow{align-self:center;padding:0 5px;color:var(--muted)}
+.as-two{display:grid;grid-template-columns:1.25fr 1fr;gap:10px;margin-top:10px}.as-two .history-wrap{margin-top:0}
+.as-analogs{display:grid;gap:7px}.as-analog{border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:#fff;font-size:12px}.as-analog b{font-size:13px}.as-analog small{display:block;color:var(--muted);margin-top:2px}
+.as-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}.as-metrics>div{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:8px 9px}.as-metrics span{font-size:10px;color:var(--muted)}.as-metrics b{display:block;font-size:16px;margin-top:2px}.as-metrics small{display:block;font-size:10px;color:var(--muted);margin-top:1px}
+.as-warn{color:var(--yellow);font-weight:700}
+@media(max-width:900px){.as-top{grid-template-columns:1fr}.as-two{grid-template-columns:1fr}.as-metrics{grid-template-columns:repeat(2,1fr)}.as-comps{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -193,40 +216,54 @@
     <div class="card"><div class="label">마지막 완료봉</div><div class="value" id="candle">—</div></div>
   </div>
 
-  <div class="panel altseason-panel">
-  <div class="section-title">🌍 GLOBAL LIQUIDITY & ALTSEASON RADAR <span>알트불장 "확인"보다 "초기 순환매"를 먼저 잡는 데이터 기반 레이더</span></div>
-  <div class="altseason-grid">
-    <div class="altseason-score-card">
+  <div class="panel as-panel" id="asPanel">
+  <div class="section-title">🌍 GLOBAL LIQUIDITY & ALTSEASON RADAR <span id="asSub">월별 역사 재구성 + 현재 알트 확산도</span>
+    <button class="btn mini-btn as-reload" id="asReload" type="button">새로고침</button></div>
+  <div class="as-top">
+    <div class="as-scorecard">
       <div class="label">ALTSEASON SCORE</div>
-      <div class="altseason-score" id="altseasonScore">—</div>
-      <div class="altseason-stage" id="altseasonStage">계산 중…</div>
-      <div class="altseason-note" id="altseasonNote">고정 60/75점이 아니라 과거 분포로 자동 보정 · 초기 순환매 탐지용</div>
+      <div class="as-score" id="asScore">—</div>
+      <div class="as-stage" id="asStage">계산 중…</div>
+      <div class="as-gauge"><i class="g1"></i><i class="g2"></i><i class="g3"></i><b id="asMarker"></b></div>
+      <div class="as-gauge-lab"><span>0</span><span style="left:40%">40</span><span style="left:70%">70</span><span>100</span></div>
+      <div class="as-path" id="asPath">—</div>
+      <div class="as-mom" id="asMom"></div>
+      <div class="altseason-note">과거 패턴 기반 환경 진단 · 매매신호 아님</div>
     </div>
-    <div class="altseason-metrics">
-      <div><span>Global M2</span><b id="macroM2">—</b><small id="macroM2Sub">—</small></div>
-      <div><span>Fed Funds</span><b id="macroFed">—</b><small id="macroFedSub">—</small></div>
-      <div><span>Dollar</span><b id="macroDollar">—</b><small id="macroDollarSub">—</small></div>
-      <div><span>WTI</span><b id="macroOil">—</b><small id="macroOilSub">—</small></div>
-      <div><span>S&P 500</span><b id="macroSP">—</b><small id="macroSPSub">—</small></div>
-      <div><span>BTC vs S&P</span><b id="macroRiskFlow">—</b><small id="macroRiskFlowSub">—</small></div>
-      <div><span>Alt Breadth</span><b id="macroBreadth">—</b><small id="macroBreadthSub">Top 50 · 7/30/90일</small></div>
-      <div><span>ETH/BTC</span><b id="macroEthBtc">—</b><small id="macroEthBtcSub">—</small></div>
+    <div class="as-comps" id="asComps"></div>
+  </div>
+  <div class="as-drivers" id="asDrivers"></div>
+
+  <div class="as-tabs" id="asTabs">
+    <button type="button" data-m="score" class="on">ALTSEASON SCORE</button>
+    <button type="button" data-m="m2">Global M2 YoY</button>
+    <button type="button" data-m="dom">BTC.D</button>
+    <button type="button" data-m="eth">ETH/BTC</button>
+  </div>
+  <canvas id="asChart" class="as-chart"></canvas>
+  <div class="as-caption" id="asCaption">차트 위에 마우스를 올리면 월별 값이 표시됩니다.</div>
+  <div class="as-legend" id="asLegend"></div>
+
+  <div class="as-ladder-box">
+    <div class="history-title">🪜 자금 순환 사다리 <span class="as-mute">최근 30일 BTC 대비 초과수익 · 업비트 원화마켓 15종</span></div>
+    <div class="as-ladder" id="asLadder"></div>
+    <div class="as-mute" id="asLadderNote"></div>
+  </div>
+
+  <div class="as-two">
+    <div class="history-wrap">
+      <div class="history-title">📐 점수 보정표 <span class="as-mute">몇 점부터 알트 확산이 시작됐나</span></div>
+      <div id="asCalib" class="history-table">계산 중…</div>
+      <div id="asWin" class="history-table" style="margin-top:8px"></div>
+    </div>
+    <div class="history-wrap">
+      <div class="history-title">🧭 지금과 비슷했던 과거 시기 <span class="as-mute">M2·Fed·달러·BTC·ETH/BTC·BTC.D 6개 지표 거리</span></div>
+      <div id="asAnalogs" class="as-analogs">계산 중…</div>
     </div>
   </div>
-  <div class="altseason-bars">
-    <div><span>유동성</span><b id="scoreLiquidity">—</b></div>
-    <div><span>금리·달러·유가</span><b id="scoreRates">—</b></div>
-    <div><span>BTC 추세</span><b id="scoreBtc">—</b></div>
-    <div><span>BTC.D</span><b id="scoreDom">—</b></div>
-    <div><span>ETH/BTC</span><b id="scoreEth">—</b></div>
-    <div><span>Alt Breadth</span><b id="scoreBreadth">—</b></div>
-  </div>
-  <canvas class="macro-spark macro-spark-xl altseason-history-chart" id="altseasonChart"></canvas><div class="altseason-legend" id="altseasonLegend"><span class="lz lz-calm">BTC 중심</span><span class="lz lz-watch">순환매 감지</span><span class="lz lz-alt">초기 알트 확산</span><span class="lz lz-hot">광범위 알트 강세</span></div><div class="altseason-chart-note">색상 경계는 고정 숫자가 아니라 2013~현재의 실제 분포와 과거 대표 알트강세 구간(2017~18, 2020~21)을 함께 사용해 자동 보정합니다. <b>Alt Breadth</b>는 상위 알트가 BTC를 이기는 비율을 7일·30일·90일로 보고, 90일 값이 75%를 넘는 것은 '확인'에 가깝습니다. 우리는 그보다 앞선 7/30일 개선과 ETH/BTC·BTC.D·유동성 동시 개선을 먼저 포착하도록 설계했습니다.</div>
-  <div class="history-wrap">
-    <div class="history-title">📊 과거 ALTSEASON SCORE 고점</div>
-    <div id="altseasonHistory" class="history-table">과거 점수 계산 중…</div>
-  </div>
-  <div class="macro-context" id="altseasonContext">Global M2 Composite = 미국 + 유로존 + 일본 + 영국 광의통화의 USD 환산 합산. 중국은 공식 자동수집 안정성 문제로 제외합니다.</div>
+
+  <div class="as-metrics" id="asMetrics"></div>
+  <div class="macro-context" id="asFoot">데이터 연결 중…</div>
 </div>
 
 <div class="panel">
@@ -240,7 +277,7 @@
   <div class="metric card macro-card">
     <div class="label">Mayer Multiple</div><div class="value" id="mayer">—</div>
     <div class="small" id="mayerSub">BTC ÷ 200일 이동평균</div>
-    <div class="macro-context" id="mayerContext">200일 이동평균 계산 중…</div>
+    <div class="macro-context" id="mayerContext">10년 역사 기준 계산 중…</div>
     <canvas class="macro-spark macro-spark-lg" id="mayerChart"></canvas>
   </div>
   <div class="metric card macro-card">
@@ -442,7 +479,7 @@ async function health(){
   const r=await fetchWithTimeout(workerBase()+'/health',{method:'GET'},12000);
   return parseResponse(r);
 }
-async function call(path,body){
+async function call(path,body,ms=20000){
   const headers={'x-scalper-pin':(P?.value||'').trim()};
   if(body) headers['content-type']='application/json';
   const url=workerBase()+path;
@@ -450,7 +487,7 @@ async function call(path,body){
     method:'POST',
     headers,
     body:body?JSON.stringify(body):undefined
-  },20000);
+  },ms);
   const text=await r.text();
   let d={};
   try{ d=text?JSON.parse(text):{}; }
@@ -1650,34 +1687,6 @@ setInterval(loadMarketFx,600000);
 setInterval(loadMarketCharts,600000);
 setInterval(loadRSCandles,60000);
 
-function drawAltseasonHistory(id, rows){
-  const c=$(id); if(!c) return;
-  const data=(rows||[]).filter(x=>Number.isFinite(Number(x.score)));
-  const dpr=window.devicePixelRatio||1,w=Math.max(320,c.clientWidth||720),h=250;
-  c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h);
-  if(data.length<2)return;
-  const pad={l:38,r:12,t:22,b:28}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
-  const Y=v=>pad.t+ph-(Math.max(0,Math.min(100,v))/100)*ph, X=i=>pad.l+pw*i/(data.length-1);
-  // Score zones: 0-39 BTC 중심, 40-59 순환매 준비, 60-74 알트 확산 후보, 75-100 광범위한 알트 강세 후보.
-  const zones=[[0,40,'rgba(148,163,184,.07)'],[40,60,'rgba(245,158,11,.08)'],[60,75,'rgba(37,99,235,.09)'],[75,100,'rgba(220,38,38,.08)']];
-  for(const [lo,hi,fill] of zones){x.fillStyle=fill;x.fillRect(pad.l,Y(hi),pw,Y(lo)-Y(hi));}
-  // Historical reference windows.
-  const bands=[['2017-05','2018-01','2017~18 알트 강세'],['2020-07','2021-12','2020~21 알트 강세']];
-  for(const [a,b,label] of bands){const i1=data.findIndex(q=>q.month>=a),i2=[...data].reverse().findIndex(q=>q.month<=b);const j2=i2<0?-1:data.length-1-i2;if(i1>=0&&j2>=i1){x.fillStyle='rgba(100,116,139,.12)';x.fillRect(X(i1),pad.t,X(j2)-X(i1),ph);x.fillStyle='#64748b';x.font='10px sans-serif';x.fillText(label,X(i1)+4,pad.t+13);}}
-  // Threshold lines.
-  x.lineWidth=1;x.setLineDash([5,4]);[40,60,75].forEach(v=>{x.strokeStyle=v===60?'#2563eb':v===75?'#dc2626':'#f59e0b';x.beginPath();x.moveTo(pad.l,Y(v));x.lineTo(w-pad.r,Y(v));x.stroke();x.fillStyle=v===60?'#1d4ed8':v===75?'#b91c1c':'#92400e';x.font='bold 10px sans-serif';x.fillText(v+'점',4,Y(v)+3);});x.setLineDash([]);
-  // Main score line is neutral; monthly dots carry the score-zone color.
-  x.strokeStyle='#111827';x.lineWidth=2;x.beginPath();data.forEach((q,i)=>{const px=X(i),py=Y(Number(q.score));i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();
-  const zoneColor=s=>s>=75?'#dc2626':s>=60?'#2563eb':s>=40?'#d97706':'#64748b';
-  data.forEach((q,i)=>{const s=Number(q.score);x.fillStyle=zoneColor(s);x.beginPath();x.arc(X(i),Y(s),s>=60?3.4:2.2,0,Math.PI*2);x.fill();});
-  // Mark first 60/75 crossings and first 2-month persistence at/above 60.
-  function firstCross(th){for(let i=0;i<data.length;i++){if(Number(data[i].score)>=th)return i;}return -1;}
-  function firstPersistent(th,n){for(let i=0;i<=data.length-n;i++){let ok=true;for(let j=0;j<n;j++)if(Number(data[i+j].score)<th)ok=false;if(ok)return i;}return -1;}
-  const markers=[{th:60,color:'#2563eb',label:'60점 최초',i:firstCross(60)},{th:75,color:'#dc2626',label:'75점 최초',i:firstCross(75)},{th:60,color:'#0f766e',label:'60점 2개월 연속',i:firstPersistent(60,2)}];
-  markers.forEach(m=>{if(m.i<0)return;const px=X(m.i),py=Y(Number(data[m.i].score));x.strokeStyle=m.color;x.fillStyle=m.color;x.lineWidth=1.5;x.beginPath();x.moveTo(px,pad.t);x.lineTo(px,py-5);x.stroke();x.beginPath();x.arc(px,py,4,0,Math.PI*2);x.fill();x.font='bold 9px sans-serif';x.fillText(m.label,Math.min(w-pad.r-72,Math.max(pad.l,px-28)),Math.max(pad.t+10,py-8));});
-  x.fillStyle='#64748b';x.font='10px sans-serif'; const years=[...new Set(data.map(q=>q.month.slice(0,4)))]; years.forEach(y=>{const i=data.findIndex(q=>q.month.startsWith(y+'-'));if(i>=0)x.fillText(y,X(i)-12,h-7)});
-  x.fillStyle='#111827';x.font='bold 11px sans-serif';x.fillText('ALTSEASON SCORE / 100',pad.l,pad.t-8);
-}
 function drawMacroSpark(id, values, opts={}){
   const c=$(id); if(!c) return;
   const vals=(values||[]).map(Number).filter(Number.isFinite);
@@ -1699,70 +1708,183 @@ function fearGreedKo(cls){
   return ({'Extreme Fear':'극단적 공포','Fear':'공포','Neutral':'중립','Greed':'탐욕','Extreme Greed':'극단적 탐욕'})[cls]||cls||'—';
 }
 
-function renderAltseason(d){
-  const m=d?.macroRegime;if(!m)return;
-  const N=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
-  const F=(v,n=1)=>N(v)?Number(v).toFixed(n):'—';
+// ===== ALTSEASON RADAR v2 (worker /altseason) =====
+var AS={data:null,mode:'score',hoverIdx:null,timer:null};
+function asOk(v){return v!=null&&Number.isFinite(Number(v))}
+function asF(v,d=1,u='%',sign=true){if(!asOk(v))return '—';let t=Number(v).toFixed(d);if(/^-0(\.0+)?$/.test(t))t=t.slice(1);return `${sign&&Number(t)>=0?'+':''}${t}${u}`}
+function asEsc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function asColor(s){return s>=70?'#d93025':s>=40?'#b7791f':'#0f9d58'}
+
+function renderAlt(d){
+  AS.data=d;
   const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
-  const th=m.thresholds||{};
-  const scoreNum=Number(m.score);
-  const complete=!!m.dataComplete;
-  set('altseasonScore',N(scoreNum)?`${scoreNum}/100`:'—');
-  set('altseasonStage',m.stage||'—');
-  set('altseasonNote',complete?'초기 순환매를 탐지하는 환경 점수 · 매매신호 아님':N(scoreNum)?'부분 데이터 점수 · 핵심 데이터가 모두 모이면 확정 점수로 전환':'핵심 데이터 부족 · 점수 산출 보류');
-  const scoreCard=$('altseasonScore')?.closest('.altseason-score-card');
-  if(scoreCard){
-    const w=N(th.watch)?Number(th.watch):45,e=N(th.expansion)?Number(th.expansion):60,b=N(th.broad)?Number(th.broad):75;
-    const bg=N(scoreNum)&&scoreNum>=b?'#fef2f2':N(scoreNum)&&scoreNum>=e?'#eff6ff':N(scoreNum)&&scoreNum>=w?'#fffbeb':'var(--panel2)';
-    const bc=N(scoreNum)&&scoreNum>=b?'#dc2626':N(scoreNum)&&scoreNum>=e?'#2563eb':N(scoreNum)&&scoreNum>=w?'#f59e0b':'#cbd5e1';
-    scoreCard.style.borderColor=bc;scoreCard.style.background=bg;
+  const sc=d.score||{},tot=sc.total;
+  set('asScore',asOk(tot)?String(tot):'—');
+  const se=$('asScore');if(se)se.style.color=asOk(tot)?asColor(tot):'inherit';
+  set('asStage',sc.stage?`${sc.stage.emoji} ${sc.stage.label}`:'데이터 부족');
+  const mk=$('asMarker');if(mk&&asOk(tot))mk.style.left=Math.max(0,Math.min(100,tot))+'%';
+  const pth=(sc.path||[]).map(p=>p.s);
+  set('asPath',pth.length?pth.join(' → '):'—');
+  const mo=sc.momentum||{};
+  set('asMom',asOk(tot)?`1개월 ${asF(mo.m1,0,'',true)} · 3개월 ${asF(mo.m3,0,'',true)} · 40점↑ ${sc.streak?.over40||0}개월 연속 · 70점↑ ${sc.streak?.over70||0}개월`:'');
+  const comps=$('asComps');
+  if(comps)comps.innerHTML=(sc.components||[]).map(c=>{
+    const has=asOk(c.pts),w=has?Math.round(c.pts/c.max*100):0;
+    return `<div class="as-comp"><div class="r"><span>${asEsc(c.label)}</span><span>${has?c.pts:'—'}/${c.max}</span></div><div class="as-bar"><i style="width:${w}%"></i></div><small>${asEsc(c.detail)}</small></div>`;
+  }).join('');
+  const dr=sc.drivers||{};
+  const dv=$('asDrivers');
+  if(dv)dv.innerHTML=`<b>우호적</b> ${asEsc((dr.up||[]).join(' · ')||'없음')} &nbsp;|&nbsp; <b>부정적</b> ${asEsc((dr.down||[]).join(' · ')||'없음')}${sc.coverage&&sc.coverage<100?` &nbsp;|&nbsp; <span class="as-warn">일부 항목 데이터 없음 (${sc.coverage}점 만점 기준 환산)</span>`:''}`;
+  renderAltLadder(d);renderAltCalib(d);renderAltAnalogs(d);renderAltMetrics(d);renderAltFoot(d);
+  drawAlt();
+}
+function renderAltLadder(d){
+  const b=d.breadth,el=$('asLadder'),nt=$('asLadderNote');if(!el)return;
+  if(!b||!b.groups){el.innerHTML='<span class="as-mute">업비트 데이터 없음</span>';if(nt)nt.textContent='';return}
+  let h;
+  h='<div class="as-node"><small>기준</small><b>BTC</b><small>&nbsp;</small></div>';
+  b.groups.forEach((g,i)=>{
+    const cls=g.beat===true?'hit':g.beat===false?'miss':'';
+    h+=`<div class="as-arrow">→</div><div class="as-node ${cls}"><small>${asEsc(g.label)} (${g.n})</small><b style="color:${g.beat?'var(--red)':'var(--blue)'}">${asF(g.rel30,1,'%p')}</b><small>${g.beat===true?'BTC 초과':g.beat===false?'BTC 열세':'—'}</small></div>`;
+  });
+  el.innerHTML=h;
+  const names=['BTC 중심','ETH까지 확산','대형 알트까지 확산','중형 알트까지 확산','소형·고베타까지 전 구간 확산'];
+  if(nt)nt.innerHTML=`${names[b.reach||0]} · 90일 기준 BTC를 이긴 알트 <b>${asOk(b.pctBeat90)?b.pctBeat90+'%':'—'}</b> (75%↑ = CMC식 알트시즌) · 30일 <b>${asOk(b.pctBeat30)?b.pctBeat30+'%':'—'}</b> · 알트 거래대금 7일/30일 <b>x${asOk(b.volRatio)?b.volRatio:'—'}</b>`;
+}
+function renderAltCalib(d){
+  const h=d.history||{},el=$('asCalib'),wl=$('asWin');if(!el)return;
+  const cal=h.calibration||[];
+  const cell=(l)=>{if(!l||!l.firstCross)return '<td>미돌파</td>';const m=l.leadMonths;return `<td>${l.firstCross}<br><small>${m>0?`시작 ${m}개월 전`:m===0?'시작 월':`시작 ${-m}개월 후`}</small></td>`};
+  const ids=(h.windows||[]).map(w=>w.id);
+  el.innerHTML=`<table><thead><tr><th>기준점</th><th>알트 구간 적중</th><th>구간 밖 오탐</th>${(h.windows||[]).map(w=>`<th>${asEsc(w.id)} 최초 돌파</th>`).join('')}</tr></thead><tbody>${cal.map(c=>`<tr><td>${c.threshold}점↑</td><td>${asOk(c.hitRate)?c.hitRate+'%':'—'}</td><td>${asOk(c.falseAlarmRate)?c.falseAlarmRate+'%':'—'}</td>${ids.map(id=>cell((c.leads||[]).find(l=>l.id===id))).join('')}</tr>`).join('')}</tbody></table>`;
+  if(wl)wl.innerHTML=`<table><thead><tr><th>알트 강세 구간</th><th>시작월 점수</th><th>최고점</th><th>최고점 월</th></tr></thead><tbody>${(h.windowStats||[]).map(w=>`<tr><td>${asEsc(w.label)}<br><small>${w.from} ~ ${w.to}</small></td><td>${asOk(w.startScore)?w.startScore:'—'}</td><td>${asOk(w.peakScore)?w.peakScore:'—'}</td><td>${w.peakMonth||'—'}</td></tr>`).join('')}</tbody></table><div style="margin-top:5px;color:var(--muted)">구간은 사후에 정한 참고용이며 점수 계산에는 쓰이지 않습니다. 오탐 = 구간 앞뒤 2개월을 뺀 나머지 월 중 기준점 이상이었던 비율.</div>`;
+}
+function renderAltAnalogs(d){
+  const el=$('asAnalogs');if(!el)return;const a=d.analogs||[];
+  if(!a.length){el.innerHTML='<span class="as-mute">6개 지표가 모두 확보되지 않아 유사 시기를 계산하지 못했습니다.</span>';return}
+  el.innerHTML=a.map(x=>`<div class="as-analog"><b>${x.month}</b> · 유사도 ${x.similarity}% · 당시 점수 ${asOk(x.score)?x.score:'—'}<small>${asEsc(x.phase)} · 이후 6개월: ETH/BTC ${asF(x.fwdEthBtc6m,1)} · BTC ${asF(x.fwdBtc6m,1)}</small></div>`).join('')+'<div class="as-mute">표본이 적은 통계적 유사도일 뿐, 이번에도 같은 결과가 온다는 예측이 아닙니다.</div>';
+}
+function renderAltMetrics(d){
+  const el=$('asMetrics');if(!el)return;const i=d.inputs||{},r=d.rotation;
+  const T=v=>asOk(v)?(Number(v)/1000).toFixed(1)+'T':'—';
+  const items=[
+    ['Global M2',T(i.m2?.value),`YoY ${asF(i.m2?.yoy)} · ${(i.m2?.used||[]).join('+')||'—'}`],
+    ['Fed Funds',asOk(i.fed?.value)?Number(i.fed.value).toFixed(2)+'%':'—',`12개월 ${asF(i.fed?.chg12,2,'%p')}`],
+    ['달러(광의)',asOk(i.dollar?.value)?Number(i.dollar.value).toFixed(1):'—',`3개월 ${asF(i.dollar?.chg3m)}`],
+    ['WTI',asOk(i.oil?.value)?'$'+Number(i.oil.value).toFixed(1):'—',`3개월 ${asF(i.oil?.chg3m)}`],
+    ['S&P 500',asOk(i.sp?.value)?Math.round(i.sp.value).toLocaleString():'—',`3개월 ${asF(i.sp?.chg3m)}`],
+    ['BTC 90일',asF(i.btc?.ret90),`vs S&P ${asF(i.btc?.vsSp,1,'%p')}`],
+    ['BTC.D',asOk(i.dom?.value)?Number(i.dom.value).toFixed(1)+'%':'—',`7일 ${asF(i.dom?.d7,1,'%p')} · 30일 ${asF(i.dom?.d30,1,'%p')} · 90일 ${asF(i.dom?.d90,1,'%p')}`],
+    ['ETH/BTC 90일',asF(i.ethbtc?.ch90),`30일 ${asF(i.ethbtc?.ch30)}`],
+    ['스테이블코인',T(i.stable?.value),`90일 ${asF(i.stable?.g90)}`],
+    ['위험자본 순환',r?String(r.score)+'/100':'—',r?`BTC-S&P ${asF(r.parts.btcVsSp,1,'%p')} · 스테이블 ${asF(r.parts.stable90)} · 거래대금 x${asOk(r.parts.altVolume)?r.parts.altVolume:'—'}`:'—']
+  ];
+  el.innerHTML=items.map(([a,b,c])=>`<div><span>${a}</span><b>${b}</b><small>${asEsc(c)}</small></div>`).join('');
+}
+function renderAltFoot(d){
+  const el=$('asFoot');if(!el)return;const s=d.sources||{};
+  const t=(n,ok,x='')=>`${n} ${ok?'✓':'✗'}${x}`;
+  const parts=[t('FRED',s.fred&&s.fred.ok===s.fred.total,s.fred?` ${s.fred.ok}/${s.fred.total}`:''),t('ECB',s.ecb?.ok),t('BoJ',s.boj?.ok),t('BoE',s.boe?.ok),t('BTC가격',s.btcPrice?.ok,s.btcPrice?.fallback?'(Coinbase 대체)':''),t('스테이블',s.stablecoin?.ok),t('BTC.D 월별(CMC)',s.cmcDominance?.ok),t('CoinGecko',s.coingecko?.ok),t('업비트',s.upbit?.ok,s.upbit?` ${s.upbit.coins}/${s.upbit.total}`:'')];
+  const m2=d.inputs?.m2||{},rej=(m2.rejected||[]).map(x=>`${x.name}(${x.why})`);
+  const notes=[];
+  if(d.notes?.domApprox)notes.push('과거 BTC.D는 월별 실측이 아닌 연평균 앵커 보간(근사)이라 점선으로 표시됩니다.');
+  if(rej.length)notes.push('Global M2에서 제외된 항목: '+rej.join(', ')+' → 남은 항목으로 계산');
+  notes.push('M2는 발표 지연을 감안해 1개월 전 값을 사용. 과거 점수는 알트 확산도(10점) 없이 90점 만점을 100으로 환산.');
+  if(d.staleReason)notes.push('최신 갱신 실패로 캐시 데이터를 표시 중 ('+d.staleReason+')');
+  el.innerHTML=`<b>데이터 상태</b> ${parts.join(' · ')}<br>${notes.map(asEsc).join('<br>')}<br>갱신 ${new Date(d.updatedAt).toLocaleString('ko-KR')} · Global M2 = 미국+유로존+일본+영국(USD 환산), 중국 제외 · 매매신호 아님`;
+}
+
+// ----- chart -----
+function asSeries(mode,months){
+  if(mode==='score')return {a:months.map(m=>m.s),b:months.map(m=>m.mo),min:0,max:100,fmt:v=>Math.round(v),refs:[[40,'#b7791f','40 순환매 준비'],[70,'#d93025','70 광범위 강세']],main:'#7c3aed',name:'ALTSEASON SCORE'};
+  if(mode==='m2')return {a:months.map(m=>m.m2),refs:[[0,'#94a3b8','0%']],main:'#1976d2',fmt:v=>v.toFixed(1)+'%',name:'Global M2 YoY (%)'};
+  if(mode==='dom')return {a:months.map(m=>m.d),approx:months.map(m=>m.ds==='anchor'),refs:[[50,'#94a3b8','50%']],main:'#111827',fmt:v=>v.toFixed(1)+'%',name:'BTC.D (%)'};
+  return {a:months.map(m=>m.e),refs:[],main:'#0f9d58',fmt:v=>v.toFixed(4),name:'ETH/BTC (Coinbase)'};
+}
+function drawAlt(){
+  const c=$('asChart'),d=AS.data;if(!c||!d?.history)return;
+  const months=d.history.months||[],S=asSeries(AS.mode,months);
+  const dpr=window.devicePixelRatio||1,w=Math.max(320,c.clientWidth||720),h=270;
+  c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);
+  const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+  const pad={l:40,r:12,t:22,b:24},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,n=months.length;if(n<2)return;
+  const vals=[...S.a,...(S.b||[])].filter(asOk).map(Number);
+  let lo=S.min??Math.min(...vals,...S.refs.map(r=>r[0])),hi=S.max??Math.max(...vals,...S.refs.map(r=>r[0]));
+  if(hi===lo){hi+=1;lo-=1}const padv=S.min==null?(hi-lo)*.08:0;lo-=padv;hi+=padv;
+  const X=i=>pad.l+pw*i/(n-1),Y=v=>pad.t+ph-(v-lo)/(hi-lo)*ph;
+  // 격자
+  x.font='10px sans-serif';x.lineWidth=1;x.strokeStyle='#eef2f6';x.fillStyle='#94a3b8';
+  for(let g=0;g<=4;g++){const v=lo+(hi-lo)*g/4,yy=Y(v);x.beginPath();x.moveTo(pad.l,yy);x.lineTo(w-pad.r,yy);x.stroke();x.fillText(S.fmt?S.fmt(v):v.toFixed(0),3,yy+3)}
+  // 알트 강세 구간 음영
+  for(const wd of d.history.windows||[]){
+    const i1=months.findIndex(m=>m.k>=wd.from);let j=-1;for(let i=n-1;i>=0;i--){if(months[i].k<=wd.to){j=i;break}}
+    if(i1>=0&&j>=i1){x.fillStyle='rgba(124,58,237,.10)';x.fillRect(X(i1),pad.t,Math.max(2,X(j)-X(i1)),ph);x.fillStyle='#6d28d9';x.font='10px sans-serif';x.fillText(wd.label,Math.min(X(i1)+3,w-pad.r-90),pad.t+11)}
   }
-  set('scoreLiquidity',N(m.liquidity)?`${m.liquidity}/20`:'—');
-  set('scoreRates',N(m.rates)?`${m.rates}/15`:'—');
-  set('scoreBtc',N(m.btcScore)?`${m.btcScore}/10`:'—');
-  set('scoreDom',N(m.domScore)?`${m.domScore}/20`:'—');
-  set('scoreEth',N(m.ethScore)?`${m.ethScore}/15`:'—');
-  set('scoreBreadth',N(m.breadthScore)?`${m.breadthScore}/20`:'—');
-  set('macroM2',N(m.m2?.value)?`${F(m.m2.value,1)}T`:'—');
-  set('macroM2Sub',N(m.m2?.yoy)?`12개월 ${Number(m.m2.yoy)>=0?'+':''}${F(m.m2.yoy,1)}% · ${m.globalM2}`:'Global M2 계산 대기');
-  set('macroFed',N(m.fed?.value)?`${F(m.fed.value,2)}%`:'—');
-  set('macroFedSub',N(m.fed?.change12m)?`12개월 ${Number(m.fed.change12m)>=0?'+':''}${F(m.fed.change12m,2)}%`:'—');
-  set('macroDollar',N(m.dollar?.value)?F(m.dollar.value,1):'—');
-  set('macroDollarSub',N(m.dollar?.change3m)?`약 3개월 ${Number(m.dollar.change3m)>=0?'+':''}${F(m.dollar.change3m,1)}%`:'—');
-  set('macroOil',N(m.oil?.value)?`$${F(m.oil.value,1)}`:'—');
-  set('macroOilSub',N(m.oil?.change3m)?`약 3개월 ${Number(m.oil.change3m)>=0?'+':''}${F(m.oil.change3m,1)}%`:'—');
-  set('macroSP',N(m.sp?.value)?Math.round(Number(m.sp.value)).toLocaleString():'—');
-  set('macroSPSub',N(m.sp?.change3m)?`약 3개월 ${Number(m.sp.change3m)>=0?'+':''}${F(m.sp.change3m,1)}%`:'—');
-  set('macroRiskFlow',N(m.btc?.relativeToSP)?`${Number(m.btc.relativeToSP)>=0?'+':''}${F(m.btc.relativeToSP,1)}%p`:'—');
-  set('macroRiskFlowSub',N(m.btc?.return90d)?`BTC 90일 ${Number(m.btc.return90d)>=0?'+':''}${F(m.btc.return90d,1)}%`:'—');
-  const br=m.breadth||{};
-  set('macroBreadth',N(br.b90)?`${F(br.b90,0)}%`:'—');
-  set('macroBreadthSub',`7일 ${N(br.b7)?F(br.b7,0):'—'} · 30일 ${N(br.b30)?F(br.b30,0):'—'} · 90일 ${N(br.b90)?F(br.b90,0):'—'}`);
-  set('macroEthBtc',N(m.ethBtcNow)?Number(m.ethBtcNow).toFixed(4):'—');
-  set('macroEthBtcSub',`7일 ${N(m.ethBtc7d)?(m.ethBtc7d>=0?'+':'')+F(m.ethBtc7d,1)+'%':''} · 30일 ${N(m.ethBtcChange)?(m.ethBtcChange>=0?'+':'')+F(m.ethBtcChange,1)+'%':''}`);
-  const mh=Array.isArray(m.historicalMonthlyScores)?m.historicalMonthlyScores:[];
-  if(mh.length>1)drawAltseasonHistory('altseasonChart',mh); else { const c=$('altseasonChart'); if(c){ const x=c.getContext('2d'); x.clearRect(0,0,c.width,c.height); x.fillStyle='#64748b'; x.font='12px sans-serif'; x.fillText('월별 역사 데이터 수신 대기 중…',18,30); } }
-  const legend=$('altseasonLegend');
-  if(legend){const w=N(th.watch)?Math.round(th.watch):45,e=N(th.expansion)?Math.round(th.expansion):60,b=N(th.broad)?Math.round(th.broad):75;legend.innerHTML=`<span class="lz lz-calm">0~${w-1} BTC 중심</span><span class="lz lz-watch">${w}~${e-1} 순환매 감지</span><span class="lz lz-alt">${e}~${b-1} 초기/진행 알트 확산</span><span class="lz lz-hot">${b}~100 광범위 알트 강세</span>`}
-  const hs=Array.isArray(m.historicalScores)?m.historicalScores:[];
-  const he=$('altseasonHistory');
-  if(he&&hs.length){
-    const rows=hs.map(x=>{
-      const s=N(x.score)?`${x.score}`:'—',g=N(x.globalM2YoY)?`${x.globalM2YoY>=0?'+':''}${Number(x.globalM2YoY).toFixed(1)}%`:'—',dd=N(x.btcD)?`${Number(x.btcD).toFixed(1)}%`:'—',e=N(x.ethBtc)?Number(x.ethBtc).toFixed(3):'—',sx=Number(x.score);
-      const cls=N(sx)?(sx>=Number(th.broad)?'hot':sx>=Number(th.expansion)?'alt':sx>=Number(th.watch)?'watch':''):'';
-      return `<tr class="${cls}"><td>${x.year}</td><td>${s}</td><td>${x.peakMonth||'—'}</td><td>${g}</td><td>${dd}</td><td>${e}</td></tr>`;
-    }).join('');
-    const fw=th.firstWatch?.month||'미관측',fe=th.firstExpansion?.month||'미관측',fep=th.firstExpansionPersist2?.month||'미관측',fb=th.firstBroad?.month||'미관측';
-    he.innerHTML=`<table><thead><tr><th>연도</th><th>최고 Score</th><th>고점 월</th><th>Global M2 YoY</th><th>BTC.D</th><th>ETH/BTC</th></tr></thead><tbody>${rows}</tbody></table><div class="threshold-box"><b>🎯 자동 보정 경계</b> · 순환매 감지 <b>${th.watch??'—'}</b> · 초기/진행 알트확산 <b>${th.expansion??'—'}</b> · 광범위 알트강세 <b>${th.broad??'—'}</b><br>과거 최초 관측: ${fw} → ${fe} · ${th.expansion??'—'}점 2개월 연속: ${fep} · 광범위 경계 최초: ${fb}<br><small>경계값은 고정 60/75가 아니라 2013~현재 분포와 2017~18·2020~21 대표 알트강세 구간을 이용해 자동 보정합니다.</small></div>`;
-  }
-  const currentText=N(scoreNum)?`${complete?'현재':'부분'} ${scoreNum}/100 · 경계 ${th.watch??'—'}/${th.expansion??'—'}/${th.broad??'—'} · Breadth ${N(br.b90)?F(br.b90,0)+'%':'—'} · ETH/BTC 30일 ${N(m.ethBtcChange)?(m.ethBtcChange>=0?'+':'')+F(m.ethBtcChange,1)+'%':'—'}`:'핵심 데이터 부족으로 현재 종합점수 보류';
-  set('altseasonContext',currentText+` · ${m.globalM2}`);
+  // 기준선
+  x.setLineDash([4,4]);for(const [v,col,lab] of S.refs){if(v<lo||v>hi)continue;x.strokeStyle=col;x.beginPath();x.moveTo(pad.l,Y(v));x.lineTo(w-pad.r,Y(v));x.stroke();x.fillStyle=col;x.font='10px sans-serif';x.fillText(lab,w-pad.r-92,Y(v)-3)}x.setLineDash([]);
+  // 연도 라벨
+  x.fillStyle='#64748b';x.font='10px sans-serif';
+  months.forEach((m,i)=>{if(m.k.endsWith('-01')&&(+m.k.slice(0,4))%2===0||i===0){x.fillText(m.k.slice(0,4),X(i)-10,h-8)}});
+  const line=(arr,col,lw,dashFn)=>{
+    x.strokeStyle=col;x.lineWidth=lw;let prev=null;
+    for(let i=0;i<n;i++){
+      const v=arr[i];if(!asOk(v)){prev=null;continue}
+      const px=X(i),py=Y(Number(v));
+      if(prev!==null){x.setLineDash(dashFn&&dashFn(i)?[3,3]:[]);x.beginPath();x.moveTo(prev[0],prev[1]);x.lineTo(px,py);x.stroke()}
+      prev=[px,py];
+    }x.setLineDash([]);
+  };
+  if(S.b)line(S.b,'#b6c0cc',1.3,null);   // 거시 3요소만 본 점수 (2012~)
+  line(S.a,S.main,2,S.approx?(i=>S.approx[i]):(AS.mode==='score'?(i=>months[i].ds==='anchor'):null));
+  // 70점 이상 표시 및 현재점
+  if(AS.mode==='score')months.forEach((m,i)=>{if(asOk(m.s)&&m.s>=70){x.fillStyle='#d93025';x.beginPath();x.arc(X(i),Y(m.s),2.4,0,7);x.fill()}});
+  const li=(()=>{for(let i=n-1;i>=0;i--)if(asOk(S.a[i]))return i;return -1})();
+  if(li>=0){x.fillStyle=S.main;x.beginPath();x.arc(X(li),Y(Number(S.a[li])),4,0,7);x.fill()}
+  x.fillStyle='#111827';x.font='bold 11px sans-serif';x.fillText(S.name,pad.l,12);
+  // 호버 십자선
+  const hi2=AS.hoverIdx;
+  if(hi2!=null&&hi2>=0&&hi2<n){x.strokeStyle='#64748b';x.lineWidth=1;x.beginPath();x.moveTo(X(hi2),pad.t);x.lineTo(X(hi2),pad.t+ph);x.stroke()}
+  const lg=$('asLegend');
+  if(lg)lg.innerHTML=AS.mode==='score'?`<i style="background:#7c3aed"></i>SCORE(전체 7개 항목, ${(months.find(m=>asOk(m.s))||{}).k||'—'}부터) <i style="background:#b6c0cc"></i>거시 3요소만(M2·달러·Fed·BTC, 2012~) <i style="background:rgba(124,58,237,.25)"></i>과거 알트 강세 구간 · 점선 구간 = BTC.D 근사값 사용`:AS.mode==='dom'?`점선 = 월별 실측이 아닌 연평균 앵커 보간(근사)`:'';
+}
+function asCaption(i){
+  const d=AS.data,m=d?.history?.months?.[i],cp=$('asCaption');if(!m||!cp)return;
+  const w=(d.history.windows||[]).find(x=>m.k>=x.from&&m.k<=x.to);
+  cp.textContent=`${m.k} · SCORE ${asOk(m.s)?m.s:'—'} (거시만 ${asOk(m.mo)?m.mo:'—'}) · M2 YoY ${asF(m.m2)} · BTC.D ${asOk(m.d)?m.d.toFixed(1)+'%'+(m.ds==='anchor'?'*':''):'—'} · ETH/BTC ${asOk(m.e)?Number(m.e).toFixed(4):'—'} · BTC 90일 ${asF(m.b,0)}${w?' · ['+w.label+']':''}`;
+}
+function asBindChart(){
+  const c=$('asChart');if(!c||c._bound)return;c._bound=true;
+  const mv=ev=>{const d=AS.data;if(!d?.history)return;const n=d.history.months.length,r=c.getBoundingClientRect(),padL=40,padR=12,px=(ev.clientX-r.left-padL)/(r.width-padL-padR);const i=Math.max(0,Math.min(n-1,Math.round(px*(n-1))));AS.hoverIdx=i;asCaption(i);drawAlt()};
+  c.addEventListener('pointermove',mv);c.addEventListener('pointerdown',mv);
+  c.addEventListener('pointerleave',()=>{AS.hoverIdx=null;drawAlt()});
+  document.querySelectorAll('#asTabs button').forEach(b=>b.addEventListener('click',()=>{AS.mode=b.dataset.m;document.querySelectorAll('#asTabs button').forEach(x=>x.classList.toggle('on',x===b));drawAlt()}));
+  const rb=$('asReload');if(rb)rb.addEventListener('click',()=>loadAltseason(true));
+  window.addEventListener('resize',()=>{clearTimeout(AS.timer);AS.timer=setTimeout(drawAlt,150)});
+}
+async function loadAltseason(force){
+  asBindChart();
+  const foot=$('asFoot'),rb=$('asReload');
+  if(rb)rb.disabled=true;
+  try{
+    if(foot&&!AS.data)foot.textContent='거시·알트 데이터 계산 중… (처음 1회는 10~30초 걸릴 수 있습니다)';
+    let d;
+    const path='/altseason'+(force?'?force=1':'');
+    try{d=await call(path,{},60000)}
+    catch(e1){
+      // Worker CPU/시간 제한으로 한 번에 실패하면 역사 데이터만 먼저 데운 뒤 다시 시도한다.
+      await call('/altseason?part=hist'+(force?'&force=1':''),{},60000);
+      d=await call('/altseason',{},60000);
+    }
+    if(!d.ok)throw Error(d.error||'altseason 실패');
+    renderAlt(d);
+  }catch(e){
+    if(foot)foot.innerHTML='<span class="error">ALTSEASON 데이터 연결 실패 · '+asEsc((e?.message||String(e)).slice(0,140))+'</span>';
+  }finally{if(rb)rb.disabled=false}
 }
 
 async function loadMacroMetrics(){
   try{
     const d=await call('/macro',{});
-    renderAltseason(d);
     if(Number.isFinite(Number(d.btcDominance))){
       const cur=Number(d.btcDominance);
       $('btcDom').textContent=cur.toFixed(2)+'%';
@@ -1836,6 +1958,7 @@ async function loadMacroMetrics(){
 }
 async function bootApp(){
   loadMacroMetrics();
+  if(!window.__asBooted){window.__asBooted=true;setTimeout(()=>loadAltseason(false),400);setInterval(()=>loadAltseason(false),600000)}
   // 최소 구조 단계: /health 와 /market 연결 여부만 확인한다.
   // /scan, PIN, KV, Telegram 등은 다음 단계에서 다시 연결한다.
   setConn('연결 확인 중…','var(--yellow)');

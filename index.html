@@ -1654,7 +1654,8 @@ setInterval(loadRSCandles,60000);
 
 function drawAltseasonHistory(id, rows){
   const c=$(id); if(!c) return;
-  const data=(rows||[]).filter(x=>Number.isFinite(Number(x.score)));
+  const finite=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
+  const data=(rows||[]).filter(x=>finite(x?.score));
   const dpr=window.devicePixelRatio||1,w=Math.max(320,c.clientWidth||720),h=250;
   c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,w,h);
   if(data.length<2)return;
@@ -1703,17 +1704,18 @@ function fearGreedKo(cls){
 
 function renderAltseason(d){
   const m=d?.macroRegime;if(!m)return;
+  const finite=v=>v!==null&&v!==undefined&&v!==''&&Number.isFinite(Number(v));
   const set=(id,v)=>{const e=$(id);if(e)e.textContent=v};
   const scoreNum=Number(m.score);
   set('altseasonScore',Number.isFinite(scoreNum)?`${scoreNum}/100`:'—');
   set('altseasonStage',m.stage||'—');
   const scoreCard=$('altseasonScore')?.closest('.altseason-score-card');
   if(scoreCard){scoreCard.style.borderColor=Number.isFinite(scoreNum)&&scoreNum>=75?'#dc2626':Number.isFinite(scoreNum)&&scoreNum>=60?'#2563eb':Number.isFinite(scoreNum)&&scoreNum>=40?'#f59e0b':'#cbd5e1';scoreCard.style.background=Number.isFinite(scoreNum)&&scoreNum>=75?'#fef2f2':Number.isFinite(scoreNum)&&scoreNum>=60?'#eff6ff':Number.isFinite(scoreNum)&&scoreNum>=40?'#fffbeb':'var(--panel2)';}
-  set('scoreLiquidity',`${m.liquidity||0}/20`);
-  set('scoreRates',`${m.rates||0}/20`);
-  set('scoreBtc',`${m.btcScore||0}/10`);
-  set('scoreDom',`${m.domScore||0}/20`);
-  set('scoreAlt',`${m.altScore||0}/10`);
+  set('scoreLiquidity',finite(m.liquidity)?`${m.liquidity}/20`:'—');
+  set('scoreRates',finite(m.rates)?`${m.rates}/20`:'—');
+  set('scoreBtc',finite(m.btcScore)?`${m.btcScore}/10`:'—');
+  set('scoreDom',finite(m.domScore)?`${m.domScore}/20`:'—');
+  set('scoreAlt',finite(m.altScore)?`${m.altScore}/10`:'—');
   set('macroM2',Number.isFinite(Number(m.m2?.value))?`${Number(m.m2.value).toFixed(1)}T`:'—');
   set('macroM2Sub',Number.isFinite(Number(m.m2?.yoy))?`12개월 ${m.m2.yoy>=0?'+':''}${m.m2.yoy.toFixed(1)}% · ${m.globalM2}`:'M2 변화 계산 중');
   set('macroFed',Number.isFinite(Number(m.fed?.value))?`${Number(m.fed.value).toFixed(2)}%`:'—');
@@ -1732,12 +1734,12 @@ function renderAltseason(d){
   const he=$('altseasonHistory');
   if(he&&hs.length){
     const rows=hs.map(x=>{
-      const s=Number.isFinite(Number(x.score))?`${x.score}`:'—';
-      const g=Number.isFinite(Number(x.globalM2YoY))?`${x.globalM2YoY>=0?'+':''}${Number(x.globalM2YoY).toFixed(1)}%`:'—';
-      const d=Number.isFinite(Number(x.btcD))?`${Number(x.btcD).toFixed(1)}%`:'—';
-      const e=Number.isFinite(Number(x.ethBtc))?Number(x.ethBtc).toFixed(3):'—';
-      const sx=Number(x.score);
-      const cls=Number.isFinite(sx)?(sx>=75?'hot':sx>=60?'alt':sx>=40?'watch':'') : '';
+      const s=finite(x.score)?`${x.score}`:'—';
+      const g=finite(x.globalM2YoY)?`${x.globalM2YoY>=0?'+':''}${Number(x.globalM2YoY).toFixed(1)}%`:'—';
+      const d=finite(x.btcD)?`${Number(x.btcD).toFixed(1)}%`:'—';
+      const e=finite(x.ethBtc)?Number(x.ethBtc).toFixed(3):'—';
+      const sx=finite(x.score)?Number(x.score):null;
+      const cls=sx===null?'':(sx>=75?'hot':sx>=60?'alt':sx>=40?'watch':'');
       return `<tr class="${cls}"><td>${x.year}</td><td>${s}</td><td>${x.peakMonth||'—'}</td><td>${g}</td><td>${d}</td><td>${e}</td></tr>`;
     }).join('');
     const th=m.thresholds||{}; const first60=th.first60?.month||'미관측', first60p=th.first60Persist2?.month||'미관측', first75=th.first75?.month||'미관측';

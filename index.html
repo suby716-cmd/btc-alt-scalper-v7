@@ -390,7 +390,12 @@ const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const W=$('worker'),P=$('pin');
-W.value=localStorage.getItem('v8_worker')||localStorage.getItem('v7_worker')||'';
+// Configure the public Worker once via a meta tag or a pre-script global.
+// Example: <meta name="btc-alt-worker-url" content="https://YOUR_WORKER.workers.dev">
+const DEFAULT_WORKER_URL=(window.__BTC_ALT_WORKER_URL__||document.querySelector('meta[name="btc-alt-worker-url"]')?.content||'').trim();
+const SAVED_WORKER_URL=(localStorage.getItem('v8_worker')||localStorage.getItem('v7_worker')||'').trim();
+W.value=SAVED_WORKER_URL||DEFAULT_WORKER_URL;
+if(!SAVED_WORKER_URL&&DEFAULT_WORKER_URL) localStorage.setItem('v8_worker',DEFAULT_WORKER_URL);
 P.value=localStorage.getItem('v8_pin')||localStorage.getItem('v7_pin')||'';
 let SERVER_CFG={minScore:75,tp1Pct:1.2,tp2Pct:2.2,stopLossPct:.8,patternConfirmation:true,patternBuyMinScore:2,patternSellScore:-4,regimeEngine:true,tradingFeePct:.05};
 let LAST={};

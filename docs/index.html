@@ -289,7 +289,7 @@
   </div>
 </div>
 <div class="controls">
-      <input id="worker" placeholder="Cloudflare Worker URL (https://...workers.dev)">
+      <input id="worker" placeholder="Worker 자동 연결됨 · 필요시 변경 가능">
       <input id="pin" type="password" placeholder="Worker PIN">
       <button class="btn primary" id="save">설정 저장</button>
       <button class="btn" id="health">연결 점검</button>
@@ -431,7 +431,9 @@ const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const W=$('worker'),P=$('pin');
-W.value=localStorage.getItem('v8_worker')||localStorage.getItem('v7_worker')||'';
+// 공개 배포용: 처음 방문한 사용자도 별도 설정 없이 실시간 데이터에 연결됩니다.
+const DEFAULT_WORKER='https://btc-alt-scalper-v7.suby716.workers.dev';
+W.value=localStorage.getItem('v8_worker')||localStorage.getItem('v7_worker')||DEFAULT_WORKER;
 P.value=localStorage.getItem('v8_pin')||localStorage.getItem('v7_pin')||'';
 let SERVER_CFG={minScore:75,tp1Pct:1.2,tp2Pct:2.2,stopLossPct:.8,patternConfirmation:true,patternBuyMinScore:2,patternSellScore:-4,regimeEngine:true,tradingFeePct:.05};
 let LAST={};
@@ -1973,10 +1975,7 @@ async function bootApp(){
   // 최소 구조 단계: /health 와 /market 연결 여부만 확인한다.
   // /scan, PIN, KV, Telegram 등은 다음 단계에서 다시 연결한다.
   setConn('연결 확인 중…','var(--yellow)');
-  if(!W.value.trim()){
-    setConn('Worker URL 필요','var(--red)');
-    return;
-  }
+  if(!W.value.trim()){ W.value=DEFAULT_WORKER; }
   try{
     const d=await health();
     renderHealth(d);

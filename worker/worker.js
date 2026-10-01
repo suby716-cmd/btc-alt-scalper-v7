@@ -1,4 +1,4 @@
-// worker/worker.js — BTC ALT REGIME TRADER v10.8.0-minimal+pin+altseason-v3 (routes normalized, JSON 404, deploy check in /health)
+// worker/worker.js — BTC ALT REGIME TRADER v10.8.1-minimal+pin+altseason-v3 (routes normalized, JSON 404, deploy check in /health)
 //
 // 단계별 복구 진행 중: /health, /upbit, /market (완료) → PIN 인증 (이번 단계) → KV 포지션 → Telegram → Cron
 // KV(포지션/장부), Telegram 알림, Cron 자동감시는 다음 단계에서 하나씩 다시 붙일 예정입니다.
@@ -346,16 +346,16 @@ function featureRow(k, t, live, c) {
 const YH = { "Accept": "application/json,text/plain,*/*", "User-Agent": CSV_HDR["User-Agent"] };
 const SINCE = Date.UTC(2010, 5, 1);
 async function yahooMonthly(sym) {
-  const r = await fetchJson(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=max&interval=1mo`, 12000, YH);
+  const r = await fetchJson(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?period1=1275350400&period2=${Math.floor(Date.now() / 1000)}&interval=1mo`, 12000, YH);
   const res = r.body?.chart?.result?.[0]; const ts = res?.timestamp || [], cl = res?.indicators?.quote?.[0]?.close || [];
-  const series = []; for (let i = 0; i < ts.length; i++) { const v = Number(cl[i]), t = ts[i] * 1000; if (fin(v) && v > 0 && t >= SINCE) series.push({ t, v }); }
-  return { ok: series.length > 12, status: r.status, series, via: "yahoo:" + sym };
+  const series = []; for (let i = 0; i < ts.length; i++) { const v = Number(cl[i]), t = ts[i] * 1000; if (fin(v) && v > 0 && t >= SINCE) series.push({ t: t + 3 * DAY, v }); }
+  return { ok: series.length > 100, status: r.status, series, via: "yahoo:" + sym };
 }
 async function stooqMonthly(sym) {
   const r = await fetchText(`https://stooq.com/q/d/l/?s=${encodeURIComponent(sym)}&i=m`, 12000, CSV_HDR);
   const series = [];
   if (r.ok) for (const line of r.body.trim().split(/\r?\n/).slice(1)) { const p = line.split(","); const t = Date.parse(p[0]), v = Number(p[4]); if (fin(t) && fin(v) && v > 0 && t >= SINCE) series.push({ t, v }); }
-  return { ok: series.length > 12, status: r.status, series, via: "stooq:" + sym };
+  return { ok: series.length > 100, status: r.status, series, via: "stooq:" + sym };
 }
 async function nyFedEffr() {
   const end = new Date().toISOString().slice(0, 10);
@@ -465,7 +465,11 @@ const COIN_GROUPS = [
   { key: "small", label: "소형·고베타", coins: ["ONDO", "TAO", "SEI"] }
 ];
 async function upbitDays(sym, count = 100) {
-  const r = await fetchJson(`${UPBIT}/v1/candles/days?market=KRW-${sym}&count=${count}`, 7000);
+  let r = await fetchJson(`${UPBIT}/v1/candles/days?market=KRW-${sym}&count=${count}`, 7000);
+  for (let k = 0; k < 3 && !(Array.isArray(r.body) && r.body.length) && (r.status === 429 || r.status >= 500 || r.status === 0); k++) {
+    await sleep(600 + k * 500);
+    r = await fetchJson(`${UPBIT}/v1/candles/days?market=KRW-${sym}&count=${count}`, 7000);
+  }
   const a = Array.isArray(r.body) ? r.body : [];
   const rows = a.map(x => ({ t: Date.parse(x.candle_date_time_utc + "Z"), c: Number(x.trade_price), v: Number(x.candle_acc_trade_price) })).filter(x => fin(x.c) && x.c > 0).sort((p, q) => p.t - q.t);
   return { ok: rows.length >= 40, status: r.status, rows };
@@ -489,7 +493,7 @@ async function buildLive() {
   if (btc.ok) {
     const b7 = retN(btc.rows, 7), b30 = retN(btc.rows, 30), b90 = retN(btc.rows, 90);
     for (const g of COIN_GROUPS) for (const sym of g.coins) {
-      await sleep(120);
+      await sleep(200);
       const d = await upbitDays(sym); if (!d.ok) continue;
       const r7 = retN(d.rows, 7), r30 = retN(d.rows, 30), r90 = retN(d.rows, 90);
       coins.push({ sym, group: g.key, ret7: r3(r7, 1), ret30: r3(r30, 1), ret90: r3(r90, 1), rel7: fin(r7) && fin(b7) ? r3(r7 - b7, 1) : null, rel30: fin(r30) && fin(b30) ? r3(r30 - b30, 1) : null, rel90: fin(r90) && fin(b90) ? r3(r90 - b90, 1) : null, vol: r3(vol7over30(d.rows), 2), _rows: d.rows });
@@ -516,7 +520,7 @@ async function buildLive() {
   let reach = 0; for (const g of groups) { if (g.beat === true) reach++; else break; }
   const ok = btc.ok && coins.length >= 6;
   return { ok, built: Date.now(), ms: Date.now() - t0, dom, btcKrw: btc.ok ? { ret7: r3(retN(btc.rows, 7), 1), ret30: r3(retN(btc.rows, 30), 1), ret90: r3(retN(btc.rows, 90), 1) } : null, ethbtc, coins, breadth: { n: coins.length, pctBeat7, pctBeat30, pctBeat90, breadthBlend, volRatio }, groups, reach,
-    sources: { coingecko: { ok: !!dom, api: cgApiR.status, page: cgPageR.status }, upbit: { ok: btc.ok, coins: coins.length, total: COIN_GROUPS.reduce((s, g) => s + g.coins.length, 0) } }, error: ok ? undefined : "LIVE_INPUTS_MISSING" };
+    sources: { coingecko: { ok: !!dom, api: cgApiR.status, page: cgPageR.status }, upbit: { ok: btc.ok, coins: coins.length, missing: COIN_GROUPS.flatMap(g => g.coins).filter(x => !coins.some(c => c.sym === x)), total: COIN_GROUPS.reduce((s, g) => s + g.coins.length, 0) } }, error: ok ? undefined : "LIVE_INPUTS_MISSING" };
 }
 
 // ---------- 점수 ----------
@@ -684,7 +688,7 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.8.0-minimal+pin+altseason-v3",
+        version: "v10.8.1-minimal+pin+altseason-v3",
         routes: ["/health","/macro","/altseason","/candles","/upbit","/market"],
         altseason: true,
         service: "BTC ALT REGIME TRADER (minimal)",

@@ -530,13 +530,115 @@ async function altSeries(name, fx) {
   return { ok: false, status: 0, series: [], via: null };
 }
 
+// ---------- US M2: Federal Reserve H.6 direct feed ----------
+// FRED CSV가 Cloudflare Workers에서 간헐적으로 520/접속 거절되는 문제를 피하기 위해
+// 미국 M2만 Federal Reserve Board의 H.6 공식 데이터 다운로드(CSV)에서 직접 읽는다.
+// H.6 preformatted monthly package에는 H6/H6_M2/M2.M (seasonally adjusted)이 포함된다.
+const FED_H6_M2_URL = 'https://www.federalreserve.gov/datadownload/Output.aspx?filetype=csv&from=&label=include&lastobs=&layout=seriescolumn&rel=H6&series=798e2796917702a5f8423426ba7e6b42&to=&type=package';
+
+function parseFedH6M2Csv(txt) {
+  const rows = String(txt || '').trim().split(/\r?\n/).map(splitCsv).filter(r => r.length);
+  if (!rows.length) return [];
+  const norm = v => String(v ?? '').trim().replace(/^"|"$/g, '').trim();
+  const isMonth = v => /^(19|20)\d{2}[-\/]\d{2}(?:[-\/]\d{2})?$/.test(norm(v));
+  const toDate = v => {
+    const m = norm(v).match(/^(\d{4})[-\/]?(\d{2})(?:[-\/]?(\d{2}))?/);
+    return m ? `${m[1]}-${m[2]}-01` : null;
+  };
+  const toNum = v => {
+    const x = Number(norm(v).replace(/,/g, ''));
+    return Number.isFinite(x) ? x : null;
+  };
+  const out = [];
+
+  // Form A: series-as-rows, dates across the columns.
+  // e.g. ...  H6/H6_M2/M2.M, "M2; Seasonally adjusted", 1959-01, ...
+  for (const r of rows) {
+    const joined = r.map(norm).join(' | ');
+    if (!/(?:H6[\\/]H6[_\\/]M2[\\/]M2\.M|\bM2\.M\b)/i.test(joined)) continue;
+    for (let i = 0; i < r.length; i++) {
+      const d = toDate(r[i]);
+      if (!d) continue;
+      const v = toNum(r[i]);
+      // In this layout dates are headers, so the value is on the same row at the
+      // corresponding column. The loop below is handled by header alignment.
+    }
+  }
+  const header = rows.find(r => r.some(x => isMonth(x)));
+  if (header) {
+    const hi = rows.indexOf(header);
+    // Locate a data row that identifies the seasonally-adjusted M2 series.
+    const ri = rows.findIndex((r, idx) => idx > hi && r.some(x => /(?:H6[\\/]H6[_\\/]M2[\\/]M2\.M|\bM2\.M\b)/i.test(norm(x))));
+    if (ri >= 0) {
+      const r = rows[ri];
+      for (let i = 0; i < Math.min(header.length, r.length); i++) {
+        const d = toDate(header[i]), v = toNum(r[i]);
+        if (d && v != null && v > 0) out.push({ d, v });
+      }
+    }
+  }
+
+  // Form B: observation-date rows, with an M2.M column.
+  if (!out.length) {
+    const hi = rows.findIndex(r => r.some(x => /observation.?date|date|time.?period/i.test(norm(x))) && r.some(x => /(?:M2\.M|H6[\\/]H6[_\\/]M2)/i.test(norm(x))));
+    if (hi >= 0) {
+      const h = rows[hi].map(norm);
+      const di = h.findIndex(x => /observation.?date|date|time.?period/i.test(x));
+      const vi = h.findIndex(x => /(?:M2\.M|H6[\\/]H6[_\\/]M2)/i.test(x));
+      if (di >= 0 && vi >= 0) for (const r of rows.slice(hi + 1)) {
+        const d = toDate(r[di]), v = toNum(r[vi]);
+        if (d && v != null && v > 0) out.push({ d, v });
+      }
+    }
+  }
+
+  // Form C: generic two-column/series-column fallback. Keep only rows whose first
+  // meaningful field is a date and whose numeric field is positive.
+  if (!out.length) {
+    for (const r of rows) {
+      const d = toDate(r[0]);
+      if (!d) continue;
+      for (let i = 1; i < r.length; i++) {
+        const v = toNum(r[i]);
+        if (v != null && v > 0) { out.push({ d, v }); break; }
+      }
+    }
+  }
+  const m = new Map();
+  for (const x of out) m.set(x.d.slice(0, 7), x.v);
+  return [...m].map(([k, v]) => ({ d: `${k}-01`, v })).sort((a, b) => a.d.localeCompare(b.d));
+}
+
+async function fetchFedH6M2() {
+  try {
+    const r = await fetchText(FED_H6_M2_URL, 15000, CSV_HDR);
+    const series = parseFedH6M2Csv(r.body);
+    return { ok: series.length > 24, status: r.status, series, via: 'federal-reserve-h6', source: 'Federal Reserve Board H.6 M2.M' };
+  } catch (e) {
+    return { ok: false, status: 0, series: [], via: 'federal-reserve-h6', error: String(e?.message || e) };
+  }
+}
+
 // FRED는 동시 요청이 많으면 거절하는 경우가 있어 3개씩 끊어서 받는다.
 // FRED_API_KEY가 없으면 FRED 공개 CSV(Workers IP를 520으로 거절하는 경우가 많음)는 M2 한 개만 1회 시도한다.
 async function fredLimited(names, ids) {
   const hasKey = !!(ENV_REF && ENV_REF.FRED_API_KEY);
   const out = new Array(names.length);
-  const todo = names.map((n, i) => i).filter(i => hasKey || names[i] === "m2");
-  names.forEach((n, i) => { if (!todo.includes(i)) out[i] = { ok: false, status: 0, series: [], via: "skipped" }; });
+
+  // US M2 is deliberately sourced from the Federal Reserve H.6 direct feed first.
+  // This avoids the FRED public-CSV path that can be rejected from Workers.
+  const m2i = names.indexOf("m2");
+  if (m2i >= 0) {
+    out[m2i] = await fetchFedH6M2();
+    // If the Fed direct feed is temporarily unavailable, preserve the old FRED
+    // fallback so the dashboard does not lose US M2 unnecessarily.
+    if (!out[m2i].ok) out[m2i] = await fredSeries(ids.m2, "2010-06-01", true, "avg");
+  }
+
+  const todo = names.map((n, i) => i).filter(i => i !== m2i && (hasKey || false));
+  names.forEach((n, i) => {
+    if (i !== m2i && !todo.includes(i)) out[i] = { ok: false, status: 0, series: [], via: "skipped" };
+  });
   let next = 0;
   const worker = async () => {
     while (next < todo.length) {
@@ -809,7 +911,7 @@ function compose(hist, live) {
       broadScore: total != null && total >= bands.broad, breadthConfirmed: fin(br.pctBeat90) && br.pctBeat90 >= 75, rotationConfirmed: fin(cur.eth90)&&cur.eth90>0&&fin(cur.dom90)&&cur.dom90<0,
       broadConfirmed: total != null && total >= bands.broad && fin(br.pctBeat90) && br.pctBeat90 >= 75 && fin(cur.eth90) && cur.eth90 > 0 && fin(cur.dom90) && cur.dom90 < 0 },
     history: { months: rows.map(r => ({ k: r.k, s: r.s, mo: r.mo, m2: r.m2yoy, d: fin(r.dom) ? r3(r.dom, 1) : null, ds: r.domSrc, e: r.ethbtc, b: r.btc90 })), windows: ALT_WINDOWS, windowStats: windows, calibration },
-    sources: src, notes: { globalM2Profiles: "GLOBAL M2=US+Euro Area+Japan. 영국·중국·한국·캐나다·스위스는 사용하지 않습니다.", domApprox: !hist.cmcDom, m2Lag: "M2는 발표 지연을 반영해 1개월 전 공개분을 사용", scoring: "각 점수는 직전 60개월 분포의 percentile로 산출하며, 현재 breadth는 7/30/90일 혼합을 사용", historicalAltProxy: "과거 알트확산 15점은 BTC.D·ETH/BTC·스테이블코인 증가율의 회전 proxy로 대체" }
+    sources: src, notes: { globalM2Profiles: "GLOBAL M2=US Federal Reserve H.6 + Euro Area + Japan. 영국·중국·한국·캐나다·스위스는 사용하지 않습니다.", domApprox: !hist.cmcDom, m2Lag: "M2는 발표 지연을 반영해 1개월 전 공개분을 사용", scoring: "각 점수는 직전 60개월 분포의 percentile로 산출하며, 현재 breadth는 7/30/90일 혼합을 사용", historicalAltProxy: "과거 알트확산 15점은 BTC.D·ETH/BTC·스테이블코인 증가율의 회전 proxy로 대체" }
   };
 }
 

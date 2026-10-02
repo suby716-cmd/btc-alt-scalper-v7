@@ -571,7 +571,7 @@ async function buildHistory() {
   const g = buildGlobalM2(f, ea, jp, uk, curK);
   const btc = bc.ok ? bc.series : (f.cbbtc.ok ? f.cbbtc.series : []);
   const c = {
-    yoy: g.core.yoy, fedM: monthMap(f.fed.series), dolM: monthMap(f.dollar.series), oilM: monthMap(f.oil.series), spM: monthMap(f.sp.series), y10M: monthMap(f.y10.series),
+    yoy: g.yoy, fedM: monthMap(f.fed.series), dolM: monthMap(f.dollar.series), oilM: monthMap(f.oil.series), spM: monthMap(f.sp.series), y10M: monthMap(f.y10.series),
     btcM: monthLast(btc), cbbtc: f.cbbtc.series, cbeth: f.cbeth.series, ethBtcM: ethAlt.ok ? monthLast(ethAlt.series) : monthLast(f.cbeth.series.map((x,i)=>({t:x.t,v:(x.v/(valAt(f.cbbtc.series,x.t,7*DAY)||NaN))})).filter(x=>fin(x.v))), stableM: monthLast(sc.series)
   };
   const rows = [];
@@ -579,7 +579,7 @@ async function buildHistory() {
   const last = (a) => a.length ? a[a.length - 1].v : null;
   const lvl = {
     fed: last(f.fed.series), dollar: last(f.dollar.series), oil: last(f.oil.series), sp: last(f.sp.series), y10: last(f.y10.series),
-    m2: g.core.lastK ? g.core.global.get(g.core.lastK) : null, m2Key: g.core.lastK, stable: last(sc.series)
+    m2: g.lastK ? g.global.get(g.lastK) : null, m2Key: g.lastK, stable: last(sc.series)
   };
   const sources = {
     fred: { ok: fredArr.filter(x => x.ok).length, total: names.length, failed: names.filter((n, i) => !fredArr[i].ok), via: fredArr.find(x => x.ok && x.via === "csv" || x.via === "api")?.via || null, alt: Object.fromEntries(names.map((n, i) => [n, fredArr[i].via || null])), ethbtc: { ok: ethAlt.ok, via: ethAlt.via, status: ethAlt.status }, status: Object.fromEntries(names.map((n, i) => [n, fredArr[i].status])), hint: fredArr.find(x => !x.ok)?.snip || fredArr.find(x => !x.ok)?.error || undefined },

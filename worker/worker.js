@@ -283,36 +283,149 @@ async function fetchCmcDominance(nowMs) {
 }
 
 // ---------- Global M2 (USD) ----------
-const M2_RANGE = { US: [5000, 40000], EA: [5000, 40000], JP: [2000, 30000], UK: [1000, 10000] }; // 단위 오류 방지용 상식 범위 (십억 USD)
-function buildGlobalM2(f, ea, jp, uk, curK) {
-  const fx = { eu: monthMap(f.eurusd.series), jp: monthMap(f.jpyusd.series), uk: monthMap(f.gbpusd.series) };
+// v8.8 Global M2 upgrade:
+// CORE     = US + Euro Area + Japan + UK
+// EXTENDED = CORE + China + Canada + Korea + Switzerland
+// All components are converted to USD and are kept separate so a temporary
+// failure in an EXTENDED country never breaks CORE.
+// CORE is used by the existing ALTSEASON score; EXTENDED is an additional
+// liquidity breadth indicator returned by /altseason.
+const M2_RANGE = {
+  US: [5000, 40000], EA: [5000, 40000], JP: [2000, 30000], UK: [1000, 10000],
+  CN: [10000, 50000], CA: [500, 5000], KR: [500, 10000], CH: [200, 3000]
+};
+
+function parseFlexibleMonthlyJson(body) {
+  const out = [];
+  const walk = (x) => {
+    if (!x) return;
+    if (Array.isArray(x)) { for (const v of x) walk(v); return; }
+    if (typeof x !== 'object') return;
+    const date = x.period ?? x.date ?? x.TIME_PERIOD ?? x.time ?? x.d ?? x.Date;
+    const val = x.value ?? x.v ?? x.VALUE ?? x.OBS_VALUE ?? x.Value ?? x.amount;
+    if (date != null && val != null) {
+      const ds = String(date).replace(/\//g, '-');
+      const m = ds.match(/(20\d{2})[-]?(\d{2})/);
+      const v = Number(String(val).replace(/,/g, ''));
+      if (m && Number.isFinite(v)) out.push({ d: `${m[1]}-${m[2]}-01`, v });
+    }
+    for (const v of Object.values(x)) if (v && typeof v === 'object') walk(v);
+  };
+  walk(body);
+  const m = new Map(); for (const x of out) m.set(x.d.slice(0,7), x.v);
+  return [...m].map(([k,v])=>({d:k+'-01',v})).sort((a,b)=>a.d.localeCompare(b.d));
+}
+
+function parseGenericMonthlyCsv(txt) {
+  const out = []; if (!txt) return out;
+  const rows = txt.trim().split(/\r?\n/).map(splitCsv);
+  if (!rows.length) return out;
+  const header = rows[0].map(x => String(x || '').trim().toLowerCase());
+  const dateIdx = header.findIndex(x => /date|period|time/.test(x));
+  let valueIdx = header.findIndex(x => /value|obs_value|gm2|m2/.test(x));
+  if (valueIdx < 0) valueIdx = dateIdx >= 0 ? rows[0].length - 1 : 1;
+  for (const r of rows.slice(1)) {
+    const rawDate = r[dateIdx >= 0 ? dateIdx : 0];
+    const rawVal = r[valueIdx];
+    const m = String(rawDate || '').match(/(20\d{2})[-/.]?(\d{2})/);
+    const v = Number(String(rawVal || '').replace(/,/g,''));
+    if (m && Number.isFinite(v)) out.push({d:`${m[1]}-${m[2]}-01`,v});
+  }
+  const map = new Map(); for (const x of out) map.set(x.d.slice(0,7),x.v);
+  return [...map].map(([k,v])=>({d:k+'-01',v})).sort((a,b)=>a.d.localeCompare(b.d));
+}
+
+async function fetchChinaM2() {
+  // Free public dataset sourced from People's Bank of China (PBoC).
+  // This is used only for EXTENDED; failure never affects CORE.
+  try {
+    const r = await fetchJson('https://chinadata.live/api/v2/data/china-m2-money-supply', 12000);
+    const series = parseFlexibleMonthlyJson(r.body).map(x => ({ d:x.d, v:x.v / 10000 }));
+    // Source unit: 100 million CNY -> trillion CNY -> billion CNY / 1000.
+    // x.v/10000 = trillion CNY; convert below to billion CNY.
+    const fixed = series.map(x=>({d:x.d,v:x.v*1000}));
+    return {ok:fixed.length>24,status:r.status,series:fixed,via:'chinadata-pbc'};
+  } catch(e) { return {ok:false,status:0,series:[],via:'chinadata-pbc',error:String(e?.message||e)}; }
+}
+
+async function fetchCanadaM2() {
+  // Bank of Canada Valet: no API key required. V41552796 = M2 gross, SA, CAD millions.
+  try {
+    const url='https://www.bankofcanada.ca/valet/observations/series/V41552796/json?start_date=2010-06-01';
+    const r=await fetchJson(url,12000);
+    const obs=Array.isArray(r.body?.observations)?r.body.observations:[];
+    const series=obs.map(x=>({d:String(x.d).slice(0,7)+'-01',v:Number(x.V41552796)/1000}))
+      .filter(x=>Number.isFinite(x.v)&&x.v>0).sort((a,b)=>a.d.localeCompare(b.d));
+    return {ok:series.length>24,status:r.status,series,via:'bankofcanada-valet'};
+  } catch(e){return {ok:false,status:0,series:[],via:'bankofcanada-valet',error:String(e?.message||e)};}
+}
+
+async function fetchKoreaM2() {
+  // Bank of Korea ECOS: full history with a free personal key; without one,
+  // use the public demo key for the most recent <=10 observations so the
+  // current EXTENDED snapshot still contains Korea. The demo is row-limited.
+  const personal = ENV_REF?.BOK_ECOS_API_KEY || '';
+  const key = personal || 'sample';
+  const end = mkey(Date.now());
+  const start = personal ? '201006' : addM(end, -9);
+  try {
+    const url=`https://ecos.bok.or.kr/api/StatisticSearch/${encodeURIComponent(key)}/json/en/1/${personal?500:10}/101Y004/M/${start}/${end}/BBHA00`;
+    const r=await fetchJson(url,15000);
+    const rows=Array.isArray(r.body?.StatisticSearch?.row)?r.body.StatisticSearch.row:[];
+    // ECOS M2 is in billion KRW.
+    const series=rows.map(x=>({d:String(x.TIME).slice(0,7)+'-01',v:Number(String(x.DATA_VALUE||'').replace(/,/g,''))}))
+      .filter(x=>/^20\d{2}-\d{2}-01$/.test(x.d)&&Number.isFinite(x.v)&&x.v>0)
+      .sort((a,b)=>a.d.localeCompare(b.d));
+    return {ok:personal?series.length>24:series.length>0,status:r.status,series,via:personal?'bok-ecos':'bok-ecos-sample',error:personal?undefined:'demo key: recent 10 rows only'};
+  } catch(e){return {ok:false,status:0,series:[],via:personal?'bok-ecos':'bok-ecos-sample',error:String(e?.message||e)};}
+}
+
+async function fetchSwissM2() {
+  // SNB data portal cube: D0(B) = end-of-month, D1(GM2) = M2.
+  try {
+    const url='https://data.snb.ch/api/cube/snbmonagg/data/csv/en?dimSel=D0(B),D1(GM2)&fromDate=2010-06&toDate=2026-12';
+    const r=await fetchText(url,15000,CSV_HDR);
+    const series=parseGenericMonthlyCsv(r.body).map(x=>({d:x.d,v:x.v/1000}));
+    // SNB source is CHF millions -> CHF billions.
+    return {ok:series.length>24,status:r.status,series,via:'snb'};
+  } catch(e){return {ok:false,status:0,series:[],via:'snb',error:String(e?.message||e)};}
+}
+
+function buildGlobalM2(f, ea, jp, uk, ext, curK) {
+  const fx = {
+    eu: monthMap(f.eurusd.series), jp: monthMap(f.jpyusd.series), uk: monthMap(f.gbpusd.series),
+    cn: monthMap(f.cnyusd?.series || []), ca: monthMap(f.cadusd?.series || []),
+    kr: monthMap(f.krwusd?.series || []), ch: monthMap(f.chfusd?.series || [])
+  };
   const keys = []; for (let k = "2010-06"; k <= curK; k = addM(k, 1)) keys.push(k);
   const defs = [
-    { name: "US", map: f.m2.ok ? monthMap(f.m2.series) : null, fx: null, conv: v => v },
-    { name: "EA", map: ea.ok ? ea.map : null, fx: fx.eu, conv: (v, r) => v * r },
-    { name: "JP", map: jp.ok ? jp.map : null, fx: fx.jp, conv: (v, r) => v / r },
-    { name: "UK", map: uk.ok ? uk.map : null, fx: fx.uk, conv: (v, r) => v * r }
+    { name:"US", map:f.m2.ok?monthMap(f.m2.series):null, fx:null, conv:v=>v },
+    { name:"EA", map:ea.ok?ea.map:null, fx:fx.eu, conv:(v,r)=>v*r },
+    { name:"JP", map:jp.ok?jp.map:null, fx:fx.jp, conv:(v,r)=>v/r },
+    { name:"UK", map:uk.ok?uk.map:null, fx:fx.uk, conv:(v,r)=>v*r },
+    { name:"CN", map:ext.cn.ok?monthMap(ext.cn.series):null, fx:fx.cn, conv:(v,r)=>v*r },
+    { name:"CA", map:ext.ca.ok?monthMap(ext.ca.series):null, fx:fx.ca, conv:(v,r)=>v*r },
+    { name:"KR", map:ext.kr.ok?monthMap(ext.kr.series):null, fx:fx.kr, conv:(v,r)=>v*r },
+    { name:"CH", map:ext.ch.ok?monthMap(ext.ch.series):null, fx:fx.ch, conv:(v,r)=>v*r }
   ];
-  const used = [], rejected = [], usd = [];
-  for (const d of defs) {
-    if (!d.map || !d.map.size) { rejected.push({ name: d.name, why: "데이터 없음" }); continue; }
-    const out = new Map();
-    for (const k of keys) {
-      const raw = lookback(d.map, k, 3); const rate = d.fx ? lookback(d.fx, k, 2) : 1;
-      if (raw == null || rate == null || rate === 0) continue;
-      out.set(k, d.conv(raw, rate));
+  const build=(selected)=>{
+    const used=[],rejected=[],usd=[];
+    for(const d of defs.filter(x=>selected.includes(x.name))){
+      if(!d.map||!d.map.size){rejected.push({name:d.name,why:'데이터 없음'});continue;}
+      const out=new Map();
+      for(const k of keys){const raw=lookback(d.map,k,3),rate=d.fx?lookback(d.fx,k,2):1;if(raw==null||rate==null||rate===0)continue;out.set(k,d.conv(raw,rate));}
+      const vals=[...out.values()].filter(Number.isFinite).sort((a,b)=>a-b),med=vals[vals.length>>1],[lo,hi]=M2_RANGE[d.name];
+      if(!vals.length||!(med>=lo&&med<=hi)){rejected.push({name:d.name,why:`단위/범위 이상 (중앙값 ${r3(med,0)}B USD)`});continue;}
+      used.push(d.name);usd.push(out);
     }
-    const vals = [...out.values()].sort((a, b) => a - b); const med = vals[vals.length >> 1];
-    const [lo, hi] = M2_RANGE[d.name];
-    if (!vals.length || !(med >= lo && med <= hi)) { rejected.push({ name: d.name, why: `단위/범위 이상 (중앙값 ${r3(med, 0)}B USD)` }); continue; }
-    used.push(d.name); usd.push(out);
-  }
-  const global = new Map();
-  if (usd.length) for (const k of keys) { let s = 0, ok = true; for (const m of usd) { const v = m.get(k); if (v == null) { ok = false; break; } s += v; } if (ok) global.set(k, s); }
-  const yoy = new Map();
-  for (const [k, v] of global) { const p = global.get(addM(k, -12)); if (p) yoy.set(k, (v / p - 1) * 100); }
-  const lastK = [...global.keys()].pop() || null;
-  return { global, yoy, used, rejected, lastK };
+    const global=new Map();
+    if(usd.length) for(const k of keys){let s=0,ok=true;for(const m of usd){const v=m.get(k);if(v==null){ok=false;break;}s+=v;}if(ok)global.set(k,s);}
+    const yoy=new Map(); for(const [k,v] of global){const p=global.get(addM(k,-12));if(p)yoy.set(k,(v/p-1)*100);}
+    return {global,yoy,used,rejected,lastK:[...global.keys()].pop()||null};
+  };
+  const core=build(['US','EA','JP','UK']);
+  const extended=build(['US','EA','JP','UK','CN','CA','KR','CH']);
+  return {core,extended};
 }
 
 // ---------- 월별 특징 ----------
@@ -371,12 +484,22 @@ async function ecbFxDaily(cur) {
   return { ok: m.size > 100, status: r.status, map: m };
 }
 async function ecbFx() {
-  const [u, j, g] = await Promise.all([ecbFxDaily("USD"), ecbFxDaily("JPY"), ecbFxDaily("GBP")]);
-  const mk = (f) => [...u.map.keys()].sort().map(d => { const v = f(d); return fin(v) ? { t: Date.parse(d), v } : null; }).filter(Boolean);
+  const currencies = ["USD","JPY","GBP","CNY","CAD","KRW","CHF"];
+  const got = await Promise.all(currencies.map(ecbFxDaily));
+  const maps = Object.fromEntries(currencies.map((c,i)=>[c,got[i].map]));
+  const usd = maps.USD;
+  const make = (cur) => [...usd.keys()].sort().map(d=>{
+    const eurUsd=usd.get(d), eurCur=maps[cur]?.get(d); if(!fin(eurUsd)||!fin(eurCur)||eurCur===0)return null;
+    return {t:Date.parse(d),v:eurUsd/eurCur};
+  }).filter(Boolean);
   return {
-    eurusd: { ok: u.ok, status: u.status, via: "ecb", series: mk(d => u.map.get(d)) },
-    jpyusd: { ok: u.ok && j.ok, status: j.status, via: "ecb", series: mk(d => j.map.get(d) / u.map.get(d)) },   // JPY per USD
-    gbpusd: { ok: u.ok && g.ok, status: g.status, via: "ecb", series: mk(d => u.map.get(d) / g.map.get(d)) }   // USD per GBP
+    eurusd:{ok:got[0].ok,status:got[0].status,via:"ecb",series:[...usd.keys()].sort().map(d=>{const a=usd.get(d);return fin(a)?{t:Date.parse(d),v:a}:null}).filter(Boolean)},
+    jpyusd:{ok:got[0].ok&&got[1].ok,status:got[1].status,via:"ecb",series:[...usd.keys()].sort().map(d=>{const a=usd.get(d),b=maps.JPY?.get(d);return fin(a)&&fin(b)&&b?{t:Date.parse(d),v:b/a}:null}).filter(Boolean)},
+    gbpusd:{ok:got[0].ok&&got[2].ok,status:got[2].status,via:"ecb",series:make("GBP")},
+    cnyusd:{ok:got[0].ok&&got[3].ok,status:got[3].status,via:"ecb",series:make("CNY")},
+    cadusd:{ok:got[0].ok&&got[4].ok,status:got[4].status,via:"ecb",series:make("CAD")},
+    krwusd:{ok:got[0].ok&&got[5].ok,status:got[5].status,via:"ecb",series:make("KRW")},
+    chfusd:{ok:got[0].ok&&got[6].ok,status:got[6].status,via:"ecb",series:make("CHF")}
   };
 }
 async function ethBtcAlt() {
@@ -428,16 +551,19 @@ async function buildHistory() {
   const t0 = Date.now(), now = t0, curK = mkey(now);
   const ids = { m2: "M2SL", fed: "EFFR", dollar: "DTWEXBGS", oil: "WTISPLC", sp: "SP500", y10: "DGS10", eurusd: "DEXUSEU", jpyusd: "DEXJPUS", gbpusd: "EXUSUK", cbbtc: "CBBTCUSD", cbeth: "CBETHUSD" };
   const names = Object.keys(ids);
-  const [fredArr0, ea, jp, uk, bc, sc, cmc, ethAlt] = await Promise.all([
+  const [fredArr0, ea, jp, uk, cn, ca, kr, ch, bc, sc, cmc, ethAlt] = await Promise.all([
     fredLimited(names, ids),
-    fetchEcbM2(), fetchBojM2(now), fetchBoeM4(now), fetchBtcPrice(), fetchStable(), fetchCmcDominance(now), ethBtcAlt()
+    fetchEcbM2(), fetchBojM2(now), fetchBoeM4(now), fetchChinaM2(), fetchCanadaM2(), fetchKoreaM2(), fetchSwissM2(),
+    fetchBtcPrice(), fetchStable(), fetchCmcDominance(now), ethBtcAlt()
   ]);
   const fredArr = await fillAlt(names, fredArr0);
   const f = {}; names.forEach((n, i) => f[n] = fredArr[i]);
-  const g = buildGlobalM2(f, ea, jp, uk, curK);
+  const fxAll = await ecbFx();
+  f.cnyusd = fxAll.cnyusd; f.cadusd = fxAll.cadusd; f.krwusd = fxAll.krwusd; f.chfusd = fxAll.chfusd;
+  const g = buildGlobalM2(f, ea, jp, uk, {cn,ca,kr,ch}, curK);
   const btc = bc.ok ? bc.series : (f.cbbtc.ok ? f.cbbtc.series : []);
   const c = {
-    yoy: g.yoy, fedM: monthMap(f.fed.series), dolM: monthMap(f.dollar.series), oilM: monthMap(f.oil.series), spM: monthMap(f.sp.series), y10M: monthMap(f.y10.series),
+    yoy: g.core.yoy, fedM: monthMap(f.fed.series), dolM: monthMap(f.dollar.series), oilM: monthMap(f.oil.series), spM: monthMap(f.sp.series), y10M: monthMap(f.y10.series),
     btcM: monthLast(btc), cbbtc: f.cbbtc.series, cbeth: f.cbeth.series, ethBtcM: ethAlt.ok ? monthLast(ethAlt.series) : monthLast(f.cbeth.series.map((x,i)=>({t:x.t,v:(x.v/(valAt(f.cbbtc.series,x.t,7*DAY)||NaN))})).filter(x=>fin(x.v))), stableM: monthLast(sc.series)
   };
   const rows = [];
@@ -445,7 +571,7 @@ async function buildHistory() {
   const last = (a) => a.length ? a[a.length - 1].v : null;
   const lvl = {
     fed: last(f.fed.series), dollar: last(f.dollar.series), oil: last(f.oil.series), sp: last(f.sp.series), y10: last(f.y10.series),
-    m2: g.lastK ? g.global.get(g.lastK) : null, m2Key: g.lastK, stable: last(sc.series)
+    m2: g.core.lastK ? g.core.global.get(g.core.lastK) : null, m2Key: g.core.lastK, stable: last(sc.series)
   };
   const sources = {
     fred: { ok: fredArr.filter(x => x.ok).length, total: names.length, failed: names.filter((n, i) => !fredArr[i].ok), via: fredArr.find(x => x.ok && x.via === "csv" || x.via === "api")?.via || null, alt: Object.fromEntries(names.map((n, i) => [n, fredArr[i].via || null])), ethbtc: { ok: ethAlt.ok, via: ethAlt.via, status: ethAlt.status }, status: Object.fromEntries(names.map((n, i) => [n, fredArr[i].status])), hint: fredArr.find(x => !x.ok)?.snip || fredArr.find(x => !x.ok)?.error || undefined },
@@ -454,7 +580,7 @@ async function buildHistory() {
     cmcDominance: { ok: cmc.ok, status: cmc.status }
   };
   const ok = rows.some(r => fin(r.m2yoy)) && btc.length > 0;
-  return { ok, built: now, ms: Date.now() - t0, rows, levels: lvl, m2: { used: g.used, rejected: g.rejected, lastKey: g.lastK }, cmcDom: cmc.ok ? cmc.series : null, sources, error: ok ? undefined : "HISTORY_INPUTS_MISSING" };
+  return { ok, built: now, ms: Date.now() - t0, rows, levels: { ...lvl, m2Extended: g.extended.lastK ? g.extended.global.get(g.extended.lastK) : null, m2ExtendedKey: g.extended.lastK }, m2: { used: g.core.used, rejected: g.core.rejected, lastKey: g.core.lastK, extended: { used: g.extended.used, rejected: g.extended.rejected, lastKey: g.extended.lastK, yoy: g.extended.lastK ? (g.extended.yoy.get(g.extended.lastK) ?? null) : null, value: g.extended.lastK ? g.extended.global.get(g.extended.lastK) : null } }, cmcDom: cmc.ok ? cmc.series : null, sources: { ...sources, extendedM2: { china: {ok:cn.ok,status:cn.status,via:cn.via}, canada:{ok:ca.ok,status:ca.status,via:ca.via}, korea:{ok:kr.ok,status:kr.status,via:kr.via}, switzerland:{ok:ch.ok,status:ch.status,via:ch.via}, fx:{cnyusd:f.cnyusd?.ok===true,cadusd:f.cadusd?.ok===true,krwusd:f.krwusd?.ok===true,chfusd:f.chfusd?.ok===true} } }, error: ok ? undefined : "HISTORY_INPUTS_MISSING" };
 }
 
 // ---------- 실시간(업비트/CoinGecko) ----------
@@ -665,15 +791,15 @@ function compose(hist, live) {
   }
   const L = hist.levels || {};
   return {
-    ok: true, version: "altseason-v3", updatedAt: Date.now(), cache: { hist: hist.cache, live: live?.cache }, staleReason: hist.staleReason || live?.staleReason,
+    ok: true, version: "altseason-v4-global-m2", updatedAt: Date.now(), cache: { hist: hist.cache, live: live?.cache }, staleReason: hist.staleReason || live?.staleReason,
     score: { total, comparable, stage, coverage: tot ? tot.cover : null, components: comps, drivers, path, momentum: { m1: ago(1) != null && comparable != null ? comparable - ago(1) : null, m3: ago(3) != null && comparable != null ? comparable - ago(3) : null }, streak: { overWatch: streak(bands.watch), overExpansion: streak(bands.expansion), overBroad: streak(bands.broad) }, bands, methodology: 'rolling-60m-percentile' },
-    inputs: { m2: { value: L.m2, key: L.m2Key, yoy: cur.m2yoy, accel: cur.m2accel, used: hist.m2.used, rejected: hist.m2.rejected }, fed: { value: L.fed, chg12: cur.fed12 }, dollar: { value: L.dollar, chg3m: cur.dollar3m }, oil: { value: L.oil, chg3m: cur.oil3m }, us10y: { value: cur.us10y, chg3m: cur.us10y3m }, sp: { value: L.sp, chg3m: cur.sp90 }, btc: { usd: cur.btc, ret90: cur.btc90, vsSp: r3(rel, 1) }, dom: { value: fin(liveDom) ? liveDom : cur.dom, src: fin(liveDom) ? "coingecko" : cur.domSrc, d7: live?.dom?.d7 != null && fin(liveDom) ? r3(liveDom - live.dom.d7, 2) : null, d30: live?.dom?.m1 != null && fin(liveDom) ? r3(liveDom - live.dom.m1, 2) : null, d90: cur.dom90 }, ethbtc: { value: cur.ethbtc, ch30: live?.ethbtc?.ch30 ?? null, ch90: cur.eth90 }, stable: { value: L.stable, g90: cur.stable90 } },
+    inputs: { m2: { value: L.m2, key: L.m2Key, yoy: cur.m2yoy, accel: cur.m2accel, used: hist.m2.used, rejected: hist.m2.rejected, extended: { value: L.m2Extended, key: L.m2ExtendedKey, yoy: hist.m2.extended?.yoy ? (hist.m2.extended.yoy.get(hist.m2.extended.lastKey) ?? null) : null, used: hist.m2.extended?.used || [], rejected: hist.m2.extended?.rejected || [] } }, fed: { value: L.fed, chg12: cur.fed12 }, dollar: { value: L.dollar, chg3m: cur.dollar3m }, oil: { value: L.oil, chg3m: cur.oil3m }, us10y: { value: cur.us10y, chg3m: cur.us10y3m }, sp: { value: L.sp, chg3m: cur.sp90 }, btc: { usd: cur.btc, ret90: cur.btc90, vsSp: r3(rel, 1) }, dom: { value: fin(liveDom) ? liveDom : cur.dom, src: fin(liveDom) ? "coingecko" : cur.domSrc, d7: live?.dom?.d7 != null && fin(liveDom) ? r3(liveDom - live.dom.d7, 2) : null, d30: live?.dom?.m1 != null && fin(liveDom) ? r3(liveDom - live.dom.m1, 2) : null, d90: cur.dom90 }, ethbtc: { value: cur.ethbtc, ch30: live?.ethbtc?.ch30 ?? null, ch90: cur.eth90 }, stable: { value: L.stable, g90: cur.stable90 } },
     breadth: live ? { ...live.breadth, coins: live.coins, groups: live.groups, reach: live.reach } : null, rotation, analogs,
     confirmation: { score: total, bands, breadth90: br.pctBeat90 ?? null, breadthBlend: br.breadthBlend ?? null, eth90: cur.eth90 ?? null, dom90: cur.dom90 ?? null, volumeRatio: br.volRatio ?? null,
       broadScore: total != null && total >= bands.broad, breadthConfirmed: fin(br.pctBeat90) && br.pctBeat90 >= 75, rotationConfirmed: fin(cur.eth90)&&cur.eth90>0&&fin(cur.dom90)&&cur.dom90<0,
       broadConfirmed: total != null && total >= bands.broad && fin(br.pctBeat90) && br.pctBeat90 >= 75 && fin(cur.eth90) && cur.eth90 > 0 && fin(cur.dom90) && cur.dom90 < 0 },
     history: { months: rows.map(r => ({ k: r.k, s: r.s, mo: r.mo, m2: r.m2yoy, d: fin(r.dom) ? r3(r.dom, 1) : null, ds: r.domSrc, e: r.ethbtc, b: r.btc90 })), windows: ALT_WINDOWS, windowStats: windows, calibration },
-    sources: src, notes: { domApprox: !hist.cmcDom, m2Lag: "M2는 발표 지연을 반영해 1개월 전 공개분을 사용", scoring: "각 점수는 직전 60개월 분포의 percentile로 산출하며, 현재 breadth는 7/30/90일 혼합을 사용", historicalAltProxy: "과거 알트확산 15점은 BTC.D·ETH/BTC·스테이블코인 증가율의 회전 proxy로 대체" }
+    sources: src, notes: { globalM2Profiles: "CORE=US+Euro Area+Japan+UK · EXTENDED=CORE+China+Canada+Korea+Switzerland. CORE만 기존 점수에 사용하며 EXTENDED는 별도 유동성 폭 지표입니다.", domApprox: !hist.cmcDom, m2Lag: "M2는 발표 지연을 반영해 1개월 전 공개분을 사용", scoring: "각 점수는 직전 60개월 분포의 percentile로 산출하며, 현재 breadth는 7/30/90일 혼합을 사용", historicalAltProxy: "과거 알트확산 15점은 BTC.D·ETH/BTC·스테이블코인 증가율의 회전 proxy로 대체" }
   };
 }
 
@@ -797,7 +923,7 @@ export default {
         const live = await cached(env, "as:live:v3", 600, buildLive, v=>v&&v.ok, force);
         return json({ ok:!!live?.ok, part:"live", cache:live?.cache, ...live });
       }
-      const hist = await cached(env, "as:hist:v3", 12*3600, buildHistory, v=>v&&v.ok, force);
+      const hist = await cached(env, "as:hist:v4-global-m2", 12*3600, buildHistory, v=>v&&v.ok, force);
       if (part === "hist") return json({ ok: !!hist.ok, part: "hist", cache: hist.cache, ms: hist.ms, sources: hist.sources, error: hist.error, history: hist.rows, levels: hist.levels, m2: hist.m2, cmcDom: hist.cmcDom });
       const live = await cached(env, "as:live:v3", 600, buildLive, v=>v&&v.ok, force);
       return json(compose(hist, live));

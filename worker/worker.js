@@ -537,76 +537,92 @@ async function altSeries(name, fx) {
 const FED_H6_M2_URL = 'https://www.federalreserve.gov/datadownload/Output.aspx?filetype=csv&from=&label=include&lastobs=&layout=seriescolumn&rel=H6&series=798e2796917702a5f8423426ba7e6b42&to=&type=package';
 
 function parseFedH6M2Csv(txt) {
-  const rows = String(txt || '').trim().split(/\r?\n/).map(splitCsv).filter(r => r.length);
+  // Federal Reserve DDP "series in columns" CSV:
+  //   Time Period,H6/H6_M1/M1.M,H6/H6_M2/M2.M,...
+  //   1959-01,167.0,286.6,...
+  // The DDP can also return a series-in-rows layout, so keep a small fallback.
+  const parseLine = (line) => {
+    const out = []; let cur = '', q = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (q && line[i + 1] === '"') { cur += '"'; i++; }
+        else q = !q;
+      } else if (ch === ',' && !q) { out.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    out.push(cur.trim());
+    return out;
+  };
+  const rows = String(txt || '').split(/\r?\n/).filter(Boolean).map(parseLine);
   if (!rows.length) return [];
   const norm = v => String(v ?? '').trim().replace(/^"|"$/g, '').trim();
-  const isMonth = v => /^(19|20)\d{2}[-\/]\d{2}(?:[-\/]\d{2})?$/.test(norm(v));
-  const toDate = v => {
-    const m = norm(v).match(/^(\d{4})[-\/]?(\d{2})(?:[-\/]?(\d{2}))?/);
+  const isDate = v => /^(?:19|20)\d{2}[-\/]\d{2}(?:[-\/]\d{2})?$/.test(norm(v));
+  const toMonth = v => {
+    const m = norm(v).match(/^(\d{4})[-\/]?(\d{2})/);
     return m ? `${m[1]}-${m[2]}-01` : null;
   };
   const toNum = v => {
-    const x = Number(norm(v).replace(/,/g, ''));
-    return Number.isFinite(x) ? x : null;
+    const z = norm(v).replace(/,/g, '');
+    if (!z || z === '.' || /^ND$/i.test(z)) return null;
+    const n = Number(z);
+    return Number.isFinite(n) ? n : null;
   };
   const out = [];
 
-  // Form A: series-as-rows, dates across the columns.
-  // e.g. ...  H6/H6_M2/M2.M, "M2; Seasonally adjusted", 1959-01, ...
-  for (const r of rows) {
-    const joined = r.map(norm).join(' | ');
-    if (!/(?:H6[\\/]H6[_\\/]M2[\\/]M2\.M|\bM2\.M\b)/i.test(joined)) continue;
-    for (let i = 0; i < r.length; i++) {
-      const d = toDate(r[i]);
-      if (!d) continue;
-      const v = toNum(r[i]);
-      // In this layout dates are headers, so the value is on the same row at the
-      // corresponding column. The loop below is handled by header alignment.
-    }
-  }
-  const header = rows.find(r => r.some(x => isMonth(x)));
-  if (header) {
-    const hi = rows.indexOf(header);
-    // Locate a data row that identifies the seasonally-adjusted M2 series.
-    const ri = rows.findIndex((r, idx) => idx > hi && r.some(x => /(?:H6[\\/]H6[_\\/]M2[\\/]M2\.M|\bM2\.M\b)/i.test(norm(x))));
-    if (ri >= 0) {
-      const r = rows[ri];
-      for (let i = 0; i < Math.min(header.length, r.length); i++) {
-        const d = toDate(header[i]), v = toNum(r[i]);
+  // A) Normal DDP "series in columns" layout.
+  for (let hi = 0; hi < Math.min(rows.length, 20); hi++) {
+    const h = rows[hi].map(norm);
+    const ti = h.findIndex(x => /^(?:time period|observation date|date)$/i.test(x));
+    const vi = h.findIndex(x => /(?:H6\/H6[_\/]M2[_\/]M2\.M|\bM2\.M\b)/i.test(x));
+    if (ti >= 0 && vi >= 0) {
+      for (const r of rows.slice(hi + 1)) {
+        const d = toMonth(r[ti]);
+        const v = toNum(r[vi]);
         if (d && v != null && v > 0) out.push({ d, v });
       }
+      if (out.length) break;
     }
   }
 
-  // Form B: observation-date rows, with an M2.M column.
+  // B) DDP "series in rows" fallback: dates across the top, M2.M on a row.
   if (!out.length) {
-    const hi = rows.findIndex(r => r.some(x => /observation.?date|date|time.?period/i.test(norm(x))) && r.some(x => /(?:M2\.M|H6[\\/]H6[_\\/]M2)/i.test(norm(x))));
-    if (hi >= 0) {
+    for (let hi = 0; hi < Math.min(rows.length, 20); hi++) {
       const h = rows[hi].map(norm);
-      const di = h.findIndex(x => /observation.?date|date|time.?period/i.test(x));
-      const vi = h.findIndex(x => /(?:M2\.M|H6[\\/]H6[_\\/]M2)/i.test(x));
-      if (di >= 0 && vi >= 0) for (const r of rows.slice(hi + 1)) {
-        const d = toDate(r[di]), v = toNum(r[vi]);
+      const dateCols = h.map((x, i) => isDate(x) ? i : -1).filter(i => i >= 0);
+      if (dateCols.length < 12) continue;
+      const ri = rows.findIndex((r, idx) => idx > hi && r.some(x => /(?:H6\/H6[_\/]M2[_\/]M2\.M|\bM2\.M\b|M2;\s*Seasonally adjusted)/i.test(norm(x))));
+      if (ri < 0) continue;
+      const r = rows[ri];
+      for (const i of dateCols) {
+        const d = toMonth(h[i]), v = toNum(r[i]);
         if (d && v != null && v > 0) out.push({ d, v });
       }
+      if (out.length) break;
     }
   }
 
-  // Form C: generic two-column/series-column fallback. Keep only rows whose first
-  // meaningful field is a date and whose numeric field is positive.
+  // C) Generic observation-date/value fallback, but only when the header explicitly
+  // identifies M2.M. Never guess the first numeric column (that could be M1).
   if (!out.length) {
-    for (const r of rows) {
-      const d = toDate(r[0]);
-      if (!d) continue;
-      for (let i = 1; i < r.length; i++) {
-        const v = toNum(r[i]);
-        if (v != null && v > 0) { out.push({ d, v }); break; }
+    for (let hi = 0; hi < Math.min(rows.length, 30); hi++) {
+      const h = rows[hi].map(norm);
+      const ti = h.findIndex(x => /^(?:time period|observation date|date)$/i.test(x));
+      const vi = h.findIndex(x => /(?:M2\.M|M2;\s*Seasonally adjusted)/i.test(x));
+      if (ti < 0 || vi < 0) continue;
+      for (const r of rows.slice(hi + 1)) {
+        const d = toMonth(r[ti]), v = toNum(r[vi]);
+        if (d && v != null && v > 0) out.push({ d, v });
       }
+      if (out.length) break;
     }
   }
+
   const m = new Map();
   for (const x of out) m.set(x.d.slice(0, 7), x.v);
-  return [...m].map(([k, v]) => ({ d: `${k}-01`, v })).sort((a, b) => a.d.localeCompare(b.d));
+  return [...m].map(([k, v]) => ({ t: Date.parse(`${k}-01T00:00:00Z`), v }))
+    .filter(x => Number.isFinite(x.t) && Number.isFinite(x.v))
+    .sort((a, b) => a.t - b.t);
 }
 
 async function fetchFedH6M2() {
@@ -688,6 +704,7 @@ async function buildHistory() {
   const sources = {
     fred: { ok: fredArr.filter(x => x.ok).length, total: names.length, failed: names.filter((n, i) => !fredArr[i].ok), via: fredArr.find(x => x.ok && x.via === "csv" || x.via === "api")?.via || null, alt: Object.fromEntries(names.map((n, i) => [n, fredArr[i].via || null])), ethbtc: { ok: ethAlt.ok, via: ethAlt.via, status: ethAlt.status }, status: Object.fromEntries(names.map((n, i) => [n, fredArr[i].status])), hint: fredArr.find(x => !x.ok)?.snip || fredArr.find(x => !x.ok)?.error || undefined },
     ecb: { ok: ea.ok, status: ea.status }, boj: { ok: jp.ok, status: jp.status }, globalM2: { profile: "US+EU+JP", used: g.used, rejected: g.rejected },
+    usM2: { ok: !!f.m2?.ok, status: f.m2?.status ?? 0, via: f.m2?.via || null, series: f.m2?.series?.length || 0 },
     btcPrice: { ok: bc.ok, status: bc.status, fallback: !bc.ok && f.cbbtc.ok }, stablecoin: { ok: sc.ok, status: sc.status },
     cmcDominance: { ok: cmc.ok, status: cmc.status }
   };

@@ -1779,7 +1779,8 @@ function renderAltMetrics(d){
   const el=$('asMetrics');if(!el)return;const i=d.inputs||{},r=d.rotation;
   const T=v=>asOk(v)?(Number(v)/1000).toFixed(1)+'T':'—';
   const items=[
-    ['Global M2',T(i.m2?.value),`YoY ${asF(i.m2?.yoy)} · ${(i.m2?.used||[]).join('+')||'—'}`],
+    ['Global M2 CORE',T(i.m2?.value),`YoY ${asF(i.m2?.yoy)} · ${(i.m2?.used||[]).join('+')||'—'}`],
+    ['Global M2 EXTENDED',T(i.m2?.extended?.value),`YoY ${asF(i.m2?.extended?.yoy)} · ${(i.m2?.extended?.used||[]).join('+')||'—'}`],
     ['Fed Funds',asOk(i.fed?.value)?Number(i.fed.value).toFixed(2)+'%':'—',`12개월 ${asF(i.fed?.chg12,2,'%p')}`],
     ['달러(광의)',asOk(i.dollar?.value)?Number(i.dollar.value).toFixed(1):'—',`3개월 ${asF(i.dollar?.chg3m)}`],
     ['WTI',asOk(i.oil?.value)?'$'+Number(i.oil.value).toFixed(1):'—',`3개월 ${asF(i.oil?.chg3m)}`],
@@ -1796,15 +1797,16 @@ function renderAltMetrics(d){
 function renderAltFoot(d){
   const el=$('asFoot');if(!el)return;const s=d.sources||{};
   const t=(n,ok,x='')=>`${n} ${ok?'✓':'✗'}${x}`;
-  const parts=[t('FRED',s.fred&&s.fred.ok===s.fred.total,s.fred?` ${s.fred.ok}/${s.fred.total}`:''),t('ECB',s.ecb?.ok),t('BoJ',s.boj?.ok),t('BoE',s.boe?.ok),t('BTC가격',s.btcPrice?.ok,s.btcPrice?.fallback?'(Coinbase 대체)':''),t('스테이블',s.stablecoin?.ok),t('BTC.D 월별(CMC)',s.cmcDominance?.ok),t('CoinGecko',s.coingecko?.ok),t('업비트',s.upbit?.ok,s.upbit?` ${s.upbit.coins}/${s.upbit.total}`:'')];
-  const m2=d.inputs?.m2||{},rej=(m2.rejected||[]).map(x=>`${x.name}(${x.why})`);
+  const parts=[t('US M2(H.6)',s.usM2?.ok),t('FRED',s.fred&&s.fred.ok===s.fred.total,s.fred?` ${s.fred.ok}/${s.fred.total}`:''),t('ECB',s.ecb?.ok),t('BoJ',s.boj?.ok),t('BTC가격',s.btcPrice?.ok,s.btcPrice?.fallback?'(Coinbase 대체)':''),t('스테이블',s.stablecoin?.ok),t('BTC.D 월별(CMC)',s.cmcDominance?.ok),t('CoinGecko',s.coingecko?.ok),t('업비트',s.upbit?.ok,s.upbit?` ${s.upbit.coins}/${s.upbit.total}`:'')];
+  const m2=d.inputs?.m2||{},rej=(m2.rejected||[]).map(x=>`${x.name}(${x.why})`),extRej=(m2.extended?.rejected||[]).map(x=>`${x.name}(${x.why})`);
   const notes=[];
   if(d.notes?.domApprox)notes.push('과거 BTC.D는 월별 실측이 아닌 연평균 앵커 보간(근사)이라 점선으로 표시됩니다.');
-  if(rej.length)notes.push('Global M2에서 제외된 항목: '+rej.join(', ')+' → 남은 항목으로 계산');
+  if(rej.length)notes.push('Global M2 CORE 제외: '+rej.join(', ')+' → CORE는 남은 항목으로 계산');
+  if(extRej.length)notes.push('Global M2 EXTENDED 제외: '+extRej.join(', ')+' → CORE는 영향 없음');
   notes.push(d.notes?.scoring||'점수는 과거 60개월 percentile 기반이며 임계값도 과거 분포에서 자동 보정됩니다.');
   if(d.notes?.historicalAltProxy)notes.push(d.notes.historicalAltProxy);
   if(d.staleReason)notes.push('최신 갱신 실패로 캐시 데이터를 표시 중 ('+d.staleReason+')');
-  el.innerHTML=`<b>데이터 상태</b> ${parts.join(' · ')}<br>${notes.map(asEsc).join('<br>')}<br>갱신 ${new Date(d.updatedAt).toLocaleString('ko-KR')} · Global M2 = 미국+유로존+일본+영국(USD 환산), 중국 제외 · 매매신호 아님`;
+  el.innerHTML=`<b>데이터 상태</b> ${parts.join(' · ')}<br>${notes.map(asEsc).join('<br>')}<br>갱신 ${new Date(d.updatedAt).toLocaleString('ko-KR')} · Global M2 CORE = 미국 H.6+유로존 ECB+일본 BoJ(USD 환산) · EXTENDED = CORE+중국+캐나다+한국+스위스 · 매매신호 아님`;
 }
 
 // ----- chart -----

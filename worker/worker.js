@@ -1,4 +1,4 @@
-// worker/worker.js — BTC ALT REGIME TRADER v10.8.2-minimal+pin+altseason-v4 (routes normalized, JSON 404, deploy check in /health)
+// worker/worker.js — BTC ALT REGIME TRADER v10.8.3-minimal+pin+altseason-v4 (public /candles) (routes normalized, JSON 404, deploy check in /health)
 //
 // 단계별 복구 진행 중: /health, /upbit, /market (완료) → PIN 인증 (이번 단계) → KV 포지션 → Telegram → Cron
 // KV(포지션/장부), Telegram 알림, Cron 자동감시는 다음 단계에서 하나씩 다시 붙일 예정입니다.
@@ -943,7 +943,7 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.8.2-minimal+pin+altseason-v4",
+        version: "v10.8.3-public-candles",
         routes: ["/health","/macro","/altseason","/candles","/upbit","/market"],
         altseason: true,
         service: "BTC ALT REGIME TRADER (minimal)",
@@ -1080,7 +1080,8 @@ export default {
 
     if (u.pathname === "/candles") {
       if (req.method !== "POST") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405);
-      if (env.PIN && !requirePin(req, env)) return json({ ok: false, error: "UNAUTHORIZED" }, 401);
+      // 공개 시세(Upbit 캔들) 프록시이므로 PIN 불필요 — 링크를 공유받은 사람도 Regime 분석이 동작해야 함.
+      // (PIN은 텔레그램 전송 같은 개인용 기능(/test)에만 사용)
       let body = {};
       try { body = await req.json(); } catch {}
       const symbol = String(body.symbol || "BTC").toUpperCase().replace(/[^A-Z0-9]/g, "");

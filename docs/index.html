@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v10.7.0</title>
+<title>BTC ALT REGIME TRADER v10.8.4</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -184,6 +184,15 @@
 .as-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}.as-metrics>div{border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:8px 9px}.as-metrics span{font-size:10px;color:var(--muted)}.as-metrics b{display:block;font-size:16px;margin-top:2px}.as-metrics small{display:block;font-size:10px;color:var(--muted);margin-top:1px}
 .as-warn{color:var(--yellow);font-weight:700}
 @media(max-width:900px){.as-top{grid-template-columns:1fr}.as-two{grid-template-columns:1fr}.as-metrics{grid-template-columns:repeat(2,1fr)}.as-comps{grid-template-columns:1fr}}
+ 
+.as-bt-controls{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin:9px 0}
+.as-bt-controls label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted)}
+.as-bt-controls input{width:130px;max-width:100%;padding:8px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--text)}
+.as-bt-status{padding:8px 0}
+.as-bt-subhead{font-size:12px;font-weight:800;margin:12px 0 5px}
+.as-bt-warning{font-size:10px;line-height:1.55;color:#7c2d12;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:9px;margin-top:10px}
+.as-bt-controls button:disabled{opacity:.55;cursor:wait}
+@media(max-width:520px){.as-bt-controls{display:grid;grid-template-columns:1fr 1fr}.as-bt-controls label{min-width:0}.as-bt-controls input{width:100%}.as-bt-controls button{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -244,6 +253,26 @@
   <canvas id="asChart" class="as-chart"></canvas>
   <div class="as-caption" id="asCaption">차트 위에 마우스를 올리면 월별 값이 표시됩니다.</div>
   <div class="as-legend" id="asLegend"></div>
+
+  <div class="history-wrap" id="asStrategyLab">
+    <div class="history-title">🧪 ALTSEASON 실전 전략 검증실
+      <span class="as-mute">점수 기반 매집·분할매도 · 월봉 데이터 · 자동매매 아님</span>
+    </div>
+    <div class="as-bt-controls">
+      <label>매집 SCORE 이하 <input id="asBtBuy" type="number" min="0" max="100" step="1" value="44"></label>
+      <label>매도 SCORE <input id="asBtSell" type="number" min="1" max="100" step="1" value="65"></label>
+      <label>편도 비용(수수료+슬리피지, %) <input id="asBtCost" type="number" min="0" max="2" step="0.01" value="0.15"></label>
+      <button type="button" class="btn primary" id="asBtRun">월봉 데이터 불러와 검증</button>
+    </div>
+    <div class="as-bt-status small" id="asBtStatus">실행 시 업비트 월봉 데이터와 ALTSEASON SCORE 기록을 맞춰 성과를 계산합니다. 처음 실행은 데이터 조회에 시간이 걸릴 수 있습니다.</div>
+    <div id="asBtSummary" class="history-table"></div>
+    <div id="asBtPeriods" class="history-table"></div>
+    <div class="as-bt-subhead">BTC 대비 상대강도 개선 코인 (마지막 완결 월 기준)</div>
+    <div id="asBtRS" class="history-table">전략 검증 실행 후 표시됩니다.</div>
+    <div class="as-bt-warning">
+      주의: 백테스트는 과거 데이터에 대한 연구 도구이며 미래 수익을 보장하지 않습니다. 현재 상장된 코인만 사용하므로 생존편향이 있고, 상장폐지·거래중단·호가충격·세금·실제 체결 오차를 완전히 반영하지 못합니다. SCORE의 과거 계산 방식이 현재와 달랐던 구간은 별도 해석이 필요합니다. 결과를 실전 매수·매도 신호로 사용하지 말고 페이퍼 트레이딩으로 먼저 확인하세요.
+    </div>
+  </div>
 
   <div class="as-ladder-box">
     <div class="history-title">🪜 자금 순환 사다리 <span class="as-mute">최근 30일 BTC 대비 초과수익 · 업비트 원화마켓 15종</span></div>
@@ -1875,6 +1904,178 @@ function asCaption(i){
   const w=(d.history.windows||[]).find(x=>m.k>=x.from&&m.k<=x.to);
   cp.textContent=`${m.k} · SCORE ${asOk(m.s)?m.s:'—'} (거시만 ${asOk(m.mo)?m.mo:'—'}) · M2 YoY ${asF(m.m2)} · BTC.D ${asOk(m.d)?m.d.toFixed(1)+'%'+(m.ds==='anchor'?'*':''):'—'} · ETH/BTC ${asOk(m.e)?Number(m.e).toFixed(4):'—'} · BTC 90일 ${asF(m.b,0)}${w?' · ['+w.label+']':''}`;
 }
+
+// ===== ALTSEASON STRATEGY RESEARCH LAB =====
+// Monthly, close-to-close backtest. Signals only use the score available at the
+// prior month close; the current incomplete month is excluded.
+const ASBT={loading:false,prices:null,lastRun:null};
+const ASBT_SYMBOLS=['BTC','ETH','XRP','ADA','SOL','LINK','DOGE','AVAX','NEAR','HBAR','ONDO','UNI','TAO','AAVE'];
+function asBtMonth(t){return new Date(Number(t)).toISOString().slice(0,7)}
+function asBtNum(v){const n=Number(v);return Number.isFinite(n)?n:null}
+function asBtFmt(v,d=2){return Number.isFinite(v)?v.toFixed(d)+'%':'—'}
+function asBtStats(rows){
+  let eq=1,peak=1,mdd=0,exposed=0,entries=0,exits=0,prev=false;
+  const curve=[];
+  for(const r of rows){
+    if(r.invested!==prev){eq*=Math.max(0,1-r.cost/100);if(r.invested)entries++;else exits++;prev=r.invested}
+    if(r.invested&&Number.isFinite(r.ret)) {eq*=Math.max(0,1+r.ret/100);exposed++}
+    peak=Math.max(peak,eq);mdd=Math.max(mdd,peak>0?(peak-eq)/peak*100:0);
+    curve.push(eq);
+  }
+  if(prev){eq*=Math.max(0,1-(rows.at(-1)?.cost||0)/100);exits++}
+  return {net:(eq-1)*100,mdd,exposure:rows.length?exposed/rows.length*100:0,entries,exits,months:rows.length,curve};
+}
+function asBtReturn(map,from,to){
+  const a=map.get(from),b=map.get(to);
+  return a>0&&b>0?(b/a-1)*100:null;
+}
+function asBtMedian(arr){const a=arr.filter(Number.isFinite).sort((x,y)=>x-y);if(!a.length)return null;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2}
+function asBtPrepare(){
+  const months=(AS.data?.history?.months||[]).filter(m=>m&&m.k&&asOk(m.s));
+  const scores=new Map(months.map(m=>[m.k,Number(m.s)]));
+  const allKeys=[...(ASBT.prices?.BTC?.keys?.()||[])].sort();
+  const nowKey=new Date().toISOString().slice(0,7);
+  // Remove the still-open current month to avoid treating a partial candle as final.
+  const keys=allKeys.filter(k=>k<nowKey);
+  return {scores,keys,price:ASBT.prices};
+}
+function asBtRunStrategy(keys,scores,prices,opts,from,to,kind){
+  const rows=[];let invested=false;
+  const btc=prices.BTC||new Map();
+  const altSymbols=ASBT_SYMBOLS.filter(s=>s!=='BTC');
+  for(let i=1;i<keys.length;i++){
+    const prev=keys[i-1],key=keys[i];
+    if(key<from||key>to)continue;
+    const score=scores.get(prev);
+    if(!Number.isFinite(score))continue;
+    const btc1=asBtReturn(btc,keys[i-2],prev);
+    const btc3=asBtReturn(btc,keys[i-4],prev);
+    const risk=kind==='guarded'&&((Number.isFinite(btc1)&&btc1<=-12)||(Number.isFinite(btc3)&&btc3<=-25));
+    const available=altSymbols.filter(s=>Number.isFinite(asBtReturn(prices[s]||new Map(),prev,key)));
+    if(available.length<2)continue; // avoid reporting fake returns where the historical basket is not observable
+    let selected=available.filter(s=>{
+      const pm=prices[s];
+      if(kind!=='guarded')return true;
+      const r1=asBtReturn(pm,keys[i-2],prev),r3=asBtReturn(pm,keys[i-4],prev);
+      return Number.isFinite(r1)&&Number.isFinite(r3)&&Number.isFinite(btc1)&&Number.isFinite(btc3)&&r1-btc1>=0&&r3-btc3>0;
+    });
+    if(score>=opts.sell||risk||(kind==='guarded'&&invested&&selected.length<2))invested=false;
+    else if(!invested&&score<=opts.buy&&(!risk)&&(kind!=='guarded'||selected.length>=2))invested=true;
+    let ret=null;
+    if(invested){
+      const rs=selected.map(s=>asBtReturn(prices[s],prev,key)).filter(Number.isFinite);
+      ret=rs.length?rs.reduce((a,b)=>a+b,0)/rs.length:null;
+      if(!Number.isFinite(ret))invested=false;
+    }
+    rows.push({month:key,score,invested,ret,cost:opts.cost,selected:selected.length,risk,btc1,btc3});
+  }
+  return rows;
+}
+function asBtPeriodStats(keys,scores,prices,opts,from,to,kind){
+  const rows=asBtRunStrategy(keys,scores,prices,opts,from,to,kind);
+  return {rows,stats:asBtStats(rows)};
+}
+async function asBtFetchPrices(){
+  if(ASBT.prices)return ASBT.prices;
+  const out={};
+  const symbols=ASBT_SYMBOLS;
+  const status=$('asBtStatus');
+  for(let i=0;i<symbols.length;i+=3){
+    const batch=symbols.slice(i,i+3);
+    if(status)status.textContent=`업비트 월봉 조회 중… ${Math.min(i+batch.length,symbols.length)}/${symbols.length}`;
+    const got=await Promise.all(batch.map(async symbol=>{
+      try{
+        const d=await call('/candles',{symbol,frame:'month',count:200},18000);
+        if(!d?.ok||!Array.isArray(d.candles))return [symbol,new Map()];
+        const m=new Map();
+        for(const c of d.candles){const k=asBtMonth(c[0]),v=asBtNum(c[4]);if(v>0)m.set(k,v)}
+        return [symbol,m];
+      }catch(e){return [symbol,new Map()]}
+    }));
+    for(const [symbol,map] of got)out[symbol]=map;
+  }
+  ASBT.prices=out;
+  return out;
+}
+function asBtRenderRS(keys,prices){
+  const latest=keys.at(-1),previous=keys.at(-2);
+  if(!latest||!previous){$('asBtRS').textContent='상대강도 계산에 필요한 월봉 데이터가 부족합니다.';return}
+  const btc=prices.BTC||new Map(), rows=[];
+  for(const s of ASBT_SYMBOLS.filter(x=>x!=='BTC')){
+    const pm=prices[s];if(!pm)continue;
+    const r1=asBtReturn(pm,keys.at(-2),latest),b1=asBtReturn(btc,keys.at(-2),latest);
+    const r3=asBtReturn(pm,keys.at(-4),latest),b3=asBtReturn(btc,keys.at(-4),latest);
+    const r6=asBtReturn(pm,keys.at(-7),latest),b6=asBtReturn(btc,keys.at(-7),latest);
+    if([r1,r3,r6].every(x=>x==null))continue;
+    rows.push({s,r1,b1,ex1:Number.isFinite(r1)&&Number.isFinite(b1)?r1-b1:null,r3,b3,ex3:Number.isFinite(r3)&&Number.isFinite(b3)?r3-b3:null,r6,b6,ex6:Number.isFinite(r6)&&Number.isFinite(b6)?r6-b6:null});
+  }
+  rows.sort((a,b)=>(b.ex3??-Infinity)-(a.ex3??-Infinity));
+  const table=(head,body)=>`<table><thead><tr>${head.map(x=>`<th>${asEsc(x)}</th>`).join('')}</tr></thead><tbody>${body.map(r=>`<tr>${r.map(x=>`<td>${asEsc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  $('asBtRS').innerHTML=`<div class="small">완결 월 기준: ${latest} · 초과수익 = 코인 수익률 − BTC 수익률 · 3개월 초과수익순</div>`+
+    table(['코인','1개월 초과','3개월 초과','6개월 초과','선별 참고'],rows.map(x=>[x.s,asBtFmt(x.ex1),asBtFmt(x.ex3),asBtFmt(x.ex6),Number.isFinite(x.ex1)&&Number.isFinite(x.ex3)&&x.ex1>0&&x.ex3>0?'상대강도 개선':'대기']));
+}
+function asBtRender(){
+  const {scores,keys,price}=asBtPrepare();
+  const buy=Math.max(0,Math.min(100,Number($('asBtBuy').value)||44));
+  const sell=Math.max(1,Math.min(100,Number($('asBtSell').value)||65));
+  const cost=Math.max(0,Math.min(2,Number($('asBtCost').value)||0));
+  const opts={buy,sell,cost};
+  if(sell<=buy){$('asBtStatus').textContent='매도 SCORE는 매집 SCORE보다 커야 합니다.';return}
+  const table=(head,body)=>`<table><thead><tr>${head.map(x=>`<th>${asEsc(x)}</th>`).join('')}</tr></thead><tbody>${body.map(r=>`<tr>${r.map(x=>`<td>${asEsc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const windows=[
+    {label:'2017–2018',from:'2017-01',to:'2018-12'},
+    {label:'2020–2021',from:'2020-01',to:'2021-12'},
+    {label:'2024–현재(완결 월)',from:'2024-01',to:keys.at(-1)||'2024-01'}
+  ];
+  const strategyDefs=[
+    {label:`기본 ${buy}→65`,sell:65,kind:'base'},
+    {label:`기본 ${buy}→70`,sell:70,kind:'base'},
+    {label:`위험·상대강도 필터 ${buy}→${sell}`,sell,kind:'guarded'}
+  ];
+  const full=[];
+  for(const win of windows){
+    for(const def of strategyDefs){
+      const strategyOpts={...opts,sell:def.sell};
+      const res=asBtPeriodStats(keys,scores,price,strategyOpts,win.from,win.to,def.kind);
+      const scored=res.rows.filter(x=>Number.isFinite(x.score)).length;
+      full.push({period:win.label,...def,...res,scored});
+    }
+  }
+  const sumRows=full.map(x=>{
+    const q=x.stats;
+    const enough=x.scored>=6;
+    return [x.period,x.label,x.scored>=6?x.scored+'개월':(x.scored+'개월 · 표본부족'),enough?asBtFmt(q.net):'—',enough?asBtFmt(q.mdd):'—',enough?asBtFmt(q.exposure,1):'—',enough?q.entries:'—'];
+  });
+  $('asBtSummary').innerHTML='<div class="as-bt-subhead">전략 비교 · 점수는 전월 말 값 사용</div>'+table(['구간','전략','유효 월','복리 수익률','최대 낙폭','시장 노출','진입 횟수'],sumRows);
+  const latest=keys.at(-1),prev=keys.at(-2),btc=price.BTC||new Map();
+  const basketReturns=[];
+  for(let i=1;i<keys.length;i++){
+    const a=keys[i-1],b=keys[i];
+    const rr=ASBT_SYMBOLS.filter(s=>s!=='BTC').map(s=>asBtReturn(price[s]||new Map(),a,b)).filter(Number.isFinite);
+    if(rr.length)basketReturns.push({month:b,ret:rr.reduce((x,y)=>x+y,0)/rr.length});
+  }
+  const periodText=windows.map(w=>{
+    const rows=basketReturns.filter(r=>r.month>=w.from&&r.month<=w.to);
+    const eq=rows.reduce((v,r)=>v*(1+r.ret/100),1);
+    const net=rows.length?(eq-1)*100:null;
+    return `${w.label}: 월봉 가격 관측 ${rows.length}개월, 동일가중 알트 바스켓 단순 보유 ${Number.isFinite(net)?(net>=0?'+':'')+net.toFixed(1)+'%':'—'}`;
+  }).join(' · ');
+  $('asBtPeriods').innerHTML=`<div class="small" style="margin-top:8px">참고 바스켓: ${periodText}. 상장 전 데이터가 없는 코인은 해당 월 계산에서 제외됩니다. 2017년 SCORE 자체가 충분히 존재하지 않으면 해당 전략 성과는 산출하지 않습니다.</div>`;
+  asBtRenderRS(keys,price);
+  ASBT.lastRun={buy,sell,cost,windows,full};
+  $('asBtStatus').textContent=`완료 · 가격 데이터 ${Object.entries(price).filter(([s,m])=>s==='BTC'?m.size>0:m.size>0).length}/${ASBT_SYMBOLS.length}개 코인 · 마지막 완결 월 ${latest||'—'} · 신호에 전월 SCORE 사용`;
+}
+async function asBtStart(){
+  if(ASBT.loading)return;
+  if(!AS.data?.history?.months?.length){$('asBtStatus').textContent='ALTSEASON SCORE 기록을 먼저 불러오는 중입니다.';return}
+  ASBT.loading=true;const b=$('asBtRun');if(b)b.disabled=true;
+  try{await asBtFetchPrices();asBtRender()}
+  catch(e){$('asBtStatus').textContent='전략 검증 실패: '+String(e?.message||e).slice(0,180)}
+  finally{ASBT.loading=false;if(b)b.disabled=false}
+}
+function asBtBind(){
+  const b=$('asBtRun');if(b&&!b._bound){b._bound=true;b.addEventListener('click',asBtStart)}
+}
 function asBindChart(){
   const c=$('asChart');if(!c||c._bound)return;c._bound=true;
   const mv=ev=>{const d=AS.data;if(!d?.history)return;const n=d.history.months.length,r=c.getBoundingClientRect(),padL=40,padR=12,px=(ev.clientX-r.left-padL)/(r.width-padL-padR);const i=Math.max(0,Math.min(n-1,Math.round(px*(n-1))));AS.hoverIdx=i;asCaption(i);drawAlt()};
@@ -1886,6 +2087,7 @@ function asBindChart(){
 }
 async function loadAltseason(force){
   asBindChart();
+  asBtBind();
   const foot=$('asFoot'),rb=$('asReload');
   if(rb)rb.disabled=true;
   try{

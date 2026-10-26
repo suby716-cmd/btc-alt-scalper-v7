@@ -1098,14 +1098,26 @@ export default {
         : frame === "day"
           ? `/v1/candles/days?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`
           : `/v1/candles/minutes/5?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`;
-      const r = await fetchJson(UPBIT + path, 7000);
-      if (!r.ok || !Array.isArray(r.body)) return json({ ok:false, error:"CANDLES_FAILED", status:r.status }, 502);
+      let r = await fetchJson(UPBIT + path, 7000);
+      let source = "upbit";
+      // 월봉 분석용: Upbit KRW 마켓이 없거나 과거 캔들이 비어 있으면 Binance USDT 월봉으로 보완.
+      // 수익률 비교는 종가의 퍼센트 변화이므로 통화 단위가 달라도 계산 가능하지만,
+      // 거래소 간 가격/상장시점 차이가 있을 수 있어 source를 응답에 명시한다.
+      if ((!r.ok || !Array.isArray(r.body) || r.body.length === 0) && frame === "month") {
+        const endPart = Number.isFinite(to) ? `&endTime=${encodeURIComponent(to)}` : "";
+        const br = await fetchJson(`https://api.binance.com/api/v3/klines?symbol=${symbol}USDT&interval=1M&limit=${count}${endPart}`, 7000);
+        if (br.ok && Array.isArray(br.body) && br.body.length) {
+          const candles = br.body.map(x => [Number(x[0]), Number(x[1]), Number(x[2]), Number(x[3]), Number(x[4]), Number(x[5])]);
+          return json({ ok:true, symbol, frame, source:"binance-usdt-fallback", candles });
+        }
+      }
+      if (!r.ok || !Array.isArray(r.body) || r.body.length === 0) return json({ ok:false, error:"CANDLES_FAILED", status:r.status, fallbackTried:frame === "month" }, 502);
       const candles = r.body.slice().reverse().map(x => [
         Date.parse(x.candle_date_time_utc + "Z"),
         Number(x.opening_price), Number(x.high_price), Number(x.low_price),
         Number(x.trade_price), Number(x.candle_acc_trade_volume)
       ]);
-      return json({ ok:true, symbol, frame, candles });
+      return json({ ok:true, symbol, frame, source, candles });
     }
 
     // Upbit 프록시 (브라우저 직접 호출은 CORS로 막히므로 반드시 이 경로를 거쳐야 함)

@@ -1908,7 +1908,7 @@ function asCaption(i){
 // ===== ALTSEASON STRATEGY RESEARCH LAB =====
 // Monthly, close-to-close backtest. Signals only use the score available at the
 // prior month close; the current incomplete month is excluded.
-const ASBT={loading:false,prices:null,lastRun:null};
+const ASBT={loading:false,prices:null,lastRun:null,sources:{},errors:{}};
 const ASBT_SYMBOLS=['BTC','ETH','XRP','ADA','SOL','LINK','DOGE','AVAX','NEAR','HBAR','ONDO','UNI','TAO','AAVE'];
 function asBtMonth(t){return new Date(Number(t)).toISOString().slice(0,7)}
 function asBtNum(v){const n=Number(v);return Number.isFinite(n)?n:null}
@@ -1975,26 +1975,33 @@ function asBtPeriodStats(keys,scores,prices,opts,from,to,kind){
   const rows=asBtRunStrategy(keys,scores,prices,opts,from,to,kind);
   return {rows,stats:asBtStats(rows)};
 }
-async function asBtFetchPrices(){
-  if(ASBT.prices)return ASBT.prices;
-  const out={};
+async function asBtFetchPrices(force=false){
+  if(ASBT.prices&&!force&&Object.values(ASBT.prices).filter(m=>m?.size>0).length===ASBT_SYMBOLS.length)return ASBT.prices;
+  const out={},sources={},errors={};
   const symbols=ASBT_SYMBOLS;
   const status=$('asBtStatus');
-  for(let i=0;i<symbols.length;i+=3){
-    const batch=symbols.slice(i,i+3);
-    if(status)status.textContent=`업비트 월봉 조회 중… ${Math.min(i+batch.length,symbols.length)}/${symbols.length}`;
+  for(let i=0;i<symbols.length;i+=2){
+    const batch=symbols.slice(i,i+2);
+    if(status)status.textContent=`월봉 데이터 조회 중… ${Math.min(i+batch.length,symbols.length)}/${symbols.length}`;
     const got=await Promise.all(batch.map(async symbol=>{
-      try{
-        const d=await call('/candles',{symbol,frame:'month',count:200},18000);
-        if(!d?.ok||!Array.isArray(d.candles))return [symbol,new Map()];
-        const m=new Map();
-        for(const c of d.candles){const k=asBtMonth(c[0]),v=asBtNum(c[4]);if(v>0)m.set(k,v)}
-        return [symbol,m];
-      }catch(e){return [symbol,new Map()]}
+      let lastError='';
+      for(let attempt=0;attempt<2;attempt++){
+        try{
+          const d=await call('/candles',{symbol,frame:'month',count:200},18000);
+          if(!d?.ok||!Array.isArray(d.candles)){lastError=d?.error||`HTTP ${d?.status||'오류'}`;continue}
+          const m=new Map();
+          for(const c of d.candles){const k=asBtMonth(c[0]),v=asBtNum(c[4]);if(v>0)m.set(k,v)}
+          if(m.size){sources[symbol]=`${d.source||'unknown'} (${m.size}개월)`;return [symbol,m,'']}
+          lastError='응답은 정상이지만 유효한 월봉이 0개';
+        }catch(e){lastError=String(e?.message||e)}
+        if(attempt===0)await new Promise(r=>setTimeout(r,450));
+      }
+      errors[symbol]=lastError||'데이터 조회 실패';
+      return [symbol,new Map(),errors[symbol]];
     }));
     for(const [symbol,map] of got)out[symbol]=map;
   }
-  ASBT.prices=out;
+  ASBT.prices=out;ASBT.sources=sources;ASBT.errors=errors;
   return out;
 }
 function asBtRenderRS(keys,prices){
@@ -2063,13 +2070,19 @@ function asBtRender(){
   $('asBtPeriods').innerHTML=`<div class="small" style="margin-top:8px">참고 바스켓: ${periodText}. 상장 전 데이터가 없는 코인은 해당 월 계산에서 제외됩니다. 2017년 SCORE 자체가 충분히 존재하지 않으면 해당 전략 성과는 산출하지 않습니다.</div>`;
   asBtRenderRS(keys,price);
   ASBT.lastRun={buy,sell,cost,windows,full};
-  $('asBtStatus').textContent=`완료 · 가격 데이터 ${Object.entries(price).filter(([s,m])=>s==='BTC'?m.size>0:m.size>0).length}/${ASBT_SYMBOLS.length}개 코인 · 마지막 완결 월 ${latest||'—'} · 신호에 전월 SCORE 사용`;
+  const loaded=Object.entries(price).filter(([s,m])=>m?.size>0).length;
+  const missing=ASBT_SYMBOLS.filter(s=>!(price[s]?.size>0));
+  const fallback=Object.entries(ASBT.sources||{}).filter(([s,v])=>String(v).startsWith('binance')).map(([s])=>s);
+  const diag=[];
+  if(fallback.length)diag.push(`Binance 보완: ${fallback.join(', ')}`);
+  if(missing.length)diag.push(`실패: ${missing.map(s=>s+' ('+(ASBT.errors?.[s]||'데이터 없음')+')').join(', ')}`);
+  $('asBtStatus').textContent=`완료 · 가격 데이터 ${loaded}/${ASBT_SYMBOLS.length}개 코인 · 마지막 완결 월 ${latest||'—'} · 신호에 전월 SCORE 사용${diag.length?' · '+diag.join(' · '):''}`;
 }
 async function asBtStart(){
   if(ASBT.loading)return;
   if(!AS.data?.history?.months?.length){$('asBtStatus').textContent='ALTSEASON SCORE 기록을 먼저 불러오는 중입니다.';return}
   ASBT.loading=true;const b=$('asBtRun');if(b)b.disabled=true;
-  try{await asBtFetchPrices();asBtRender()}
+  try{await asBtFetchPrices(true);asBtRender()}
   catch(e){$('asBtStatus').textContent='전략 검증 실패: '+String(e?.message||e).slice(0,180)}
   finally{ASBT.loading=false;if(b)b.disabled=false}
 }

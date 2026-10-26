@@ -943,7 +943,7 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.8.3-public-candles",
+        version: "v10.8.4-altseason-strategy-lab",
         routes: ["/health","/macro","/altseason","/candles","/upbit","/market"],
         altseason: true,
         service: "BTC ALT REGIME TRADER (minimal)",
@@ -1093,9 +1093,11 @@ export default {
       // pagination은 실제 timestamp(2000년 이후)일 때만 허용
       const to = rawTo !== null && rawTo !== undefined && rawTo !== "" &&
         Number.isFinite(parsedTo) && parsedTo > 946684800000 ? parsedTo : NaN;
-      const path = frame === "day"
-        ? `/v1/candles/days?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`
-        : `/v1/candles/minutes/5?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`;
+      const path = frame === "month"
+        ? `/v1/candles/months?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`
+        : frame === "day"
+          ? `/v1/candles/days?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`
+          : `/v1/candles/minutes/5?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`;
       const r = await fetchJson(UPBIT + path, 7000);
       if (!r.ok || !Array.isArray(r.body)) return json({ ok:false, error:"CANDLES_FAILED", status:r.status }, 502);
       const candles = r.body.slice().reverse().map(x => [

@@ -292,19 +292,18 @@ async function fetchBtcFromBlockchainCharts() {
   return { ok: series.length > 200, status: r.status, series, source: "blockchain.info/charts" };
 }
 
-async function fetchBtcFromBinanceDaily() {
+async function fetchBtcFromBinanceDaily(maxPages = 2) {
   // data-api.binance.vision 또는 binance.us (api.binance.com은 CF에서 451 빈발)
   const endpoints = [
     "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=1000",
     "https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=1000",
   ];
-  let all = [];
   for (const url of endpoints) {
-    // 최근 1000일 + 이전 구간을 endTime으로 한 번 더
+    let all = [];
     let endTime = null;
-    for (let page = 0; page < 3; page++) {
+    for (let page = 0; page < maxPages; page++) {
       const u = endTime ? `${url}&endTime=${endTime}` : url;
-      const r = await fetchJson(u, 12000);
+      const r = await fetchJson(u, 10000);
       if (!r.ok || !Array.isArray(r.body) || !r.body.length) break;
       const chunk = r.body.map(x => ({ t: Number(x[0]), v: Number(x[4]) })).filter(x => fin(x.t) && x.v > 0);
       if (!chunk.length) break;
@@ -323,15 +322,14 @@ async function fetchBtcFromBinanceDaily() {
 }
 
 async function fetchBtcFromCoinbaseDaily() {
-  // Coinbase public candles: 최대 300개/요청, granularity=86400
+  // Coinbase public candles: 최대 300개/요청 — 최근 구간만 (서브리퀘스트 절약)
   const base = "https://api.exchange.coinbase.com/products/BTC-USD/candles";
   let all = [];
   let end = new Date().toISOString();
-  for (let page = 0; page < 8; page++) {
+  for (let page = 0; page < 4; page++) {
     const url = `${base}?granularity=86400&end=${encodeURIComponent(end)}`;
-    const r = await fetchJson(url, 10000);
+    const r = await fetchJson(url, 8000);
     if (!r.ok || !Array.isArray(r.body) || !r.body.length) break;
-    // [time, low, high, open, close, volume] time in seconds
     const chunk = r.body.map(x => ({ t: Number(x[0]) * 1000, v: Number(x[4]) })).filter(x => fin(x.t) && x.v > 0);
     if (!chunk.length) break;
     all = all.concat(chunk);
@@ -346,63 +344,70 @@ async function fetchBtcFromCoinbaseDaily() {
   return { ok: true, status: 200, series, source: "coinbase/1d" };
 }
 
+function patchSeriesWithLive(series, liveV) {
+  if (!series.length || !Number.isFinite(liveV) || liveV <= 0) return series;
+  const last = series[series.length - 1];
+  const today = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+  if (Math.abs(last.t - today) < 86400000) {
+    series[series.length - 1] = { t: today, v: liveV };
+  } else {
+    series.push({ t: today, v: liveV });
+  }
+  return series;
+}
+
 async function fetchBtcPrice() {
   const sourcesTried = [];
   let series = [];
   let primaryStatus = 0;
   let primarySource = null;
 
-  // 1) blockchain.info charts (장기 핵심)
+  // 1) blockchain.info charts (장기 핵심) — 성공하면 즉시 실시간만 보정하고 반환 (서브리퀘스트 최소화)
   const bc = await fetchBtcFromBlockchainCharts();
   sourcesTried.push({ source: bc.source, ok: bc.ok, status: bc.status, n: bc.series?.length || 0 });
-  if (bc.ok) {
-    series = bc.series;
+  if (bc.ok && bc.series.length > 300) {
+    series = bc.series.slice();
     primaryStatus = bc.status;
     primarySource = bc.source;
+    const ageDays = (Date.now() - series.at(-1).t) / 86400000;
+    if (ageDays > 0.8) {
+      const live = await fetchBtcLivePrice();
+      sourcesTried.push({ source: live.source || "live-ticker", ok: live.ok, status: live.status, n: live.ok ? 1 : 0 });
+      if (live.ok) series = patchSeriesWithLive(series, live.v);
+    }
+    // 장기 소스가 충분하면 여기서 종료 (추가 소스는 실패 표면·서브리퀘스트만 늘림)
+    return { ok: true, status: primaryStatus, series, source: primarySource, sourcesTried };
   }
 
-  // 2) Binance 계열 일봉으로 최신/구멍 보강 또는 전체 폴백
-  const bn = await fetchBtcFromBinanceDaily();
+  // 2) Binance 일봉 폴백 (1순위 실패 시에만)
+  const bn = await fetchBtcFromBinanceDaily(2);
   sourcesTried.push({ source: bn.source, ok: bn.ok, status: bn.status, n: bn.series?.length || 0 });
   if (bn.ok) {
-    if (series.length > 100) series = mergeBtcSeries(series, bn.series);
-    else {
-      series = bn.series;
-      primaryStatus = bn.status;
-      primarySource = bn.source;
-    }
+    series = series.length > 100 ? mergeBtcSeries(series, bn.series) : bn.series;
+    primaryStatus = bn.status;
+    primarySource = bn.source;
   }
 
-  // 3) Coinbase (추가 보강 / 최후 폴백)
-  if (series.length < 300 || (series.length && (Date.now() - series.at(-1).t) / 86400000 > 3)) {
+  // 3) Coinbase (여전히 부족할 때만)
+  if (series.length < 300) {
     const cb = await fetchBtcFromCoinbaseDaily();
     sourcesTried.push({ source: cb.source, ok: cb.ok, status: cb.status, n: cb.series?.length || 0 });
     if (cb.ok) {
-      if (series.length > 100) series = mergeBtcSeries(series, cb.series);
-      else {
-        series = cb.series;
+      series = series.length > 100 ? mergeBtcSeries(series, cb.series) : cb.series;
+      if (!primarySource) {
         primaryStatus = cb.status;
         primarySource = cb.source;
       }
     }
   }
 
-  // 4) 실시간 가격으로 마지막 포인트 보정 (1.5일 이상 지연 시)
+  // 4) 실시간 보정
   if (series.length > 50) {
-    const last = series[series.length - 1];
-    const ageDays = (Date.now() - last.t) / 86400000;
-    if (ageDays > 1.2) {
+    const ageDays = (Date.now() - series.at(-1).t) / 86400000;
+    if (ageDays > 0.8) {
       const live = await fetchBtcLivePrice();
       sourcesTried.push({ source: live.source || "live-ticker", ok: live.ok, status: live.status, n: live.ok ? 1 : 0 });
-      if (live.ok) {
-        const today = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
-        if (Math.abs(last.t - today) < 86400000) {
-          series[series.length - 1] = { t: today, v: live.v };
-        } else {
-          series.push({ t: today, v: live.v });
-        }
-        if (!primarySource) primarySource = live.source;
-      }
+      if (live.ok) series = patchSeriesWithLive(series, live.v);
     }
   }
 
@@ -1261,7 +1266,7 @@ function buildCompassModel(daily, meta = {}) {
     const x = Math.log10(Math.max(1,(m.t-CP_GENESIS)/CP_DAY));
     return { t:m.t, price:m.close, model:at(f50,x), lower:at(f05,x), upper:at(f95,x) };
   });
-  return { ok:true, version:'10.12.1', source: meta.source || 'blockchain.info BTC/USD', count: months.length,
+  return { ok:true, version:'10.13.1', source: meta.source || 'blockchain.info BTC/USD', count: months.length,
     firstMonth: new Date(completedMonths[0].t).toISOString().slice(0,7), lastMonth: new Date(live.t).toISOString().slice(0,7), lastPointAt: live.t, updatedAt: nowMs, quality,
     current: { price, model: mid, lower: sup, median: mid, upper: top, residualPct: (Math.pow(10, medPos)-1)*100, bandPosition: bandPos, zScore: z, cagr4y: cagr, cagrMethod, return3m: ret3, return3mMethod:ret3Method,
       yearsAheadOfSupport: yrsAhead, mayer, ma200w, wmaMultiple: wmaMult, athPrice: Math.round(ath.v), athDate: new Date(ath.t).toISOString().slice(0,10), drawdownPct: drawdown,
@@ -1362,7 +1367,7 @@ function cpRunBacktest(daily) {
   const lowConf = rows.filter(r => r.heat < 45 && r.trend === 'confirmed'), lowUn = rows.filter(r => r.heat < 45 && r.trend !== 'confirmed');
   const trendSplit = { lowConfirmed: { dates: lowConf.length, h180: agg(lowConf,180), h365: agg(lowConf,365) }, lowUnconfirmed: { dates: lowUn.length, h180: agg(lowUn,180), h365: agg(lowUn,365) } };
   const bh = {}; for (const h of H) { const f = rows.map(r => r.f[h]).filter(Boolean); bh['h'+h] = f.length; }
-  return { ok:true, version:'10.12.1', updatedAt: Date.now(), ms: Date.now() - t0,
+  return { ok:true, version:'10.13.1', updatedAt: Date.now(), ms: Date.now() - t0,
     range: { first: new Date(rows[0].t).toISOString().slice(0,7), last: new Date(rows.at(-1).t).toISOString().slice(0,7), dates: rows.length },
     buckets, baseline: all, correlation: corr, trendSplit,
     scoreSeries: rows.filter((r,i)=> i%2===0 || i===rows.length-1).map(r => ({ t:r.t, price:Math.round(r.price), heat:+r.heat.toFixed(1) })),
@@ -1402,7 +1407,7 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.13.0-master-market-compass-multisource",
+        version: "v10.13.2-candles-retry-fallback",
         routes: ["/health","/macro","/altseason","/btc-compass","/btc-compass-backtest","/candles","/upbit","/market"],
         altseason: true,
         service: "BTC ALT REGIME TRADER (minimal)",
@@ -1607,16 +1612,13 @@ export default {
     if (u.pathname === "/candles") {
       if (req.method !== "POST") return json({ ok: false, error: "METHOD_NOT_ALLOWED" }, 405);
       // 공개 시세(Upbit 캔들) 프록시이므로 PIN 불필요 — 링크를 공유받은 사람도 Regime 분석이 동작해야 함.
-      // (PIN은 텔레그램 전송 같은 개인용 기능(/test)에만 사용)
       let body = {};
       try { body = await req.json(); } catch {}
       const symbol = String(body.symbol || "BTC").toUpperCase().replace(/[^A-Z0-9]/g, "");
       const frame = String(body.frame || "5m").toLowerCase();
       const count = Math.max(1, Math.min(200, Number(body.count) || 200));
-      // null -> Number(null) === 0(1970-01-01) 버그 방지
       const rawTo = body.to;
       const parsedTo = Number(rawTo);
-      // pagination은 실제 timestamp(2000년 이후)일 때만 허용
       const to = rawTo !== null && rawTo !== undefined && rawTo !== "" &&
         Number.isFinite(parsedTo) && parsedTo > 946684800000 ? parsedTo : NaN;
       const path = frame === "month"
@@ -1624,37 +1626,80 @@ export default {
         : frame === "day"
           ? `/v1/candles/days?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`
           : `/v1/candles/minutes/5?market=KRW-${symbol}&count=${count}${Number.isFinite(to) ? `&to=${encodeURIComponent(new Date(to).toISOString())}` : ""}`;
+
+      // Upbit 429/5xx 재시도 (공개 API 속도 제한 대응)
       let r = await fetchJson(UPBIT + path, 7000);
+      for (let k = 0; k < 3 && (!r.ok || !Array.isArray(r.body) || !r.body.length) && (r.status === 429 || r.status >= 500 || r.status === 0); k++) {
+        await new Promise(res => setTimeout(res, 350 + k * 250 + Math.floor(Math.random() * 150)));
+        r = await fetchJson(UPBIT + path, 7000);
+      }
       let source = "upbit";
-      // 월봉 분석용: Upbit KRW 마켓이 없거나 과거 캔들이 비어 있으면 Binance USDT 월봉으로 보완.
-      // 수익률 비교는 종가의 퍼센트 변화이므로 통화 단위가 달라도 계산 가능하지만,
-      // 거래소 간 가격/상장시점 차이가 있을 수 있어 source를 응답에 명시한다.
-      if ((!r.ok || !Array.isArray(r.body) || r.body.length === 0) && frame === "month") {
+
+      // Binance 폴백 (월봉 + 5m/일봉). api.binance.com 은 451 빈발 → vision/us 우선
+      const needFallback = !r.ok || !Array.isArray(r.body) || r.body.length === 0;
+      if (needFallback) {
+        const interval = frame === "month" ? "1M" : frame === "day" ? "1d" : "5m";
         const endPart = Number.isFinite(to) ? `&endTime=${encodeURIComponent(to)}` : "";
-        const br = await fetchJson(`https://api.binance.com/api/v3/klines?symbol=${symbol}USDT&interval=1M&limit=${count}${endPart}`, 7000);
-        if (br.ok && Array.isArray(br.body) && br.body.length) {
-          const candles = br.body.map(x => [Number(x[0]), Number(x[1]), Number(x[2]), Number(x[3]), Number(x[4]), Number(x[5])]);
-          return json({ ok:true, symbol, frame, source:"binance-usdt-fallback", candles });
+        const bnUrls = [
+          `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}USDT&interval=${interval}&limit=${count}${endPart}`,
+          `https://api.binance.us/api/v3/klines?symbol=${symbol}USDT&interval=${interval}&limit=${count}${endPart}`,
+        ];
+        for (const bnUrl of bnUrls) {
+          const br = await fetchJson(bnUrl, 8000);
+          if (br.ok && Array.isArray(br.body) && br.body.length) {
+            // Binance: [openTime, open, high, low, close, volume, ...]
+            const candles = br.body.map(x => [
+              Number(x[0]), Number(x[1]), Number(x[2]), Number(x[3]), Number(x[4]), Number(x[5])
+            ]);
+            return json({
+              ok: true, symbol, frame,
+              source: bnUrl.includes("binance.us") ? "binance.us-fallback" : "binance.vision-fallback",
+              candles, upbitStatus: r.status,
+            });
+          }
         }
       }
-      if (!r.ok || !Array.isArray(r.body) || r.body.length === 0) return json({ ok:false, error:"CANDLES_FAILED", status:r.status, fallbackTried:frame === "month" }, 502);
+
+      if (!r.ok || !Array.isArray(r.body) || r.body.length === 0) {
+        return json({ ok: false, error: "CANDLES_FAILED", status: r.status, fallbackTried: true }, 502);
+      }
       const candles = r.body.slice().reverse().map(x => [
         Date.parse(x.candle_date_time_utc + "Z"),
         Number(x.opening_price), Number(x.high_price), Number(x.low_price),
         Number(x.trade_price), Number(x.candle_acc_trade_volume)
       ]);
-      return json({ ok:true, symbol, frame, source, candles });
+      return json({ ok: true, symbol, frame, source, candles });
     }
 
     // Upbit 프록시 (브라우저 직접 호출은 CORS로 막히므로 반드시 이 경로를 거쳐야 함)
     if (u.pathname === "/upbit") {
       const path = u.searchParams.get("path");
       if (!path || !path.startsWith("/v1/")) return json({ error: "invalid path" }, 400);
-      const r = await fetch(UPBIT + path, {
-        headers: { Accept: "application/json", "User-Agent": "BTC-ALT-REGIME-TRADER/10.4.0-minimal" },
-      });
-      return new Response(await r.text(), {
-        status: r.status,
+      let lastStatus = 0, lastText = "";
+      for (let k = 0; k < 3; k++) {
+        try {
+          const r = await fetch(UPBIT + path, {
+            headers: { Accept: "application/json", "User-Agent": "BTC-ALT-REGIME-TRADER/10.13.1" },
+          });
+          lastStatus = r.status;
+          lastText = await r.text();
+          // 429/5xx 이면 짧게 대기 후 재시도
+          if ((r.status === 429 || r.status >= 500) && k < 2) {
+            await new Promise(res => setTimeout(res, 300 + k * 200 + Math.floor(Math.random() * 120)));
+            continue;
+          }
+          return new Response(lastText, {
+            status: lastStatus,
+            headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "no-store" },
+          });
+        } catch (e) {
+          lastText = JSON.stringify({ error: String(e?.message || e) });
+          lastStatus = 502;
+          if (k < 2) await new Promise(res => setTimeout(res, 300 + k * 200));
+        }
+      }
+      return new Response(lastText || JSON.stringify({ error: "UPBIT_PROXY_FAILED" }), {
+        status: lastStatus || 502,
         headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "no-store" },
       });
     }

@@ -253,11 +253,166 @@ async function fetchBoeM4(nowMs) {
   }
   return { ok: map.size > 0, status: r.status, map };
 }
-async function fetchBtcPrice() {
+// ---------- BTC 일별 가격 다중 소스 ----------
+// 1순위: blockchain.info charts (2009~ 장기, Workers에서 안정)
+// 2순위: data-api.binance.vision / binance.us 일봉 (2017~, api.binance.com은 451 자주)
+// 3순위: Coinbase Exchange 일봉 (페이지네이션, ~2015~)
+// 실시간 보정: blockchain ticker → Coinbase spot → Kraken
+async function fetchBtcLivePrice() {
+  const sources = [
+    { name: "blockchain-ticker", url: "https://blockchain.info/ticker", pick: b => Number(b?.USD?.last ?? b?.USD?.["15m"]) },
+    { name: "coinbase-spot", url: "https://api.coinbase.com/v2/prices/BTC-USD/spot", pick: b => Number(b?.data?.amount) },
+    { name: "kraken-ticker", url: "https://api.kraken.com/0/public/Ticker?pair=XBTUSD", pick: b => Number(b?.result?.XXBTZUSD?.c?.[0] ?? b?.result?.XBTUSD?.c?.[0]) },
+  ];
+  for (const s of sources) {
+    const r = await fetchJson(s.url, 5000);
+    const v = s.pick(r.body);
+    if (r.ok && Number.isFinite(v) && v > 1000) return { ok: true, v, source: s.name, status: r.status };
+  }
+  return { ok: false, v: null, source: null, status: 0 };
+}
+
+function mergeBtcSeries(primary, secondary) {
+  // secondary의 최신 구간으로 primary 구멍을 메우거나 연장한다 (같은 날짜는 평균 대신 더 최신 소스 우선)
+  const map = new Map();
+  for (const p of primary || []) if (fin(p.t) && p.v > 0) map.set(Math.floor(p.t / 86400000), p);
+  for (const p of secondary || []) {
+    if (!fin(p.t) || !(p.v > 0)) continue;
+    const day = Math.floor(p.t / 86400000);
+    const existing = map.get(day);
+    if (!existing || p.t >= existing.t) map.set(day, p);
+  }
+  return [...map.values()].sort((a, b) => a.t - b.t);
+}
+
+async function fetchBtcFromBlockchainCharts() {
   const r = await fetchJson("https://api.blockchain.info/charts/market-price?timespan=all&sampled=true&metadata=false&cors=true&format=json", 15000);
   const vals = Array.isArray(r.body?.values) ? r.body.values : [];
   const series = vals.map(x => ({ t: x.x * 1000, v: Number(x.y) })).filter(x => fin(x.t) && x.v > 0).sort((a, b) => a.t - b.t);
-  return { ok: series.length > 100, status: r.status, series };
+  return { ok: series.length > 200, status: r.status, series, source: "blockchain.info/charts" };
+}
+
+async function fetchBtcFromBinanceDaily() {
+  // data-api.binance.vision 또는 binance.us (api.binance.com은 CF에서 451 빈발)
+  const endpoints = [
+    "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=1000",
+    "https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=1000",
+  ];
+  let all = [];
+  for (const url of endpoints) {
+    // 최근 1000일 + 이전 구간을 endTime으로 한 번 더
+    let endTime = null;
+    for (let page = 0; page < 3; page++) {
+      const u = endTime ? `${url}&endTime=${endTime}` : url;
+      const r = await fetchJson(u, 12000);
+      if (!r.ok || !Array.isArray(r.body) || !r.body.length) break;
+      const chunk = r.body.map(x => ({ t: Number(x[0]), v: Number(x[4]) })).filter(x => fin(x.t) && x.v > 0);
+      if (!chunk.length) break;
+      all = all.concat(chunk);
+      endTime = chunk[0].t - 1;
+      if (chunk.length < 500) break;
+    }
+    if (all.length > 200) {
+      const map = new Map();
+      for (const p of all) map.set(Math.floor(p.t / 86400000), p);
+      const series = [...map.values()].sort((a, b) => a.t - b.t);
+      return { ok: true, status: 200, series, source: url.includes("binance.us") ? "binance.us/1d" : "binance.vision/1d" };
+    }
+  }
+  return { ok: false, status: 0, series: [], source: "binance-daily" };
+}
+
+async function fetchBtcFromCoinbaseDaily() {
+  // Coinbase public candles: 최대 300개/요청, granularity=86400
+  const base = "https://api.exchange.coinbase.com/products/BTC-USD/candles";
+  let all = [];
+  let end = new Date().toISOString();
+  for (let page = 0; page < 8; page++) {
+    const url = `${base}?granularity=86400&end=${encodeURIComponent(end)}`;
+    const r = await fetchJson(url, 10000);
+    if (!r.ok || !Array.isArray(r.body) || !r.body.length) break;
+    // [time, low, high, open, close, volume] time in seconds
+    const chunk = r.body.map(x => ({ t: Number(x[0]) * 1000, v: Number(x[4]) })).filter(x => fin(x.t) && x.v > 0);
+    if (!chunk.length) break;
+    all = all.concat(chunk);
+    const oldest = Math.min(...chunk.map(p => p.t));
+    end = new Date(oldest - 86400000).toISOString();
+    if (chunk.length < 100) break;
+  }
+  if (all.length < 100) return { ok: false, status: 0, series: [], source: "coinbase/1d" };
+  const map = new Map();
+  for (const p of all) map.set(Math.floor(p.t / 86400000), p);
+  const series = [...map.values()].sort((a, b) => a.t - b.t);
+  return { ok: true, status: 200, series, source: "coinbase/1d" };
+}
+
+async function fetchBtcPrice() {
+  const sourcesTried = [];
+  let series = [];
+  let primaryStatus = 0;
+  let primarySource = null;
+
+  // 1) blockchain.info charts (장기 핵심)
+  const bc = await fetchBtcFromBlockchainCharts();
+  sourcesTried.push({ source: bc.source, ok: bc.ok, status: bc.status, n: bc.series?.length || 0 });
+  if (bc.ok) {
+    series = bc.series;
+    primaryStatus = bc.status;
+    primarySource = bc.source;
+  }
+
+  // 2) Binance 계열 일봉으로 최신/구멍 보강 또는 전체 폴백
+  const bn = await fetchBtcFromBinanceDaily();
+  sourcesTried.push({ source: bn.source, ok: bn.ok, status: bn.status, n: bn.series?.length || 0 });
+  if (bn.ok) {
+    if (series.length > 100) series = mergeBtcSeries(series, bn.series);
+    else {
+      series = bn.series;
+      primaryStatus = bn.status;
+      primarySource = bn.source;
+    }
+  }
+
+  // 3) Coinbase (추가 보강 / 최후 폴백)
+  if (series.length < 300 || (series.length && (Date.now() - series.at(-1).t) / 86400000 > 3)) {
+    const cb = await fetchBtcFromCoinbaseDaily();
+    sourcesTried.push({ source: cb.source, ok: cb.ok, status: cb.status, n: cb.series?.length || 0 });
+    if (cb.ok) {
+      if (series.length > 100) series = mergeBtcSeries(series, cb.series);
+      else {
+        series = cb.series;
+        primaryStatus = cb.status;
+        primarySource = cb.source;
+      }
+    }
+  }
+
+  // 4) 실시간 가격으로 마지막 포인트 보정 (1.5일 이상 지연 시)
+  if (series.length > 50) {
+    const last = series[series.length - 1];
+    const ageDays = (Date.now() - last.t) / 86400000;
+    if (ageDays > 1.2) {
+      const live = await fetchBtcLivePrice();
+      sourcesTried.push({ source: live.source || "live-ticker", ok: live.ok, status: live.status, n: live.ok ? 1 : 0 });
+      if (live.ok) {
+        const today = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+        if (Math.abs(last.t - today) < 86400000) {
+          series[series.length - 1] = { t: today, v: live.v };
+        } else {
+          series.push({ t: today, v: live.v });
+        }
+        if (!primarySource) primarySource = live.source;
+      }
+    }
+  }
+
+  return {
+    ok: series.length > 100,
+    status: primaryStatus,
+    series,
+    source: primarySource || "none",
+    sourcesTried,
+  };
 }
 async function fetchStable() {
   const r = await fetchJson("https://stablecoins.llama.fi/stablecoincharts/all", 15000);
@@ -1007,7 +1162,8 @@ function buildCompassModel(daily, meta = {}) {
   if (completedMonths.length < 60) return { ok:false, error:'INSUFFICIENT_HISTORY', count: completedMonths.length };
   const live = s.at(-1);
   const latestAgeDays = Math.max(0, (nowMs - live.t) / CP_DAY);
-  if (latestAgeDays > 7) return { ok:false, error:'STALE_BTC_DATA', latestAgeDays:+latestAgeDays.toFixed(1), count:completedMonths.length };
+  // blockchain.info charts는 종종 5~10일 지연된다. 월봉 파워로 모델에서는 10일 이내 지연은 허용한다.
+  if (latestAgeDays > 14) return { ok:false, error:'STALE_BTC_DATA', latestAgeDays:+latestAgeDays.toFixed(1), count:completedMonths.length };
   // 회귀 적합에는 완료된 월말 데이터만 사용. 진행 중인 달은 현재가 평가에만 사용한다.
   const points = completedMonths.map(m => ({ x: Math.log10(Math.max(1,(m.t-CP_GENESIS)/CP_DAY)), y: Math.log10(m.close) }));
   const f05 = cpQuantileFit(points, .05), f50 = cpQuantileFit(points, .50), f95 = cpQuantileFit(points, .95);
@@ -1105,7 +1261,7 @@ function buildCompassModel(daily, meta = {}) {
     const x = Math.log10(Math.max(1,(m.t-CP_GENESIS)/CP_DAY));
     return { t:m.t, price:m.close, model:at(f50,x), lower:at(f05,x), upper:at(f95,x) };
   });
-  return { ok:true, version:'10.12.0', source: meta.source || 'blockchain.info BTC/USD', count: months.length,
+  return { ok:true, version:'10.12.1', source: meta.source || 'blockchain.info BTC/USD', count: months.length,
     firstMonth: new Date(completedMonths[0].t).toISOString().slice(0,7), lastMonth: new Date(live.t).toISOString().slice(0,7), lastPointAt: live.t, updatedAt: nowMs, quality,
     current: { price, model: mid, lower: sup, median: mid, upper: top, residualPct: (Math.pow(10, medPos)-1)*100, bandPosition: bandPos, zScore: z, cagr4y: cagr, cagrMethod, return3m: ret3, return3mMethod:ret3Method,
       yearsAheadOfSupport: yrsAhead, mayer, ma200w, wmaMultiple: wmaMult, athPrice: Math.round(ath.v), athDate: new Date(ath.t).toISOString().slice(0,10), drawdownPct: drawdown,
@@ -1206,7 +1362,7 @@ function cpRunBacktest(daily) {
   const lowConf = rows.filter(r => r.heat < 45 && r.trend === 'confirmed'), lowUn = rows.filter(r => r.heat < 45 && r.trend !== 'confirmed');
   const trendSplit = { lowConfirmed: { dates: lowConf.length, h180: agg(lowConf,180), h365: agg(lowConf,365) }, lowUnconfirmed: { dates: lowUn.length, h180: agg(lowUn,180), h365: agg(lowUn,365) } };
   const bh = {}; for (const h of H) { const f = rows.map(r => r.f[h]).filter(Boolean); bh['h'+h] = f.length; }
-  return { ok:true, version:'10.12.0', updatedAt: Date.now(), ms: Date.now() - t0,
+  return { ok:true, version:'10.12.1', updatedAt: Date.now(), ms: Date.now() - t0,
     range: { first: new Date(rows[0].t).toISOString().slice(0,7), last: new Date(rows.at(-1).t).toISOString().slice(0,7), dates: rows.length },
     buckets, baseline: all, correlation: corr, trendSplit,
     scoreSeries: rows.filter((r,i)=> i%2===0 || i===rows.length-1).map(r => ({ t:r.t, price:Math.round(r.price), heat:+r.heat.toFixed(1) })),
@@ -1246,7 +1402,7 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.12.0-master-market-compass-backtest",
+        version: "v10.13.0-master-market-compass-multisource",
         routes: ["/health","/macro","/altseason","/btc-compass","/btc-compass-backtest","/candles","/upbit","/market"],
         altseason: true,
         service: "BTC ALT REGIME TRADER (minimal)",
@@ -1365,18 +1521,47 @@ export default {
     if (u.pathname === "/btc-compass") {
       if (req.method !== "GET" && req.method !== "POST") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
       const force = u.searchParams.get("force") === "1";
-      const data = await cached(env, "btc:compass:v3", 6*3600, async () => {
-        // 1순위: blockchain.info (2009~ 일별, Workers에서 차단 없음) / 2순위: Binance 월봉(지역 차단될 수 있음)
+      // 캐시 키 v4: 다중 소스 fetchBtcPrice 도입으로 이전 캐시와 분리
+      const data = await cached(env, "btc:compass:v4", 6*3600, async () => {
         const bp = await fetchBtcPrice();
+        const srcLabel = bp.source || "multi-source";
         if (bp.ok && bp.series.length > 300) {
-          const model = buildCompassModel(bp.series.map(p => ({ t: p.t, v: p.v })), { source: "blockchain.info BTC/USD" });
-          if (model.ok) return { ...model, dataStatus: bp.status };
+          const model = buildCompassModel(bp.series.map(p => ({ t: p.t, v: p.v })), { source: `BTC/USD · ${srcLabel}` });
+          if (model.ok) {
+            return { ...model, dataStatus: bp.status, sourcesTried: bp.sourcesTried, fetchSource: bp.source };
+          }
+          return {
+            ok: false,
+            error: model.error || "MODEL_FAILED",
+            latestAgeDays: model.latestAgeDays,
+            count: model.count,
+            status: bp.status,
+            sourcesTried: bp.sourcesTried,
+            fetchSource: bp.source,
+          };
         }
-        const r = await fetchJson("https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1M&limit=1000", 14000);
-        if (!r.ok || !Array.isArray(r.body)) return { ok:false, error:"BTC_MONTHLY_DATA_UNAVAILABLE", status: r.status, primary: bp.status };
-        const model = buildCompassModel(cpFromBinanceMonthly(r.body), { source: "Binance BTCUSDT 1M (폴백, 2017~)" });
-        return { ...model, dataStatus: r.status };
-      }, v=>v&&v.ok, force);
+        // 최후 폴백: Binance 월봉 (vision / us — api.binance.com 은 451 빈발)
+        const monthlyUrls = [
+          "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1M&limit=1000",
+          "https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=1M&limit=1000",
+        ];
+        for (const murl of monthlyUrls) {
+          const r = await fetchJson(murl, 14000);
+          if (!r.ok || !Array.isArray(r.body) || !r.body.length) continue;
+          const model = buildCompassModel(cpFromBinanceMonthly(r.body), { source: "Binance BTCUSDT 1M (폴백)" });
+          if (model.ok) {
+            return { ...model, dataStatus: r.status, sourcesTried: bp.sourcesTried, fetchSource: "binance-1M-fallback" };
+          }
+        }
+        return {
+          ok: false,
+          error: "BTC_MONTHLY_DATA_UNAVAILABLE",
+          status: bp.status,
+          seriesLen: bp.series?.length || 0,
+          sourcesTried: bp.sourcesTried,
+          fetchSource: bp.source,
+        };
+      }, v => v && v.ok, force);
       if (!data || !data.ok) return json(data);
       const rawKey = cpBucketKey(data.current?.heatScore);
       const eligible = data.quality?.signalEligible === true && data.cache !== "stale";
@@ -1388,12 +1573,14 @@ export default {
     if (u.pathname === "/btc-compass-backtest") {
       if (req.method !== "GET" && req.method !== "POST") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
       const force = u.searchParams.get("force") === "1";
-      const data = await cached(env, "btc:compass:bt:v1", 24*3600, async () => {
+      const data = await cached(env, "btc:compass:bt:v2", 24*3600, async () => {
         const bp = await fetchBtcPrice();
-        if (!bp.ok || bp.series.length < 400) return { ok:false, error:"DAILY_BTC_DATA_UNAVAILABLE", status: bp.status };
-        const r = cpRunBacktest(bp.series.map(p => ({ t:p.t, v:p.v })));
-        return { ...r, source:"blockchain.info BTC/USD" };
-      }, v=>v&&v.ok, force);
+        if (!bp.ok || bp.series.length < 400) {
+          return { ok: false, error: "DAILY_BTC_DATA_UNAVAILABLE", status: bp.status, sourcesTried: bp.sourcesTried };
+        }
+        const r = cpRunBacktest(bp.series.map(p => ({ t: p.t, v: p.v })));
+        return { ...r, source: `BTC/USD · ${bp.source || "multi"}`, sourcesTried: bp.sourcesTried };
+      }, v => v && v.ok, force);
       return json(data);
     }
 

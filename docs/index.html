@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v10.13.1 · MASTER MARKET COMPASS</title>
+<title>BTC ALT REGIME TRADER v10.14.0 · MASTER MARKET COMPASS</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -199,6 +199,16 @@
 .compass-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}.compass-card{padding:13px;border:1px solid var(--line);border-radius:11px;background:#fff;min-width:0}.compass-kicker{font-size:11px;color:var(--muted)}.compass-card b{display:block;font-size:19px;margin-top:5px}.compass-desc{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}.compass-metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.compass-metrics span{padding:7px 10px;background:#f1f5f9;border-radius:8px;font-size:12px;font-weight:650}.compass-chart{display:block;width:100%;height:245px;margin-top:10px;border:1px solid var(--line);border-radius:9px;background:#fff}.compass-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--muted)}.compass-legend i{display:inline-block;width:17px;height:3px;vertical-align:middle;margin-right:4px;background:#2563eb}.compass-legend .cc-model{background:#7c3aed}.compass-legend .cc-band{background:#94a3b8}.compass-verdict{margin-top:10px;padding:11px 12px;border-left:3px solid var(--violet);background:#f8f5ff;font-weight:700}.compass-foot{margin-top:9px;line-height:1.55}
 @media(max-width:850px){.compass-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.compass-grid{grid-template-columns:1fr 1fr}.compass-card{padding:10px}.compass-card b{font-size:16px}.compass-title{font-size:16px}}
 
+
+.rotation-engine{margin-top:14px;padding:13px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.rotation-head{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.rotation-head b{font-size:16px}
+.rotation-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.rotation-phase{border:1px solid var(--line);border-radius:9px;padding:10px;min-width:0;background:var(--panel2)}
+.rotation-phase small{display:block;color:var(--muted);font-size:10px}.rotation-phase b{display:block;font-size:16px;margin:5px 0}.rotation-phase span{font-size:11px;line-height:1.45;color:var(--muted)}
+.rotation-table-wrap{overflow-x:auto;margin-top:10px}.rotation-table{width:100%;border-collapse:collapse;font-size:12px;min-width:620px}.rotation-table th,.rotation-table td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}.rotation-table th:first-child,.rotation-table td:first-child{text-align:left}
+.rotation-note{font-size:11px;color:var(--muted);line-height:1.55;margin-top:9px}.rotation-flow{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.rotation-flow span{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:11px;background:#fff}
+@media(max-width:800px){.rotation-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.rotation-grid{grid-template-columns:1fr 1fr}.rotation-phase{padding:8px}}
+
 </style>
 </head>
 <body>
@@ -324,6 +334,21 @@
   <canvas id="compassChart" class="compass-chart" aria-label="BTC 장기 가격 및 회귀 밴드 차트"></canvas>
   <div class="compass-legend"><span><i class="cc-price"></i> BTC 월봉</span><span><i class="cc-model"></i> 회귀 중앙선</span><span><i class="cc-band"></i> 5%(서포트)~95% 밴드</span></div>
   <div class="compass-verdict" id="compassVerdict">데이터 연결 후 4단계 판단을 종합합니다.</div>
+
+  <section class="rotation-engine" id="capitalRotationEngine">
+    <div class="rotation-head"><div><b>🌐 GLOBAL CAPITAL ROTATION ENGINE</b><div class="small" id="rotationStatus">AI·반도체 → 채권·현금 → BTC·ETH → 알트코인 순환 여부 확인 중…</div></div><button type="button" class="btn" id="rotationReload">자금순환 데이터 새로고침</button></div>
+    <div class="rotation-flow" id="rotationVerdict"><span>실제 자금 이동 여부를 데이터로 검증합니다.</span></div>
+    <div class="rotation-grid" id="rotationPhases">
+      <div class="rotation-phase"><small>01 · AI · 반도체</small><b>—</b><span>가격 모멘텀 데이터 조회 중</span></div>
+      <div class="rotation-phase"><small>02 · 채권 · 현금</small><b>—</b><span>가격 모멘텀 데이터 조회 중</span></div>
+      <div class="rotation-phase"><small>03 · BTC · ETH</small><b>—</b><span>ETF 순유입 데이터 조회 중</span></div>
+      <div class="rotation-phase"><small>04 · 알트코인</small><b>—</b><span>BTC 대비 상대강도 조회 중</span></div>
+    </div>
+    <div class="rotation-table-wrap" id="rotationAssets">자산별 7일·30일·90일 데이터를 불러오는 중…</div>
+    <div class="rotation-table-wrap" id="rotationFlows"></div>
+    <div class="rotation-note" id="rotationNotes">주의: 가격 상승·하락은 자금 유출입과 동일하지 않습니다. 직접 확인된 ETF 순유입과 가격 기반 proxy를 구분합니다.</div>
+  </section>
+
   <div class="compass-bt" id="compassBt" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff">
     <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:15px">📊 자동 워크포워드 백테스트 <span class="small" style="font-weight:500">과열 점수 구간별 이후 수익률·최대낙폭</span></b><button type="button" class="btn" id="compassBtReload">백테스트 다시 계산</button></div>
     <div class="small" id="compassBtStatus" style="margin-top:6px">백테스트 계산 중… (처음 1회는 수 초 걸릴 수 있습니다)</div>
@@ -2346,6 +2371,35 @@ async function loadMasterCompass(force=false){
     $('compassVerdict').textContent='장기 BTC 다중 소스(blockchain.info · Binance.vision/us · Coinbase · ticker) 모두 실패했거나 모델 품질 기준 미달입니다. Worker를 v10.13.1 이상으로 재배포한 뒤 「장기 데이터 새로고침」을 눌러 보세요. 실시간 레이더는 그대로 동작합니다.';
   }
 }
+
+function rotationPct(x){return x==null||!Number.isFinite(Number(x))?'—':(x>0?'+':'')+Number(x).toFixed(2)+'%'}
+function rotationMoney(x){return x==null||!Number.isFinite(Number(x))?'—':(x>0?'+':'')+'$'+Math.abs(Number(x)).toLocaleString('en-US',{maximumFractionDigits:1})+'M'}
+async function loadCapitalRotation(force=false){
+  const st=$('rotationStatus'),ph=$('rotationPhases');if(!st||!ph)return;
+  st.textContent=force?'자금순환 데이터 강제 갱신 중…':'자금순환 데이터 조회 중…';
+  try{
+    const r=await fetchWithTimeout(workerBase()+'/rotation'+(force?'?force=1':''),{method:'GET'},35000),d=await parseResponse(r);
+    if(!d.ok)throw Error(d.error||'자금순환 데이터가 부족합니다.');
+    const s=d.summary||{}, phases=d.phases||[];
+    ph.innerHTML=phases.map((x,i)=>`<div class="rotation-phase"><small>0${i+1} · ${esc(x.label)}</small><b>${rotationPct(x.ret)}</b><span>${esc(x.signal||'판단 보류')}<br>${esc(x.detail||'')}<br>${esc(x.proxy||'')}</span></div>`).join('');
+    const checks=[['AI·반도체 약세',Number.isFinite(s.ai30)&&s.ai30<0],['채권·현금 상대강세',Number.isFinite(s.defensive30)&&Number.isFinite(s.ai30)&&s.defensive30>s.ai30],['BTC ETF 5·20세션 순유입',!!(s.btcFlow5m>0&&s.btcFlow20m>0)],['알트 BTC 대비 초과수익',Number.isFinite(s.altVsBtc)&&s.altVsBtc>0]];
+    const hits=checks.filter(x=>x[1]).length;
+    let verdict='순환 확인 전 · 일부 구간 데이터만 관찰됩니다.';
+    if(d.summary?.sequenceConfirmed)verdict='4단계 가격·ETF 흐름 조건이 모두 충족됨 · 다만 AI/채권은 가격 proxy이므로 자금 이동 확정이 아닙니다.';
+    else if(hits>=3)verdict='순환 가설 일부 지지 · '+hits+'/4 조건 충족. 직접 자금흐름은 BTC ETF에서만 확인하세요.';
+    else if(hits<=1)verdict='자금 순환 증거 제한적 · '+hits+'/4 조건 충족. 아직 단계적 이동을 확인하기 어렵습니다.';
+    $('rotationVerdict').innerHTML=checks.map(x=>`<span>${x[1]?'✓':'✕'} ${esc(x[0])}</span>`).join('')+`<span><b>${esc(verdict)}</b></span>`;
+    const rows=[];for(const group of [['AI · 반도체',d.assets?.ai],['채권 · 현금',d.assets?.defensive],['크립토',d.assets?.crypto]])for(const x of(group[1]||[]))rows.push({...x,group:group[0]});
+    $('rotationAssets').innerHTML='<table class="rotation-table"><thead><tr><th>구분</th><th>자산</th><th>7일</th><th>30일</th><th>90일</th><th>데이터</th></tr></thead><tbody>'+rows.map(x=>`<tr><td>${esc(x.group)}</td><td>${esc(x.symbol)}</td><td>${rotationPct(x.d7)}</td><td>${rotationPct(x.d30)}</td><td>${rotationPct(x.d90)}</td><td>${x.ok?'정상':'누락'}</td></tr>`).join('')+'</tbody></table>';
+    const fr=d.flows||{},flowRows=fr.rows||[];
+    $('rotationFlows').innerHTML='<div class="small" style="margin:8px 0 5px;font-weight:800">BTC 미국 현물 ETF 실제 순유입 · 단위 USD million · '+esc(fr.source||'데이터 출처 미확인')+'</div>'+(flowRows.length?'<table class="rotation-table"><thead><tr><th>미국 거래일</th><th>순유입</th></tr></thead><tbody>'+flowRows.slice(-10).reverse().map(x=>`<tr><td>${esc(x.date)}</td><td>${rotationMoney(x.flowUsd/1e6)}</td></tr>`).join('')+'</tbody></table>':'BTC ETF 순유입 데이터 수집 실패 · 가격 데이터와 혼합하지 않고 별도 표시합니다.');
+    const q=d.quality||{};
+    $('rotationNotes').innerHTML=(d.notes||[]).map(x=>'· '+esc(x)).join('<br>')+`<br>데이터 정상 ${q.available||0}/${q.total||0} · ETF 직접 플로우 ${q.flowDirect?'연결':'미연결'} · 업데이트 ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')} · <a href="https://www.tftc.io/bitcoin-etf-flows" target="_blank" rel="noopener">TFTC 원자료</a>`;
+    st.textContent=`${d.version||'rotation'} · 가격 데이터 ${q.available||0}/${q.total||0} · BTC ETF 플로우 ${q.flowRows||0}일 · 15분 캐시 · ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')}`;
+  }catch(e){st.textContent='자금순환 엔진 연결 실패 · '+(e?.message||String(e)).slice(0,150)+' · Worker의 /rotation 경로를 확인하세요.';}
+}
+$('rotationReload')?.addEventListener('click',()=>loadCapitalRotation(true));
+
 async function loadCompassBacktest(force=false){
   const st=$('compassBtStatus'),tb=$('compassBtTable'),vd=$('compassBtVerdict'),nt=$('compassBtNotes');
   if(!st)return;
@@ -2382,6 +2436,8 @@ window.addEventListener('resize',()=>{if(window.__compassHistory)drawMasterCompa
 async function bootApp(){
   loadMacroMetrics();
   loadMasterCompass(false);
+  setTimeout(()=>loadCapitalRotation(false),900);
+  setInterval(()=>loadCapitalRotation(false),15*60*1000);
   setTimeout(()=>loadCompassBacktest(false),1500);
   setInterval(()=>loadMasterCompass(false),30*60*1000);
   if(!window.__asBooted){window.__asBooted=true;setTimeout(()=>loadAltseason(false),400);setInterval(()=>loadAltseason(false),600000)}

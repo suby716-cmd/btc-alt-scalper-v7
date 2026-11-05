@@ -932,6 +932,309 @@ function compose(hist, live) {
   };
 }
 
+// =====================================================================
+// MASTER MARKET COMPASS v10.9 — BTC 장기 가치/사이클 엔진
+// Bitcoin Good Fiat Bad 류의 Power Law 분석을 참고한 투명한 자체 계산 모델.
+//  · 데이터: blockchain.info 일별 시세(2009~, Cloudflare에서 차단되지 않음) → 실패 시 Binance 월봉
+//  · 분위회귀(Quantile Regression): 5% 서포트 / 50% 중앙 / 95% 상단 (잔차 분위수 이동이 아니라 기울기까지 최적화)
+//  · Years Ahead of Support: 현재 가격이 서포트 곡선보다 몇 년 앞서 있는가
+//  · Mayer Multiple(200일), 200주 이평 배수, ATH 대비 낙폭, 반감기 사이클 시계
+//  · 진행 중인 달은 추세·Z-score·이평 판단에서 제외(월 중 흔들림 방지)
+// 결과는 판단 보조 자료이며 매매 자동화·수익 보장이 아니다.
+// =====================================================================
+const CP_DAY = 86400000;
+const CP_GENESIS = Date.UTC(2009, 0, 3);
+const CP_HALVINGS = [Date.UTC(2012,10,28), Date.UTC(2016,6,9), Date.UTC(2020,4,11), Date.UTC(2024,3,20)];
+function cpQuantile(values, q) {
+  const a = values.filter(Number.isFinite).slice().sort((x,y)=>x-y);
+  if (!a.length) return null;
+  const p = (a.length - 1) * q, lo = Math.floor(p), hi = Math.ceil(p);
+  return a[lo] + (a[hi] - a[lo]) * (p - lo);
+}
+// 분위회귀(pinball loss 최소화): 기울기 b 격자탐색(0.05 간격) 후 ±0.05 구간을 0.005로 미세 조정.
+// 각 b에서 절편은 (y-bx)의 q분위수. 백테스트에서 수백 번 호출되므로 Float64Array 정렬을 쓴다.
+function cpQuantileFit(points, q) {
+  const n = points.length, buf = new Float64Array(n), srt = new Float64Array(n);
+  const evalB = b => {
+    for (let i = 0; i < n; i++) { const v = points[i].y - b * points[i].x; buf[i] = v; srt[i] = v; }
+    srt.sort();
+    const p = (n - 1) * q, lo = Math.floor(p), hi = Math.ceil(p), a = srt[lo] + (srt[hi] - srt[lo]) * (p - lo);
+    let loss = 0;
+    for (let i = 0; i < n; i++) { const e = buf[i] - a; loss += e >= 0 ? q * e : (q - 1) * e; }
+    return { b, a, loss };
+  };
+  let best = null;
+  for (let k = 0; k <= 80; k++) { const r = evalB(3.5 + k * 0.05); if (!best || r.loss < best.loss) best = r; }
+  const c = best.b;
+  for (let b = Math.max(3.5, c - 0.05); b <= Math.min(7.5, c + 0.0501); b += 0.005) { const r = evalB(b); if (r.loss < best.loss) best = r; }
+  return { slope: best.b, intercept: best.a };
+}
+// 불규칙 간격 시계열의 시간가중 평균(최근 windowDays)
+function cpTimeAvg(series, windowDays, minPts) {
+  const end = series.at(-1).t, start = end - windowDays * CP_DAY;
+  const sub = series.filter(p => p.t >= start);
+  if (sub.length < minPts || series[0].t > start + 20 * CP_DAY) return null;
+  // 관측 공백이 길면 한 가격을 긴 기간의 평균으로 오인하지 않도록 MA를 계산하지 않는다.
+  for (let i = 1; i < sub.length; i++) if (sub[i].t - sub[i-1].t > 10 * CP_DAY) return null;
+  if (end - sub.at(-1).t > 10 * CP_DAY) return null;
+  let sw = 0, sv = 0;
+  for (let i = 0; i < sub.length; i++) {
+    const t0 = i === 0 ? Math.max(start, sub[0].t) : sub[i-1].t, t1 = sub[i].t, w = Math.max(1, (t1 - t0) / CP_DAY);
+    sw += w; sv += w * sub[i].v;
+  }
+  return sv / sw;
+}
+function cpMonthly(daily, nowMs) {
+  const m = new Map();
+  for (const p of daily) { const d = new Date(p.t), k = d.getUTCFullYear() * 12 + d.getUTCMonth(); m.set(k, p); }
+  const nowK = new Date(nowMs).getUTCFullYear() * 12 + new Date(nowMs).getUTCMonth();
+  return [...m.entries()].sort((a,b)=>a[0]-b[0]).map(([k,p]) => ({ k, t: p.t, close: p.v, partial: k >= nowK }));
+}
+function cpClamp01(x) { return Math.max(0, Math.min(1, x)); }
+// 목표 시점 이전의 가장 가까운 관측값. 샘플 간격이 너무 크면 사용하지 않는다.
+function cpAtOrBefore(series, targetMs, maxAgeDays = 14) {
+  let lo = 0, hi = series.length - 1, found = -1;
+  while (lo <= hi) { const mid = (lo + hi) >> 1; if (series[mid].t <= targetMs) { found = mid; lo = mid + 1; } else hi = mid - 1; }
+  if (found < 0 || targetMs - series[found].t > maxAgeDays * CP_DAY) return null;
+  return series[found];
+}
+function buildCompassModel(daily, meta = {}) {
+  const nowMs = meta.asOf ?? Date.now();
+  const all = (daily || []).filter(p => Number.isFinite(p.t) && p.v > 0).sort((a,b)=>a.t-b.t);
+  const s = all.filter(p => p.t >= Date.UTC(2011,0,1)); // 2010년 이전은 거래량이 미미해 회귀에서 제외
+  const months = cpMonthly(s, nowMs);
+  const completedMonths = months.filter(m => !m.partial);
+  if (completedMonths.length < 60) return { ok:false, error:'INSUFFICIENT_HISTORY', count: completedMonths.length };
+  const live = s.at(-1);
+  const latestAgeDays = Math.max(0, (nowMs - live.t) / CP_DAY);
+  if (latestAgeDays > 7) return { ok:false, error:'STALE_BTC_DATA', latestAgeDays:+latestAgeDays.toFixed(1), count:completedMonths.length };
+  // 회귀 적합에는 완료된 월말 데이터만 사용. 진행 중인 달은 현재가 평가에만 사용한다.
+  const points = completedMonths.map(m => ({ x: Math.log10(Math.max(1,(m.t-CP_GENESIS)/CP_DAY)), y: Math.log10(m.close) }));
+  const f05 = cpQuantileFit(points, .05), f50 = cpQuantileFit(points, .50), f95 = cpQuantileFit(points, .95);
+  const xNow = Math.log10(Math.max(1,(live.t-CP_GENESIS)/CP_DAY)), yNow = Math.log10(live.v);
+  const at = (f, x) => Math.pow(10, f.intercept + f.slope * x);
+  const sup = at(f05, xNow), mid = at(f50, xNow), top = at(f95, xNow), price = live.v;
+  const bandPos = cpClamp01((yNow - (f05.intercept + f05.slope*xNow)) / ((f95.intercept + f95.slope*xNow) - (f05.intercept + f05.slope*xNow))) * 100;
+  const medPos = (yNow - (f50.intercept + f50.slope*xNow)); // log10 단위 괴리
+  // 변동성 보정 지수: 중앙선 괴리를 최근 36개월 잔차 표준편차로 나눈 값(변동성이 줄어드는 추세를 반영)
+  const resid = points.map(p => p.y - (f50.intercept + f50.slope * p.x)), rTail = resid.slice(-36);
+  const rAvg = rTail.reduce((a,b)=>a+b,0)/rTail.length, rSd = Math.sqrt(rTail.reduce((a,b)=>a+(b-rAvg)**2,0)/Math.max(1,rTail.length-1));
+  const volAdj = rSd > 0 ? medPos / rSd : null;
+  const lr = []; for (let i=1;i<months.length;i++) lr.push(Math.log(months[i].close/months[i-1].close));
+  const sdv = a => { if (a.length<6) return null; const m=a.reduce((x,y)=>x+y,0)/a.length; return Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/(a.length-1))*Math.sqrt(12)*100; };
+  const volNow = sdv(lr.slice(-24)), volAll = sdv(lr), volEarly = sdv(lr.slice(0,48));
+  // Years Ahead of Support: 서포트 곡선이 현재 가격에 도달하는 시점까지의 거리(년). 음수면 서포트 아래.
+  const dSup = Math.pow(10, (yNow - f05.intercept) / f05.slope), yrsAhead = (dSup - Math.pow(10, xNow)) / 365.25;
+  // 완료된 달 기준 지표
+  const C = completedMonths;
+  // 4Y Z-score: 직전 48개 완료 월의 로그가격 분포와 현재가를 비교(현재가를 평균·표준편차에 섞지 않음).
+  const zBase = C.slice(-48).map(m => Math.log(m.close));
+  const avg = zBase.length === 48 ? zBase.reduce((a,b)=>a+b,0)/zBase.length : null;
+  const sd = avg == null ? null : Math.sqrt(zBase.reduce((a,b)=>a+(b-avg)**2,0)/(zBase.length-1));
+  const z = sd > 0 ? (Math.log(price) - avg) / sd : null;
+  // 일별 자료가 있으면 실제 4년/90일 전 관측값을 사용하고, 월봉 폴백은 월별 근사임을 명시한다.
+  const recentSamples = s.slice(-180);
+  const dailySeries = recentSamples.length >= 30 && recentSamples.slice(1).every((p,i)=>p.t-recentSamples[i].t <= 10*CP_DAY);
+  const p4y = dailySeries ? cpAtOrBefore(s, live.t - 1461 * CP_DAY, 14) : null;
+  const p90 = dailySeries ? cpAtOrBefore(s, live.t - 90 * CP_DAY, 14) : null;
+  const cagrBase = p4y?.v ?? (C.length >= 48 ? C[C.length-48].close : null);
+  const ret3Base = p90?.v ?? (C.length >= 3 ? C[C.length-3].close : null);
+  const cagr = cagrBase > 0 ? (Math.pow(price / cagrBase, 365.25 / 1461) - 1) * 100 : null;
+  const cagrMethod = p4y ? 'daily-nearest-1461d' : cagrBase ? 'monthly-approx-48m' : null;
+  const ret3 = ret3Base > 0 ? (price / ret3Base - 1) * 100 : null;
+  const ret3Method = p90 ? 'daily-nearest-90d' : ret3Base ? 'monthly-approx-3m' : null;
+  const ma10 = C.length >= 10 ? C.slice(-10).reduce((a,m)=>a+m.close,0)/10 : null;
+  const ma10Old = C.length >= 13 ? C.slice(-13,-3).reduce((a,m)=>a+m.close,0)/10 : null;
+  const uptrend = ma10 != null && ma10Old != null && price > ma10 && ma10 > ma10Old && ret3 != null && ret3 > 0;
+  // 일별 기반 지표
+  const ma200d = cpTimeAvg(s, 200, 20), ma200w = cpTimeAvg(s, 1400, 120);
+  const mayer = ma200d ? price / ma200d : null, wmaMult = ma200w ? price / ma200w : null;
+  let ath = s[0]; for (const p of s) if (p.v > ath.v) ath = p;
+  const drawdown = (price / ath.v - 1) * 100;
+  // 반감기 사이클 시계 (데이터에서 직접 산출 — 표본이 3~4개뿐이라 참고용)
+  const cycles = [];
+  if (!meta.lite) CP_HALVINGS.forEach((h, i) => {
+    const endT = Math.min(CP_HALVINGS[i+1] ?? nowMs, h + 600*CP_DAY), win = s.filter(p => p.t >= h && p.t < endT); // 역대 고점은 반감기 후 약 340~550일
+    if (win.length < 30) return;
+    let pk = win[0]; for (const p of win) if (p.v > pk.v) pk = p;
+    const after = s.filter(p => p.t >= pk.t && p.t <= pk.t + 560 * CP_DAY);
+    let bt = after[0]; for (const p of after) if (p.v < bt.v) bt = p;
+    const done = i < CP_HALVINGS.length - 1;
+    cycles.push({ halving: new Date(h).toISOString().slice(0,10), peakDate: new Date(pk.t).toISOString().slice(0,10), peak: Math.round(pk.v),
+      daysToPeak: Math.round((pk.t - h)/CP_DAY), troughDate: done ? new Date(bt.t).toISOString().slice(0,10) : null,
+      daysPeakToTrough: done ? Math.round((bt.t - pk.t)/CP_DAY) : null, peakToTroughPct: done ? +((bt.v/pk.v-1)*100).toFixed(1) : null,
+      current: !done, daysSincePeak: !done ? Math.round((live.t - pk.t)/CP_DAY) : null, drawdownFromPeakPct: !done ? +((price/pk.v-1)*100).toFixed(1) : null });
+  });
+  const lastH = CP_HALVINGS.filter(h => h <= nowMs).at(-1), daysSinceHalving = Math.round((nowMs - lastH)/CP_DAY);
+  // 과열 점수(0~100): 서로 다른 관점 5개의 평균. 구간 매핑은 경험적 가이드이며 in-sample 임계값이다.
+  // 과열 점수는 상관성이 큰 Years-Ahead(밴드와 중복)를 제외하고 5개 관점으로 분산.
+  // 가중치 합계 1.0. 최소 4개 지표가 유효해야 종합점수를 공개한다.
+  const comps = [
+    { key:'band', label:'장기 밴드 위치', v: bandPos, w: .25 },
+    { key:'z', label:'4년 Z-score', v: z == null ? null : cpClamp01((z + 1) / 3.5) * 100, w: .20 },
+    { key:'mayer', label:'Mayer Multiple', v: mayer == null ? null : cpClamp01((mayer - 0.8) / 1.6) * 100, w: .20 },
+    { key:'wma', label:'200주선 배수', v: wmaMult == null ? null : cpClamp01((wmaMult - 0.7) / 2.3) * 100, w: .15 },
+    { key:'vol', label:'변동성 보정 지수', v: volAdj == null ? null : cpClamp01((volAdj + 1.5) / 4) * 100, w: .20 },
+  ];
+  const ok = comps.filter(c => Number.isFinite(c.v));
+  const heatCoverage = ok.length;
+  const heatScore = heatCoverage >= 4 ? ok.reduce((a,c)=>a+c.v*c.w,0)/ok.reduce((a,c)=>a+c.w,0) : null;
+  // 간격 검사는 최근 약 5년(지표 계산에 실제 쓰이는 구간)만 본다. 2011~2015년의 오래된 공백 하나로 신호가 영구히 꺼지지 않게 한다.
+  const recentGapSeries = s.filter(p => p.t >= live.t - 1830 * CP_DAY), gaps = [];
+  for (let i=1;i<recentGapSeries.length;i++) gaps.push((recentGapSeries[i].t-recentGapSeries[i-1].t)/CP_DAY);
+  const maxGapDays = gaps.length ? gaps.reduce((m,x)=>Math.max(m,x),0) : null;
+  const fitBoundary = [f05,f50,f95].some(f => f.slope <= 3.502 || f.slope >= 7.498);
+  const signalEligible = latestAgeDays <= 3 && points.length >= 60 && heatCoverage >= 4 && maxGapDays != null && maxGapDays <= 10 && !fitBoundary;
+  const quality = { status:signalEligible?'good':latestAgeDays>3?'stale':heatCoverage<4?'limited-indicators':fitBoundary?'fit-boundary':'limited-history-spacing', signalEligible,
+    latestAgeDays:+latestAgeDays.toFixed(1), completeMonths:completedMonths.length, sampleCount:s.length,
+    maxGapDays:maxGapDays==null?null:+maxGapDays.toFixed(1), sampling:dailySeries?'daily-like':'sparse/monthly', heatCoverage, heatRequired:4, fitBoundary,
+    cagrMethod, return3mMethod:ret3Method };
+  let valuation='중립 구간', valuationKey='neutral';
+  if (price <= sup) { valuation='서포트 이탈·극단 저평가'; valuationKey='discount'; }
+  else if (bandPos <= 20) { valuation='장기 저평가 구간'; valuationKey='discount'; }
+  else if (bandPos >= 90) { valuation='장기 고평가 구간'; valuationKey='overvalued'; }
+  else if (medPos < 0) { valuation='중앙선 아래(상대적 저평가)'; valuationKey='below'; }
+  else { valuation='중앙선 위(상대적 고평가)'; valuationKey='above'; }
+  let trend='상승장 전환 미확인', trendKey='unconfirmed';
+  if (uptrend) { trend='상승 추세 확인'; trendKey='confirmed'; } else if (ma10 && price > ma10) { trend='초기 회복 시도'; trendKey='recovering'; }
+  let heat='과열 신호 제한적', heatKey='calm';
+  if (heatScore != null && heatScore >= 60) { heat='과열 경계'; heatKey='caution'; }
+  if (heatScore != null && heatScore >= 80) { heat='강한 과열 구간'; heatKey='hot'; }
+  const step = Math.max(1, Math.floor(months.length / 140));
+  const history = meta.lite ? [] : months.filter((m,i)=> i%step===0 || i===months.length-1).map(m => {
+    const x = Math.log10(Math.max(1,(m.t-CP_GENESIS)/CP_DAY));
+    return { t:m.t, price:m.close, model:at(f50,x), lower:at(f05,x), upper:at(f95,x) };
+  });
+  return { ok:true, version:'10.12.0', source: meta.source || 'blockchain.info BTC/USD', count: months.length,
+    firstMonth: new Date(completedMonths[0].t).toISOString().slice(0,7), lastMonth: new Date(live.t).toISOString().slice(0,7), lastPointAt: live.t, updatedAt: nowMs, quality,
+    current: { price, model: mid, lower: sup, median: mid, upper: top, residualPct: (Math.pow(10, medPos)-1)*100, bandPosition: bandPos, zScore: z, cagr4y: cagr, cagrMethod, return3m: ret3, return3mMethod:ret3Method,
+      yearsAheadOfSupport: yrsAhead, mayer, ma200w, wmaMultiple: wmaMult, athPrice: Math.round(ath.v), athDate: new Date(ath.t).toISOString().slice(0,10), drawdownPct: drawdown,
+      volAdjIndex: volAdj, volAnnualPct: volNow, volAnnualPctAll: volAll, volAnnualPctEarly: volEarly,
+      heatScore, heatParts: comps.map(c=>({key:c.key,label:c.label,score:Number.isFinite(c.v)?Math.round(c.v):null})) },
+    cycle: { daysSinceHalving, lastHalving: new Date(lastH).toISOString().slice(0,10), cycles },
+    valuation:{label:valuation,key:valuationKey}, trend:{label:trend,key:trendKey}, heat:{label:heat,key:heatKey},
+    fit: { support:{slope:f05.slope,intercept:f05.intercept}, median:{slope:f50.slope,intercept:f50.intercept}, upper:{slope:f95.slope,intercept:f95.intercept},
+      method:'quantile regression: log10(price)=a+b·log10(days since 2009-01-03), q=5/50/95%, 완료된 월말 종가만 적합; 진행 중인 달은 평가에만 사용', slopeBoundary:fitBoundary },
+    history };
+}
+// 월봉(Binance) → 일별 형태로 변환하는 폴백
+function cpFromBinanceMonthly(rows) {
+  const now = Date.now();
+  return (rows||[]).map(x => {
+    const open = Number(x[0]), d = new Date(open);
+    if (!Number.isFinite(open)) return null;
+    const sameMonth = d.getUTCFullYear() === new Date(now).getUTCFullYear() && d.getUTCMonth() === new Date(now).getUTCMonth();
+    // 진행 중인 월봉을 미래의 월말 날짜로 밀지 않는다. 완료 월봉은 실제 월말 시각을 사용.
+    const t = sameMonth ? now : Date.UTC(d.getUTCFullYear(), d.getUTCMonth()+1, 0, 23, 59, 59, 999);
+    return { t, v:Number(x[4]) };
+  }).filter(p => p && Number.isFinite(p.t) && p.v > 0).sort((a,b)=>a.t-b.t);
+}
+
+
+// =====================================================================
+// 자동 워크포워드 백테스트: 매월 말 시점에 "그 시점까지의 데이터만"으로 과열 점수를 다시 계산하고
+// 이후 90/180/365일 수익률·최대낙폭을 점수 구간별로 집계한다. (미래 정보 사용 없음: 분위회귀도 매번 재적합)
+// 단, 점수 구간 경계(30/45/60/80)와 지표 매핑은 사람이 정한 고정값이다.
+// =====================================================================
+const CP_BUCKETS = [
+  { key:'cold', label:'0~30 (낮음)', lo:-Infinity, hi:30 },
+  { key:'mild', label:'30~45', lo:30, hi:45 },
+  { key:'mid',  label:'45~60', lo:45, hi:60 },
+  { key:'warm', label:'60~80 (경계)', lo:60, hi:80 },
+  { key:'hot',  label:'80+ (과열)', lo:80, hi:Infinity },
+];
+function cpBucketKey(h) { if (h == null || !Number.isFinite(h)) return null; for (const b of CP_BUCKETS) if (h >= b.lo && h < b.hi) return b.key; return 'hot'; }
+function cpRanks(a) { const idx = a.map((v,i)=>[v,i]).sort((x,y)=>x[0]-y[0]), r = new Array(a.length); for (let i=0;i<idx.length;) { let j=i; while (j+1<idx.length && idx[j+1][0]===idx[i][0]) j++; const rk=(i+j)/2+1; for (let k=i;k<=j;k++) r[idx[k][1]]=rk; i=j+1; } return r; }
+function cpSpearman(x, y) {
+  const n = x.length; if (n < 12) return null;
+  const rx = cpRanks(x), ry = cpRanks(y), mx = rx.reduce((a,b)=>a+b,0)/n, my = ry.reduce((a,b)=>a+b,0)/n;
+  let sxy=0, sxx=0, syy=0; for (let i=0;i<n;i++) { sxy+=(rx[i]-mx)*(ry[i]-my); sxx+=(rx[i]-mx)**2; syy+=(ry[i]-my)**2; }
+  return sxx>0&&syy>0 ? sxy/Math.sqrt(sxx*syy) : null;
+}
+function cpMedian(a) { if (!a.length) return null; const b=a.slice().sort((x,y)=>x-y), m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; }
+function cpFwd(s, i0, T, h, lastT) {
+  // 매수 가정가 = T 시점 가격, 미래 가격 = T+h 이전 가장 가까운 관측(14일 이내). 데이터가 모자라면 null.
+  if (T + h * CP_DAY > lastT) return null;
+  const end = cpAtOrBefore(s, T + h * CP_DAY, 14); if (!end) return null;
+  const entry = s[i0].v; let minV = entry;
+  for (let i = i0 + 1; i < s.length && s[i].t <= T + h * CP_DAY; i++) if (s[i].v < minV) minV = s[i].v;
+  return { ret: (end.v / entry - 1) * 100, mdd: (minV / entry - 1) * 100 };
+}
+function cpRunBacktest(daily) {
+  const t0 = Date.now();
+  const s = (daily||[]).filter(p => Number.isFinite(p.t) && p.v > 0).sort((a,b)=>a.t-b.t).filter(p => p.t >= Date.UTC(2011,0,1));
+  if (s.length < 400) return { ok:false, error:'INSUFFICIENT_HISTORY' };
+  const lastT = s.at(-1).t, first = new Date(s[0].t);
+  const rows = []; const H = [90,180,365];
+  let y = first.getUTCFullYear(), m = first.getUTCMonth() + 1;
+  for (;; ) {
+    const T = Date.UTC(y, m + 1, 0, 23, 59, 59, 999); // 해당 월 말일
+    if (T > lastT - 1 * CP_DAY) break;
+    // T 이전 마지막 관측
+    let lo = 0, hi = s.length - 1, idx = -1;
+    while (lo <= hi) { const mid = (lo + hi) >> 1; if (s[mid].t <= T) { idx = mid; lo = mid + 1; } else hi = mid - 1; }
+    if (idx > 100 && T - s[idx].t <= 7 * CP_DAY) {
+      const model = buildCompassModel(s.slice(0, idx + 1), { asOf: T, lite: true });
+      if (model.ok && model.current.heatScore != null) {
+        const rec = { t: T, price: s[idx].v, heat: model.current.heatScore, trend: model.trend.key, f: {} };
+        for (const h of H) rec.f[h] = cpFwd(s, idx, T, h, lastT);
+        rows.push(rec);
+      }
+    }
+    m++; if (m > 11) { m = 0; y++; }
+    if (Date.UTC(y, m, 1) > lastT) break;
+    if (Date.now() - t0 > 20000) break; // 안전장치
+  }
+  if (rows.length < 24) return { ok:false, error:'NOT_ENOUGH_SIGNAL_DATES', dates: rows.length };
+  const agg = (list, h) => {
+    const f = list.map(r => r.f[h]).filter(Boolean);
+    if (!f.length) return { n:0 };
+    const rets = f.map(x=>x.ret), mdds = f.map(x=>x.mdd);
+    return { n:f.length, avgRet:+(rets.reduce((a,b)=>a+b,0)/f.length).toFixed(1), medRet:+cpMedian(rets).toFixed(1), winRate:+(rets.filter(x=>x>0).length/f.length*100).toFixed(0),
+      avgMdd:+(mdds.reduce((a,b)=>a+b,0)/f.length).toFixed(1), worstMdd:+Math.min(...mdds).toFixed(1) };
+  };
+  const buckets = CP_BUCKETS.map(b => {
+    const list = rows.filter(r => r.heat >= b.lo && r.heat < b.hi);
+    const o = { key:b.key, label:b.label, dates:list.length };
+    for (const h of H) o['h'+h] = agg(list, h);
+    return o;
+  });
+  const all = { key:'all', label:'전체 평균(기준선)', dates:rows.length }; for (const h of H) all['h'+h] = agg(rows, h);
+  const corr = {};
+  for (const h of H) { const pr = rows.filter(r => r.f[h]); corr['h'+h] = { n: pr.length, spearman: (()=>{ const v = cpSpearman(pr.map(r=>r.heat), pr.map(r=>r.f[h].ret)); return v==null?null:+v.toFixed(2); })() }; }
+  // 추세 확인(MA10 상승) 조건을 함께 쓴 경우: 낮은 점수(<45) + 상승 추세 확인 vs 낮은 점수 + 미확인
+  const lowConf = rows.filter(r => r.heat < 45 && r.trend === 'confirmed'), lowUn = rows.filter(r => r.heat < 45 && r.trend !== 'confirmed');
+  const trendSplit = { lowConfirmed: { dates: lowConf.length, h180: agg(lowConf,180), h365: agg(lowConf,365) }, lowUnconfirmed: { dates: lowUn.length, h180: agg(lowUn,180), h365: agg(lowUn,365) } };
+  const bh = {}; for (const h of H) { const f = rows.map(r => r.f[h]).filter(Boolean); bh['h'+h] = f.length; }
+  return { ok:true, version:'10.12.0', updatedAt: Date.now(), ms: Date.now() - t0,
+    range: { first: new Date(rows[0].t).toISOString().slice(0,7), last: new Date(rows.at(-1).t).toISOString().slice(0,7), dates: rows.length },
+    buckets, baseline: all, correlation: corr, trendSplit,
+    scoreSeries: rows.filter((r,i)=> i%2===0 || i===rows.length-1).map(r => ({ t:r.t, price:Math.round(r.price), heat:+r.heat.toFixed(1) })),
+    notes: ['매월 말 시점에 그 시점까지의 데이터만으로 분위회귀와 점수를 재계산했습니다(미래 정보 미사용).',
+      '월말 표본의 이후 90/180/365일 창은 서로 크게 겹쳐 독립 표본이 아닙니다. 실효 표본 수는 n보다 훨씬 적습니다.',
+      'BTC는 4번의 사이클만 겪었고 점수 구간 경계(30/45/60/80)와 지표 매핑은 사람이 정한 값이라, 이 결과는 미래 성과를 보장하지 않습니다.',
+      '수수료·세금·슬리피지는 반영하지 않았고, 매수 시점 가격 = 해당 월 말 가격으로 가정했습니다.'] };
+}
+
+// 신호 확정(히스테리시스): 점수 구간이 서로 다른 3일 연속 같은 구간일 때만 "확정 신호"를 바꾼다. (KV가 있을 때)
+async function cpUpdateSignal(env, rawKey, eligible) {
+  const need = 3, key = "btc:compass:signal-state:v1", today = new Date().toISOString().slice(0,10);
+  if (!env || !env.SCALPER_KV) return { persistent:false, raw:rawKey, confirmed:rawKey, required:need, note:'KV 미연결: 확정 대기 없이 원시 구간을 사용' };
+  let st = null; try { st = await env.SCALPER_KV.get(key, "json"); } catch {}
+  if (!eligible || !rawKey) return { persistent:true, raw:rawKey, confirmed: st?.confirmed ?? null, pending: st?.pending ?? null, required:need, note:'데이터 품질 미달: 상태를 갱신하지 않음' };
+  if (!st || !st.confirmed) st = { confirmed: rawKey, pending: null, lastDate: today, since: today };
+  else if (st.lastDate !== today) {
+    st.lastDate = today;
+    if (rawKey === st.confirmed) st.pending = null;
+    else if (st.pending && st.pending.key === rawKey) {
+      st.pending.count += 1;
+      if (st.pending.count >= need) { st.confirmed = rawKey; st.pending = null; st.since = today; }
+    } else st.pending = { key: rawKey, count: 1 };
+  } else if (rawKey === st.confirmed) st.pending = null;
+  try { await env.SCALPER_KV.put(key, JSON.stringify(st)); } catch {}
+  return { persistent:true, raw:rawKey, confirmed:st.confirmed, pending:st.pending, since:st.since, required:need };
+}
+
 export default {
   async fetch(req, env) {
     ENV_REF = env;
@@ -943,8 +1246,8 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.8.4-altseason-strategy-lab",
-        routes: ["/health","/macro","/altseason","/candles","/upbit","/market"],
+        version: "v10.12.0-master-market-compass-backtest",
+        routes: ["/health","/macro","/altseason","/btc-compass","/btc-compass-backtest","/candles","/upbit","/market"],
         altseason: true,
         service: "BTC ALT REGIME TRADER (minimal)",
         market: "Upbit KRW",
@@ -1056,6 +1359,42 @@ export default {
       if (part === "hist") return json({ ok: !!hist.ok, part: "hist", cache: hist.cache, ms: hist.ms, sources: hist.sources, error: hist.error, history: hist.rows, levels: hist.levels, m2: hist.m2, cmcDom: hist.cmcDom });
       const live = await cached(env, "as:live:v3", 600, buildLive, v=>v&&v.ok, force);
       return json(compose(hist, live));
+    }
+
+    // MASTER MARKET COMPASS: 장기 BTC 월봉 분석 (6시간 캐시, force=1 재계산; v3 품질검사 캐시)
+    if (u.pathname === "/btc-compass") {
+      if (req.method !== "GET" && req.method !== "POST") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
+      const force = u.searchParams.get("force") === "1";
+      const data = await cached(env, "btc:compass:v3", 6*3600, async () => {
+        // 1순위: blockchain.info (2009~ 일별, Workers에서 차단 없음) / 2순위: Binance 월봉(지역 차단될 수 있음)
+        const bp = await fetchBtcPrice();
+        if (bp.ok && bp.series.length > 300) {
+          const model = buildCompassModel(bp.series.map(p => ({ t: p.t, v: p.v })), { source: "blockchain.info BTC/USD" });
+          if (model.ok) return { ...model, dataStatus: bp.status };
+        }
+        const r = await fetchJson("https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1M&limit=1000", 14000);
+        if (!r.ok || !Array.isArray(r.body)) return { ok:false, error:"BTC_MONTHLY_DATA_UNAVAILABLE", status: r.status, primary: bp.status };
+        const model = buildCompassModel(cpFromBinanceMonthly(r.body), { source: "Binance BTCUSDT 1M (폴백, 2017~)" });
+        return { ...model, dataStatus: r.status };
+      }, v=>v&&v.ok, force);
+      if (!data || !data.ok) return json(data);
+      const rawKey = cpBucketKey(data.current?.heatScore);
+      const eligible = data.quality?.signalEligible === true && data.cache !== "stale";
+      const signal = await cpUpdateSignal(env, rawKey, eligible);
+      return json({ ...data, signal });
+    }
+
+    // 자동 워크포워드 백테스트 (24시간 캐시). 화면이 열릴 때 자동 호출된다.
+    if (u.pathname === "/btc-compass-backtest") {
+      if (req.method !== "GET" && req.method !== "POST") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
+      const force = u.searchParams.get("force") === "1";
+      const data = await cached(env, "btc:compass:bt:v1", 24*3600, async () => {
+        const bp = await fetchBtcPrice();
+        if (!bp.ok || bp.series.length < 400) return { ok:false, error:"DAILY_BTC_DATA_UNAVAILABLE", status: bp.status };
+        const r = cpRunBacktest(bp.series.map(p => ({ t:p.t, v:p.v })));
+        return { ...r, source:"blockchain.info BTC/USD" };
+      }, v=>v&&v.ok, force);
+      return json(data);
     }
 
     if (u.pathname === "/test") {

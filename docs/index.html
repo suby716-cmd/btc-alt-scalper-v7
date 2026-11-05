@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v10.13.0 · MASTER MARKET COMPASS</title>
+<title>BTC ALT REGIME TRADER v10.13.1 · MASTER MARKET COMPASS</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -493,7 +493,7 @@
 </div>
 
 <script>
-const VERSION='v10.13.0-master-market-compass-multisource';
+const VERSION='v10.13.1-master-market-compass-multisource';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -2252,10 +2252,20 @@ async function loadMasterCompass(force=false){
   const status=$('compassStatus');
   if(status) status.textContent=force?'장기 BTC 월봉 데이터 강제 갱신 중…':'장기 BTC 월봉 데이터 조회 중…';
   try{
-    const url=workerBase()+'/btc-compass'+(force?'?force=1':'');
-    const r=await fetchWithTimeout(url,{method:'GET'},22000);
-    const d=await parseResponse(r);
-    if(!d.ok) throw Error(d.error||'BTC 장기 분석 데이터가 없습니다.');
+    let url=workerBase()+'/btc-compass'+(force?'?force=1':'');
+    let r=await fetchWithTimeout(url,{method:'GET'},25000);
+    let d=await parseResponse(r);
+    // 첫 실패 시 force=1 로 한 번 더 시도 (엣지/캐시 불일치 대응)
+    if(!d.ok && !force){
+      if(status) status.textContent='캐시/소스 재시도 중…';
+      url=workerBase()+'/btc-compass?force=1';
+      r=await fetchWithTimeout(url,{method:'GET'},28000);
+      d=await parseResponse(r);
+    }
+    if(!d.ok){
+      const tried=(d.sourcesTried||[]).map(x=>x.source+(x.ok?'✓':'✗')).join(', ')||'없음';
+      throw Error((d.error||'BTC 장기 분석 데이터 없음')+' · 시도: '+tried);
+    }
     const c=d.current||{}, v=d.valuation||{}, t=d.trend||{}, heat=d.heat||{};
     const usd=x=>x==null||!Number.isFinite(Number(x))?'—':'$'+Number(x).toLocaleString('en-US',{maximumFractionDigits:0});
     $('compassValue').textContent=v.label||'—';
@@ -2333,7 +2343,7 @@ async function loadMasterCompass(force=false){
     if(status) status.textContent=`${d.source||'BTC 월봉'}${srcExtra}${tried} · ${d.firstMonth} ~ ${d.lastMonth} · 완료월 ${d.quality?.completeMonths??d.count}개 · 품질 ${d.quality?.status||'미확인'} · 표본 ${d.quality?.sampling||'—'} · 최근 데이터 ${d.lastPointAt?((Date.now()-d.lastPointAt)/86400000).toFixed(1):'—'}일 전${d.signal&&d.signal.persistent?' · 확정 구간 '+d.signal.confirmed:''} · ${d.cache==='kv'?'KV 캐시':d.cache==='memory'?'메모리 캐시':d.cache==='stale'?'이전 캐시':'갱신 데이터'} · ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')}`;
   }catch(e){
     if(status) status.textContent='장기 엔진 연결 실패 · '+(e?.message||String(e)).slice(0,160);
-    $('compassVerdict').textContent='장기 BTC 다중 소스(blockchain.info · Binance.vision/us · Coinbase · ticker) 모두 실패했거나 모델 품질 기준 미달입니다. Worker를 v10.13.0 이상으로 재배포한 뒤 「장기 데이터 새로고침」을 눌러 보세요. 실시간 레이더는 그대로 동작합니다.';
+    $('compassVerdict').textContent='장기 BTC 다중 소스(blockchain.info · Binance.vision/us · Coinbase · ticker) 모두 실패했거나 모델 품질 기준 미달입니다. Worker를 v10.13.1 이상으로 재배포한 뒤 「장기 데이터 새로고침」을 눌러 보세요. 실시간 레이더는 그대로 동작합니다.';
   }
 }
 async function loadCompassBacktest(force=false){

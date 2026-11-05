@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v10.14.0 · MASTER MARKET COMPASS</title>
+<title>BTC ALT REGIME TRADER v10.14.1 · MASTER MARKET COMPASS</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -518,7 +518,7 @@
 </div>
 
 <script>
-const VERSION='v10.13.2-candles-retry-fallback';
+const VERSION='v10.14.1-global-capital-rotation';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -2378,7 +2378,25 @@ async function loadCapitalRotation(force=false){
   const st=$('rotationStatus'),ph=$('rotationPhases');if(!st||!ph)return;
   st.textContent=force?'자금순환 데이터 강제 갱신 중…':'자금순환 데이터 조회 중…';
   try{
-    const r=await fetchWithTimeout(workerBase()+'/rotation'+(force?'?force=1':''),{method:'GET'},35000),d=await parseResponse(r);
+    async function fetchRotation(useForce){
+      const paths=['/rotation','/capital-rotation'];
+      let lastErr=null;
+      for(const path of paths){
+        try{
+          const url=workerBase()+path+(useForce?'?force=1':'');
+          const r=await fetchWithTimeout(url,{method:'GET'},35000);
+          const text=await r.text();
+          let d={}; try{d=text?JSON.parse(text):{};}catch{throw Error('JSON 아님 HTTP '+r.status);}
+          if(r.status===404||d.error==='NOT_FOUND'){ lastErr=Error('NOT_FOUND'); continue; }
+          if(!r.ok && !d.ok) throw Error(d.error||('HTTP '+r.status));
+          if(!d.ok) throw Error(d.error||'자금순환 데이터가 부족합니다.');
+          return d;
+        }catch(e){ lastErr=e; }
+      }
+      throw lastErr||Error('ROTATION_UNAVAILABLE');
+    }
+    let d=await fetchRotation(force);
+    if(!d.ok && !force){ st.textContent='자금순환 재시도 중…'; d=await fetchRotation(true); }
     if(!d.ok)throw Error(d.error||'자금순환 데이터가 부족합니다.');
     const s=d.summary||{}, phases=d.phases||[];
     ph.innerHTML=phases.map((x,i)=>`<div class="rotation-phase"><small>0${i+1} · ${esc(x.label)}</small><b>${rotationPct(x.ret)}</b><span>${esc(x.signal||'판단 보류')}<br>${esc(x.detail||'')}<br>${esc(x.proxy||'')}</span></div>`).join('');
@@ -2396,7 +2414,7 @@ async function loadCapitalRotation(force=false){
     const q=d.quality||{};
     $('rotationNotes').innerHTML=(d.notes||[]).map(x=>'· '+esc(x)).join('<br>')+`<br>데이터 정상 ${q.available||0}/${q.total||0} · ETF 직접 플로우 ${q.flowDirect?'연결':'미연결'} · 업데이트 ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')} · <a href="https://www.tftc.io/bitcoin-etf-flows" target="_blank" rel="noopener">TFTC 원자료</a>`;
     st.textContent=`${d.version||'rotation'} · 가격 데이터 ${q.available||0}/${q.total||0} · BTC ETF 플로우 ${q.flowRows||0}일 · 15분 캐시 · ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')}`;
-  }catch(e){st.textContent='자금순환 엔진 연결 실패 · '+(e?.message||String(e)).slice(0,150)+' · Worker의 /rotation 경로를 확인하세요.';}
+  }catch(e){st.textContent='자금순환 엔진 연결 실패 · '+(e?.message||String(e)).slice(0,150)+' · Worker URL이 최신인지, /health 에 /rotation 이 있는지 확인하세요.';}
 }
 $('rotationReload')?.addEventListener('click',()=>loadCapitalRotation(true));
 
@@ -2412,7 +2430,7 @@ async function loadCompassBacktest(force=false){
     const cell=o=>!o||!o.n?'<td style="color:var(--muted)">표본 없음</td>':'<td>'+f(o.avgRet,1)+' <span style="color:var(--muted)">(중앙 '+f(o.medRet,1)+')</span><br><span style="color:var(--muted)">승률 '+o.winRate+'% · 평균낙폭 '+f(o.avgMdd,0)+' · n='+o.n+'</span></td>';
     const rows=[...d.buckets,d.baseline];
     const cur=(window.__compassSignalZone||null);
-    tb.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:640px"><tr style="color:var(--muted);text-align:left"><th>과열 점수</th><th>월말 표본</th><th>이후 90일</th><th>이후 180일</th><th>이후 365일</th></tr>'+rows.map(b=>'<tr style="border-top:1px solid var(--line);'+(cur&&b.key===cur?'background:#f8f5ff;':'')+(b.key==='all'?'font-weight:700;':'')+'"><td>'+esc(b.label)+(cur&&b.key===cur?' ◀ 현재':'')+'</td><td>'+b.dates+'</td>'+cell(b.h90)+cell(b.h180)+cell(b.h365)+'</tr>').join('')+'</table>';
+    tb.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:640px"><tr style="color:var(--muted);text-align:left"><th>과열 점수</th><th>월말 표본</th><th>이후 90일</th><th>이후 180일</th><th>이후 365일</th></tr>'+rows.map(b=>'<tr style="border-top:1px solid var(--line);'+(cur&&b.key===cur?'background:#f8f5ff;':'')+(b.key==='all'?'font-weight:700;':'')+'"><td>'+esc(b.label)+(cur&&b.key===cur?' <span style="color:#dc2626;font-weight:800">◀ 현재</span>':'')+'</td><td>'+b.dates+'</td>'+cell(b.h90)+cell(b.h180)+cell(b.h365)+'</tr>').join('')+'</table>';
     const c1=d.correlation?.h365?.spearman,c2=d.correlation?.h180?.spearman;
     let msg;
     if(c1==null&&c2==null)msg='표본이 부족해 점수와 이후 수익률의 관계를 판단할 수 없습니다.';

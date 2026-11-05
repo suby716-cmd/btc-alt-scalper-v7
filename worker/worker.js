@@ -1396,6 +1396,76 @@ async function cpUpdateSignal(env, rawKey, eligible) {
   return { persistent:true, raw:rawKey, confirmed:st.confirmed, pending:st.pending, since:st.since, required:need };
 }
 
+
+// GLOBAL CAPITAL ROTATION ENGINE v1
+// 가격 모멘텀은 자금흐름 그 자체가 아니며, BTC ETF 순유입만 직접적인 펀드 플로우로 취급한다.
+async function yahooDaily(symbol, range='6mo') {
+  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=1d&events=div%2Csplits`;
+  const r=await fetchJson(url,10000,{
+    'Accept':'application/json,text/plain,*/*',
+    'User-Agent':'Mozilla/5.0 (compatible; MarketCompass/1.0)'
+  });
+  const q=r.body?.chart?.result?.[0], ts=q?.timestamp||[], close=q?.indicators?.quote?.[0]?.close||[];
+  const rows=ts.map((t,i)=>({t:t*1000,v:Number(close[i])})).filter(x=>Number.isFinite(x.v)&&x.v>0);
+  return {ok:r.ok&&rows.length>=25,symbol,rows,status:r.status||0,error:r.error||q?.meta?.error?.description||null};
+}
+function seriesReturn(rows, days){
+  if(!Array.isArray(rows)||rows.length<2)return null;
+  const last=rows.at(-1), target=last.t-days*DAY;
+  let prev=null; for(const x of rows){if(x.t<=target)prev=x;else break;}
+  if(!prev||!prev.v)return null;
+  return r3((last.v/prev.v-1)*100,2);
+}
+function averageFinite(xs){const a=xs.filter(fin);return a.length?a.reduce((s,x)=>s+x,0)/a.length:null;}
+async function fetchTftcBtcFlows(){
+  const r=await fetchJson('https://www.tftc.io/bitcoin-etf-flows/data.json',10000,{'Accept':'application/json','User-Agent':'Mozilla/5.0 (compatible; MarketCompass/1.0)'});
+  if(!r.ok||!r.body)return {ok:false,status:r.status||0,rows:[]};
+  const root=r.body;
+  let candidates=[];
+  const walk=(x,depth=0)=>{if(depth>5||x==null)return;if(Array.isArray(x)){if(x.length&&typeof x[0]==='object')candidates.push(x);return;}if(typeof x==='object')for(const v of Object.values(x))walk(v,depth+1);};
+  walk(root);
+  let arr=candidates.sort((a,b)=>b.length-a.length)[0]||[];
+  const rows=arr.map(x=>{
+    const date=x.date||x.day||x.session||x.tradeDate||x.asOf;
+    const raw=x.netFlowUsd??x.totalNetFlowUsd??x.total??x.flow??x.net_flow_usd;
+    const n=Number(raw);
+    return {date:String(date||'').slice(0,10),flowUsd:Number.isFinite(n)?n:null};
+  }).filter(x=>/^20\d\d-\d\d-\d\d$/.test(x.date)&&x.flowUsd!==null).sort((a,b)=>a.date.localeCompare(b.date));
+  return {ok:rows.length>0,status:r.status||200,rows:rows.slice(-180),source:'TFTC / The Commoner · SoSoValue + Farside'};
+}
+async function buildRotation(){
+  const symbols=['SOXX','SMH','NVDA','TLT','SHY','SGOV','BTC-USD','ETH-USD','SOL-USD','LINK-USD','UNI-USD','AAVE-USD','NEAR-USD','TAO-USD','ONDO-USD'];
+  const got=await Promise.all(symbols.map(async s=>[s,await yahooDaily(s)]));
+  const data=Object.fromEntries(got.map(([s,r])=>[s,r]));
+  const perf=s=>{const r=data[s];return r?.ok?{symbol:s,last:r.rows.at(-1).v,asOf:r.rows.at(-1).t, d7:seriesReturn(r.rows,7),d30:seriesReturn(r.rows,30),d90:seriesReturn(r.rows,90),ok:true}:{symbol:s,ok:false,status:r?.status||0,error:r?.error||'NO_DATA'};};
+  const ai=['SOXX','SMH','NVDA'].map(perf), defensive=['TLT','SHY','SGOV'].map(perf);
+  const crypto=[ 'BTC-USD','ETH-USD','SOL-USD','LINK-USD','UNI-USD','AAVE-USD','NEAR-USD','TAO-USD','ONDO-USD'].map(perf);
+  const alt=crypto.filter(x=>x.symbol!=='BTC-USD');
+  const btc=crypto.find(x=>x.symbol==='BTC-USD'), eth=crypto.find(x=>x.symbol==='ETH-USD');
+  const flows=await fetchTftcBtcFlows();
+  const frows=flows.rows||[];
+  const sumFlow=n=>{const a=frows.slice(-n);return a.length? r3(a.reduce((s,x)=>s+x.flowUsd,0)/1e6,1):null;};
+  const ai30=averageFinite(ai.map(x=>x.d30)), def30=averageFinite(defensive.map(x=>x.d30)), alt30=averageFinite(alt.map(x=>x.d30));
+  const altVsBtc=fin(alt30)&&fin(btc?.d30)?r3(alt30-btc.d30,2):null;
+  const btcFlow5=sumFlow(5),btcFlow20=sumFlow(20);
+  const aiWeak=fin(ai30)&&ai30<0, defensiveStrong=fin(def30)&&fin(ai30)&&def30>ai30, btcInflow=fin(btcFlow5)&&btcFlow5>0&&fin(btcFlow20)&&btcFlow20>0, altBreadth=alt.filter(x=>fin(x.d30)&&fin(btc?.d30)&&x.d30>btc.d30).length;
+  const phases=[
+    {key:'ai',label:'AI · 반도체',detail:'SOXX · SMH · NVDA',ret:ai30,signal:aiWeak?'약세 모멘텀':'강세/중립',proxy:'가격 모멘텀 proxy'},
+    {key:'defensive',label:'채권 · 현금',detail:'TLT · SHY · SGOV',ret:def30,signal:defensiveStrong?'상대강세':'상대강세 미확인',proxy:'가격 모멘텀 proxy'},
+    {key:'btc',label:'BTC · ETH',detail:'현물 가격 + BTC ETF 순유입',ret:btc?.d30??null,signal:btcInflow?'ETF 순유입 동반':'ETF 순유입 미확인',flow5:btcFlow5,flow20:btcFlow20,proxy:'가격 + BTC 현물 ETF 직접 플로우'},
+    {key:'alt',label:'알트코인',detail:'ETH 제외 7종 동일가중 바스켓',ret:alt30,signal:fin(altVsBtc)&&altVsBtc>0?'BTC 대비 초과수익':'BTC 대비 초과수익 미확인',breadth:altBreadth,total:alt.length,proxy:'가격 상대강도 proxy'}
+  ];
+  const valid=Object.values(data).filter(x=>x.ok).length;
+  return {ok:valid>=8,version:'rotation-v1',updatedAt:Date.now(),cacheTtlSec:900,
+    summary:{ai30,defensive30:def30,btc30:btc?.d30??null,eth30:eth?.d30??null,alt30,altVsBtc,btcFlow5m:btcFlow5,btcFlow20m:btcFlow20,altBreadth,altTotal:alt.length,
+      sequenceConfirmed:!!(aiWeak&&defensiveStrong&&btcInflow&&fin(altVsBtc)&&altVsBtc>0),
+      btcAccumulationEvidence:!!btcInflow,altExpansionEvidence:!!(fin(altVsBtc)&&altVsBtc>0&&altBreadth>=Math.ceil(alt.length*.5))},
+    phases,assets:{ai,defensive,crypto},flows:{ok:flows.ok,source:flows.source||null,status:flows.status||0,latest:frows.at(-1)||null,rows:frows.slice(-30),note:'BTC 미국 현물 ETF 일별 순유입. 최신 미확정 세션은 공급자가 제외할 수 있음.'},
+    sources:{prices:'Yahoo Finance chart API (ETF·자산 가격)',btcEtfFlows:flows.source||'TFTC data.json unavailable'},
+    quality:{available:valid,total:symbols.length,flowRows:frows.length,flowDirect:flows.ok,priceDataAreFlows:false},
+    notes:['ETF 가격 수익률은 실제 자금 유출입이 아니라 시장가격 proxy입니다.','채권·현금 ETF의 설정/환매 데이터는 아직 직접 수집하지 않으므로 자금 유입 확정으로 해석하지 않습니다.','BTC ETF 순유입만 별도 출처의 일별 순유입으로 직접 확인합니다.','ETH ETF 및 AI·반도체 펀드의 직접 순유입 데이터는 이 버전에서 수집하지 않습니다.']};
+}
+
 export default {
   async fetch(req, env) {
     ENV_REF = env;
@@ -1407,14 +1477,21 @@ export default {
     if (u.pathname === "/health") {
       return json({
         ok: true,
-        version: "v10.13.2-candles-retry-fallback",
-        routes: ["/health","/macro","/altseason","/btc-compass","/btc-compass-backtest","/candles","/upbit","/market"],
+        version: "v10.14.0-global-capital-rotation",
+        routes: ["/health","/macro","/altseason","/rotation","/btc-compass","/btc-compass-backtest","/candles","/upbit","/market"],
         altseason: true,
         service: "BTC ALT REGIME TRADER (minimal)",
         market: "Upbit KRW",
         pinConfigured: !!env.PIN,
         kvBound: !!env.SCALPER_KV,
       });
+    }
+
+    if (u.pathname === "/rotation") {
+      if (req.method !== "GET") return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
+      const force=u.searchParams.get("force")==="1";
+      const data=await cached(env,"rotation:v1",15*60,buildRotation,v=>v&&v.ok,force);
+      return json(data||{ok:false,error:"ROTATION_DATA_UNAVAILABLE"},data?.ok?200:503);
     }
 
     if (u.pathname === "/pin-check") {

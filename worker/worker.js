@@ -1404,10 +1404,10 @@ const ROTATION_CRYPTO = {
   'ETH-USD': { binance:'ETHUSDT', gecko:'ethereum' },
   'SOL-USD': { binance:'SOLUSDT', gecko:'solana' },
   'LINK-USD': { binance:'LINKUSDT', gecko:'chainlink' },
-  'UNI-USD': { binance:'UNIUSDT', gecko:'uniswap' },
+  'UNI-USD': { yahoo:'UNI7083-USD', binance:'UNIUSDT', gecko:'uniswap', cb:'UNI-USD' },
   'AAVE-USD': { binance:'AAVEUSDT', gecko:'aave' },
   'NEAR-USD': { binance:'NEARUSDT', gecko:'near' },
-  'TAO-USD': { binance:'TAOUSDT', gecko:'bittensor' },
+  'TAO-USD': { yahoo:'TAO22974-USD', binance:'TAOUSDT', gecko:'bittensor', cb:'TAO-USD' },
   'ONDO-USD': { binance:'ONDOUSDT', gecko:'ondo-finance' },
   'XRP-USD': { binance:'XRPUSDT', gecko:'ripple' },
   'XLM-USD': { binance:'XLMUSDT', gecko:'stellar' },
@@ -1423,7 +1423,8 @@ function cleanRotationRows(rows){
   return [...byDay.values()].sort((a,b)=>a.t-b.t);
 }
 async function yahooDaily(symbol, range='6mo') {
-  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=1d&events=div%2Csplits`;
+  const ysym=(ROTATION_CRYPTO[symbol]&&ROTATION_CRYPTO[symbol].yahoo)||symbol;
+  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ysym)}?range=${range}&interval=1d&events=div%2Csplits`;
   const r=await fetchJson(url,10000,{'Accept':'application/json,text/plain,*/*','User-Agent':'Mozilla/5.0 (compatible; MarketCompass/2.0)'});
   const q=r.body?.chart?.result?.[0], ts=q?.timestamp||[], close=q?.indicators?.quote?.[0]?.close||[];
   const rows=cleanRotationRows(ts.map((t,i)=>({t:t*1000,v:Number(close[i])})));
@@ -1431,11 +1432,19 @@ async function yahooDaily(symbol, range='6mo') {
 }
 async function binanceDaily(symbol){
   const cfg=ROTATION_CRYPTO[symbol]; if(!cfg)return {ok:false,symbol,rows:[],error:'NO_BINANCE_MAPPING'};
-  const url=`https://api.binance.com/api/v3/klines?symbol=${cfg.binance}&interval=1d&limit=190`;
+  const url=`https://data-api.binance.vision/api/v3/klines?symbol=${cfg.binance}&interval=1d&limit=190`;
   const r=await fetchJson(url,10000,{'Accept':'application/json','User-Agent':'Mozilla/5.0 (compatible; MarketCompass/2.0)'});
   const arr=Array.isArray(r.body)?r.body:[];
   const rows=cleanRotationRows(arr.map(x=>({t:Number(x?.[0]),v:Number(x?.[4])})));
   return {ok:r.ok&&rows.length>=91,symbol,rows,status:r.status||0,error:r.error||(!r.ok?(r.body?.msg||'BINANCE_HTTP_ERROR'):(!rows.length?'NO_VALID_ROWS':null)),source:'Binance Spot',quoteCurrency:'USDT'};
+}
+async function coinbaseDaily(symbol){
+  const cfg=ROTATION_CRYPTO[symbol]; if(!cfg||!cfg.cb)return {ok:false,symbol,rows:[],error:'NO_COINBASE_MAPPING'};
+  const url=`https://api.exchange.coinbase.com/products/${cfg.cb}/candles?granularity=86400`;
+  const r=await fetchJson(url,10000,{'Accept':'application/json','User-Agent':'Mozilla/5.0 (compatible; MarketCompass/2.0)'});
+  const arr=Array.isArray(r.body)?r.body:[];
+  const rows=cleanRotationRows(arr.map(x=>({t:Number(x?.[0])*1000,v:Number(x?.[4])})));
+  return {ok:r.ok&&rows.length>=91,symbol,rows,status:r.status||0,error:r.error||(!r.ok?(r.body?.message||'COINBASE_HTTP_ERROR'):(!rows.length?'NO_VALID_ROWS':null)),source:'Coinbase',quoteCurrency:'USD'};
 }
 async function coinGeckoDaily(symbol){
   const cfg=ROTATION_CRYPTO[symbol]; if(!cfg)return {ok:false,symbol,rows:[],error:'NO_COINGECKO_MAPPING'};
@@ -1451,9 +1460,11 @@ async function rotationDaily(symbol){
   if(!ROTATION_CRYPTO[symbol])return {...primary,source:'Yahoo Finance',fallbackUsed:false};
   const binance=await binanceDaily(symbol);
   if(binance.ok)return {...binance,fallbackUsed:true,primaryError:primary.error||`Yahoo HTTP ${primary.status}`};
+  const cb=await coinbaseDaily(symbol);
+  if(cb.ok)return {...cb,fallbackUsed:true,primaryError:primary.error||`Yahoo HTTP ${primary.status}`,secondaryError:binance.error||`Binance HTTP ${binance.status}`};
   const gecko=await coinGeckoDaily(symbol);
   if(gecko.ok)return {...gecko,fallbackUsed:true,primaryError:primary.error||`Yahoo HTTP ${primary.status}`,secondaryError:binance.error||`Binance HTTP ${binance.status}`};
-  return {...primary,ok:false,rows:[],source:'Yahoo → Binance → CoinGecko 실패',fallbackUsed:true,error:`Yahoo: ${primary.error||primary.status||'실패'}; Binance: ${binance.error||binance.status||'실패'}; CoinGecko: ${gecko.error||gecko.status||'실패'}`};
+  return {...primary,ok:false,rows:[],source:'Yahoo → Binance → Coinbase → CoinGecko 실패',fallbackUsed:true,error:`Yahoo: ${primary.error||primary.status||'실패'}; Binance: ${binance.error||binance.status||'실패'}; Coinbase: ${cb.error||cb.status||'실패'}; CoinGecko: ${gecko.error||gecko.status||'실패'}`};
 }
 function seriesReturn(rows, days){
   if(!Array.isArray(rows)||rows.length<2)return null;
@@ -1516,7 +1527,7 @@ async function buildRotation(){
   return {ok:valid>=8,version:'rotation-v2-multi-source',updatedAt:now,cacheTtlSec:900,
     summary:{ai30,defensive30:def30,btc30:btc?.d30??null,eth30:eth?.d30??null,alt30,altVsBtc,btcFlow5m:btcFlow5,btcFlow20m:btcFlow20,altBreadth,altTotal:alt.length,altExpected:alt.length,altCoverage:validAlt.length,coreCoverage,sequenceConfirmed,btcAccumulationEvidence:!!btcInflow,altExpansionEvidence:!!(altCoverageOk&&fin(altVsBtc)&&altVsBtc>0&&altBreadth>=Math.ceil(validAlt.length*.5))},
     phases,assets:{ai,defensive,crypto},flows:{ok:flows.ok,source:flows.source||null,status:flows.status||0,latest:frows.at(-1)||null,rows:frows.slice(-30),note:'BTC 미국 현물 ETF 일별 순유입. 최신 미확정 세션은 공급자가 제외할 수 있음.'},
-    sources:{prices:'Yahoo Finance 우선 → Binance Spot → CoinGecko 폴백(크립토)',btcEtfFlows:flows.source||'TFTC data.json unavailable'},
+    sources:{prices:'Yahoo Finance 우선 → Binance Spot → Coinbase → CoinGecko 폴백(크립토)',btcEtfFlows:flows.source||'TFTC data.json unavailable'},
     quality:{available:valid,total:all.length,missing,sourceCounts,fallbackCount,allCryptoValid:crypto.every(x=>x.ok),cryptoAvailable:crypto.filter(x=>x.ok).length,cryptoTotal:crypto.length,flowRows:frows.length,flowDirect:flows.ok,priceDataAreFlows:false,validation:'7·30·90일 수익률 유효성 기준',staleAssets:all.filter(x=>x.ok&&x.ageDays>(ROTATION_CRYPTO[x.symbol]?2:5)).map(x=>x.symbol)},
     notes:['가격 수익률은 실제 자금 유출입이 아닌 가격 기반 proxy입니다.','크립토 가격은 Yahoo Finance 우선, 실패 시 Binance USDT 현물, 이후 CoinGecko USD 가격으로 보완합니다. USDT/USD 환율 차이가 소폭 반영될 수 있습니다.','각 자산은 7·30·90일 기준 관측값이 모두 확보되어야 정상으로 표시합니다. 표본이 부족하면 수익률과 신호를 보류합니다.','채권·현금 ETF의 설정/환매 데이터는 직접 수집하지 않으므로 자금 유입 확정으로 해석하지 않습니다.','BTC ETF 순유입만 별도 출처의 일별 순유입으로 직접 확인합니다.','4단계 순환 확정은 AI·채권·BTC·ETH 핵심 데이터와 알트코인 75% 이상 데이터 확보를 전제로 합니다.','데이터 공급자 장애·API 제한·상장 이력 부족 시 누락 원인을 자산별로 표시합니다.']};
 }

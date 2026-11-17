@@ -205,7 +205,7 @@
 .rotation-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
 .rotation-phase{border:1px solid var(--line);border-radius:9px;padding:10px;min-width:0;background:var(--panel2)}
 .rotation-phase small{display:block;color:var(--muted);font-size:10px}.rotation-phase b{display:block;font-size:16px;margin:5px 0}.rotation-phase span{font-size:11px;line-height:1.45;color:var(--muted)}
-.rotation-table-wrap{overflow-x:auto;margin-top:10px}.rotation-table{width:100%;border-collapse:collapse;font-size:12px;min-width:620px}.rotation-table th,.rotation-table td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}.rotation-table th:first-child,.rotation-table td:first-child{text-align:left}
+.rotation-table-wrap{overflow-x:auto;margin-top:10px}.rotation-table{width:100%;border-collapse:collapse;font-size:12px;min-width:620px}.rotation-table th,.rotation-table td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}.rotation-table th:first-child,.rotation-table td:first-child{text-align:left}.rotation-table td.flow-value{font-variant-numeric:tabular-nums;font-weight:750}.rotation-table td.flow-inflow{color:#16803c}.rotation-table td.flow-outflow{color:#dc2626}.rotation-table td.flow-neutral{color:var(--text)}
 .rotation-note{font-size:11px;color:var(--muted);line-height:1.55;margin-top:9px}.rotation-flow{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.rotation-flow span{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:11px;background:#fff}
 @media(max-width:800px){.rotation-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.rotation-grid{grid-template-columns:1fr 1fr}.rotation-phase{padding:8px}}
 
@@ -2453,7 +2453,8 @@ async function loadMasterCompass(force=false){
 }
 
 function rotationPct(x){return x==null||!Number.isFinite(Number(x))?'—':(x>0?'+':'')+Number(x).toFixed(2)+'%'}
-function rotationMoney(x){return x==null||!Number.isFinite(Number(x))?'—':(x>0?'+':'')+'$'+Math.abs(Number(x)).toLocaleString('en-US',{maximumFractionDigits:1})+'M'}
+function rotationMoney(x){const n=Number(x);if(x==null||!Number.isFinite(n))return '—';const sign=n>0?'+':n<0?'-':'';return sign+'$'+Math.abs(n).toLocaleString('en-US',{maximumFractionDigits:1})+'M'}
+function rotationFlowClass(x){const n=Number(x);return !Number.isFinite(n)||n===0?'flow-neutral':n<0?'flow-outflow':'flow-inflow'}
 
 /* ===== TA SIGNAL LAB v10.16: configurable universe · candle chart · robust stats ===== */
 const TA_DEFAULT_COINS=['BTC','ETH','SOL','XRP','LINK','AVAX','DOGE','SUI','UNI','AAVE','NEAR','TAO','HBAR','XLM','ONDO','BAT'];
@@ -2728,7 +2729,7 @@ async function loadCapitalRotation(force=false){
     const rows=[];for(const group of [['AI · 반도체',d.assets?.ai],['채권 · 현금',d.assets?.defensive],['크립토',d.assets?.crypto]])for(const x of(group[1]||[]))rows.push({...x,group:group[0]});
     $('rotationAssets').innerHTML='<table class="rotation-table"><thead><tr><th>구분</th><th>자산</th><th>7일</th><th>30일</th><th>90일</th><th>데이터</th></tr></thead><tbody>'+rows.map(x=>`<tr><td>${esc(x.group)}</td><td>${esc(x.symbol)}</td><td>${rotationPct(x.d7)}</td><td>${rotationPct(x.d30)}</td><td>${rotationPct(x.d90)}</td><td>${x.ok?'정상':'누락'}</td></tr>`).join('')+'</tbody></table>';
     const fr=d.flows||{},flowRows=fr.rows||[];
-    $('rotationFlows').innerHTML='<div class="small" style="margin:8px 0 5px;font-weight:800">BTC 미국 현물 ETF 실제 순유입 · 단위 USD million · '+esc(fr.source||'데이터 출처 미확인')+'</div>'+(flowRows.length?'<table class="rotation-table"><thead><tr><th>미국 거래일</th><th>순유입</th></tr></thead><tbody>'+flowRows.slice(-10).reverse().map(x=>`<tr><td>${esc(x.date)}</td><td>${rotationMoney(x.flowUsd/1e6)}</td></tr>`).join('')+'</tbody></table>':'BTC ETF 순유입 데이터 수집 실패 · 가격 데이터와 혼합하지 않고 별도 표시합니다.');
+    $('rotationFlows').innerHTML='<div class="small" style="margin:8px 0 5px;font-weight:800">BTC 미국 현물 ETF 실제 순유입 · 단위 USD million · '+esc(fr.source||'데이터 출처 미확인')+'</div>'+(flowRows.length?'<table class="rotation-table"><thead><tr><th>미국 거래일</th><th>순유입(+) / 순유출(-)</th></tr></thead><tbody>'+flowRows.slice(-10).reverse().map(x=>{const value=Number(x.flowUsd)/1e6;return `<tr><td>${esc(x.date)}</td><td class="flow-value ${rotationFlowClass(value)}" title="${value<0?'순유출':value>0?'순유입':'변동 없음'}">${rotationMoney(value)}</td></tr>`}).join('')+'</tbody></table>':'BTC ETF 순유입 데이터 수집 실패 · 가격 데이터와 혼합하지 않고 별도 표시합니다.');
     const q=d.quality||{};
     $('rotationNotes').innerHTML=(d.notes||[]).map(x=>'· '+esc(x)).join('<br>')+`<br>데이터 정상 ${q.available||0}/${q.total||0} · ETF 직접 플로우 ${q.flowDirect?'연결':'미연결'} · 업데이트 ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')} · <a href="https://www.tftc.io/bitcoin-etf-flows" target="_blank" rel="noopener">TFTC 원자료</a>`;
     st.textContent=`${d.version||'rotation'} · 가격 데이터 ${q.available||0}/${q.total||0} · BTC ETF 플로우 ${q.flowRows||0}일 · 15분 캐시 · ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')}`;

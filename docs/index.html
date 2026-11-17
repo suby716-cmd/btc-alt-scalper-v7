@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v10.14.1 · MASTER MARKET COMPASS</title>
+<title>BTC ALT REGIME TRADER v10.15.0 · MASTER MARKET COMPASS</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -209,6 +209,24 @@
 .rotation-note{font-size:11px;color:var(--muted);line-height:1.55;margin-top:9px}.rotation-flow{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.rotation-flow span{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:11px;background:#fff}
 @media(max-width:800px){.rotation-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.rotation-grid{grid-template-columns:1fr 1fr}.rotation-phase{padding:8px}}
 
+
+.ta-lab{margin-top:14px;padding:13px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.ta-lab-head{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.ta-lab-head b{font-size:16px}
+.ta-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.ta-controls select,.ta-controls button,.ta-controls input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--text)}
+.ta-coin-manager{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:9px;padding:9px;border:1px dashed var(--line);border-radius:9px}.ta-coin-chips{display:flex;gap:5px;flex-wrap:wrap}.ta-coin-chip{display:inline-flex;gap:5px;align-items:center;padding:4px 7px;border-radius:20px;background:#eef2ff;font-size:11px}.ta-coin-chip button{border:0;background:transparent;color:#b91c1c;font-weight:800;cursor:pointer;padding:0 2px}.ta-coin-manager input{width:110px;min-width:90px}
+.ta-metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ta-metrics span{padding:7px 10px;background:#f1f5f9;border-radius:8px;font-size:12px;font-weight:650}
+.ta-chart{display:block;width:100%;height:320px;margin-top:10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.ta-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--muted)}
+.ta-legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px;background:#2563eb}
+.ta-legend .bb{background:#94a3b8}.ta-legend .buy{background:#16a34a;height:8px;width:8px;border-radius:50%}.ta-legend .sell{background:#dc2626;height:8px;width:8px;border-radius:50%}
+.ta-table{width:100%;border-collapse:collapse;font-size:12px;min-width:680px;margin-top:8px}
+.ta-table th,.ta-table td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.ta-table th:first-child,.ta-table td:first-child{text-align:left}
+.ta-note{font-size:11px;color:var(--muted);line-height:1.55;margin-top:8px}
+
 </style>
 </head>
 <body>
@@ -347,6 +365,68 @@
     <div class="rotation-table-wrap" id="rotationAssets">자산별 7일·30일·90일 데이터를 불러오는 중…</div>
     <div class="rotation-table-wrap" id="rotationFlows"></div>
     <div class="rotation-note" id="rotationNotes">주의: 가격 상승·하락은 자금 유출입과 동일하지 않습니다. 직접 확인된 ETF 순유입과 가격 기반 proxy를 구분합니다.</div>
+
+  <section class="ta-lab" id="taSignalLab">
+    <div class="ta-lab-head">
+      <div>
+        <b>📈 TA SIGNAL LAB · 볼린저 · 패턴 · 승률</b>
+        <div class="small" id="taStatus">주요 코인 캔들 기반 볼린저밴드·패턴 신호와 과거 승률을 계산합니다.</div>
+      </div>
+      <button type="button" class="btn" id="taReload">신호 다시 계산</button>
+    </div>
+    <div class="ta-controls">
+      <label class="small">코인
+        <select id="taSymbol"><option value="BTC">BTC</option></select>
+      </label>
+      <label class="small">봉
+        <select id="taFrame">
+          <option value="5m">5분봉</option>
+          <option value="day" selected>일봉</option>
+        </select>
+      </label>
+      <label class="small">보유 평가 구간
+        <select id="taHorizon">
+          <option value="3">3봉 후</option>
+          <option value="6">6봉 후</option>
+          <option value="12" selected>12봉 후</option>
+          <option value="24">24봉 후</option>
+          <option value="48">48봉 후</option>
+        </select>
+      </label>
+      <label class="small">시장 국면 <select id="taRegime"><option value="all">전체</option><option value="trend">추세장(ADX≥25)</option><option value="range">횡보장(ADX&lt;25)</option><option value="btcup">BTC 상승추세(EMA50 위)</option></select></label>
+      <label class="small">청산 방식 <select id="taExit"><option value="time">보유봉 종가</option><option value="atr">ATR 손절·목표</option></select></label>
+      <label class="small">수수료·슬리피지(%) <input id="taFee" type="number" step="0.01" min="0" max="2" value="0.10" style="width:72px"></label>
+      <button type="button" class="btn" id="taScan">전체 코인 스캔</button>
+    </div>
+    <div class="ta-coin-manager">
+      <b class="small">분석 코인 관리</b>
+      <input id="taAddSymbol" maxlength="80" placeholder="예: HBAR, ARB, OP (여러 개 가능)" aria-label="추가할 코인 심볼">
+      <button type="button" class="btn" id="taAddCoin">코인 추가</button>
+      <button type="button" class="btn" id="taResetCoins">기본 목록</button>
+      <span class="small" id="taCoinCount">0개</span>
+      <div class="ta-coin-chips" id="taCoinChips"></div>
+    </div>
+    <div class="ta-metrics" id="taMetrics">
+      <span>현재가 —</span><span>BB 위치 —</span><span>RSI —</span><span>최근 신호 —</span>
+    </div>
+    <div class="ta-note" id="taGate" style="font-size:12px;color:inherit;margin-top:10px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);line-height:1.7"></div>
+    <div class="ta-note" id="taVerdict" style="font-size:12px;color:inherit;margin-top:10px"></div>
+    <div id="taScanOut" style="overflow-x:auto;margin-top:8px"></div>
+    <canvas id="taChart" class="ta-chart" aria-label="볼린저밴드 및 매수매도 신호 차트"></canvas>
+    <div class="ta-legend">
+      <span><i></i>종가</span>
+      <span><i class="bb"></i>볼린저 상·중·하단</span>
+      <span><i class="buy"></i>매수 신호</span>
+      <span><i class="sell"></i>매도 신호</span>
+      <span>마커 옆 % = 보정 승률 · 마커를 탭/호버하면 상세</span>
+    </div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table class="ta-table" id="taWinTable">
+        <thead><tr><th>신호</th><th>유형</th><th>표본</th><th>승률</th><th>기저</th><th>보정확률</th><th>95% 구간</th><th>평균 순수익</th><th>OOS(최근30%)</th><th>최근 발생</th></tr></thead>
+        <tbody><tr><td colspan="10" style="text-align:center;color:var(--muted)">계산 중…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="ta-note" id="taNotes">승률 = 신호 이후 N봉 종가 기준 수익이 0% 초과인 비율입니다. 수수료·슬리피지 미반영. 표본이 적으면 참고만 하세요. 단독 매매 신호가 아닙니다.</div>
   </section>
 
   <div class="compass-bt" id="compassBt" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff">
@@ -518,7 +598,7 @@
 </div>
 
 <script>
-const VERSION='v10.14.1-global-capital-rotation';
+const VERSION='v10.15.0-ta-signal-lab';
 const COINS=['ETH','SOL','XRP','HBAR','ONDO','LINK','AVAX','DOGE','SUI','TAO','UNI','AAVE'];
 const FIVE_MIN=5*60*1000,FIFTEEN_MIN=15*60*1000,DAY_MS=24*60*60*1000;
 const $=id=>document.getElementById(id);
@@ -2359,7 +2439,7 @@ async function loadMasterCompass(force=false){
       const sg=d.signal;
       if(sg&&sg.persistent&&sg.raw&&sg.raw!==sg.confirmed&&sg.pending) verdict+=` (※ 점수 구간 변경 감지: ${sg.raw} · 확정까지 ${sg.pending.count}/${sg.required}일)`;
     }
-    window.__compassSignalZone=zone;
+    window.__compassSignalZone=zone;window.__compassState={trend:t.key,val:v.key,heat:c.heatScore,zone,quality:qualityOk,mayer:c.mayer,at:Date.now()};try{window.taGateRender&&window.taGateRender()}catch(e){}
     $('compassVerdict').textContent=verdict;
     const srcExtra = d.fetchSource ? ` · fetch ${d.fetchSource}` : '';
     const tried = Array.isArray(d.sourcesTried) && d.sourcesTried.length
@@ -2373,8 +2453,244 @@ async function loadMasterCompass(force=false){
 }
 
 function rotationPct(x){return x==null||!Number.isFinite(Number(x))?'—':(x>0?'+':'')+Number(x).toFixed(2)+'%'}
-function rotationMoney(x){const n=Number(x);return x==null||!Number.isFinite(n)?'—':(n>0?'+':n<0?'-':'')+'$'+Math.abs(n).toLocaleString('en-US',{maximumFractionDigits:1})+'M'}
-function rotationMoneyHtml(x){const n=Number(x),t=rotationMoney(x);return (x!=null&&Number.isFinite(n)&&n<0)?'<span style="color:#d92d20;font-weight:700">'+t+'</span>':t}
+function rotationMoney(x){return x==null||!Number.isFinite(Number(x))?'—':(x>0?'+':'')+'$'+Math.abs(Number(x)).toLocaleString('en-US',{maximumFractionDigits:1})+'M'}
+
+/* ===== TA SIGNAL LAB v10.16: configurable universe · candle chart · robust stats ===== */
+const TA_DEFAULT_COINS=['BTC','ETH','SOL','XRP','LINK','AVAX','DOGE','SUI','UNI','AAVE','NEAR','TAO','HBAR','XLM','ONDO','BAT'];
+const TA_COINS_KEY='masterCompassTaCoinsV2';
+let TA_COINS=(()=>{try{const a=JSON.parse(localStorage.getItem(TA_COINS_KEY)||'null');return Array.isArray(a)&&a.length?a.filter(x=>/^[A-Z0-9]{2,12}$/.test(x)).slice(0,40):TA_DEFAULT_COINS.slice()}catch{return TA_DEFAULT_COINS.slice()}})();
+function taSaveCoins(){try{localStorage.setItem(TA_COINS_KEY,JSON.stringify(TA_COINS))}catch{}}
+function taRenderCoins(){
+  const sel=$('taSymbol'), chips=$('taCoinChips'); if(!sel||!chips)return;
+  const old=sel.value; sel.innerHTML=TA_COINS.map(x=>`<option value="${x}">${x}</option>`).join('');
+  sel.value=TA_COINS.includes(old)?old:TA_COINS[0];
+  chips.innerHTML=TA_COINS.map(x=>`<span class="ta-coin-chip">${x}<button type="button" data-ta-del="${x}" aria-label="${x} 삭제">×</button></span>`).join('');
+  $('taCoinCount').textContent=`${TA_COINS.length}/40개`;
+}
+async function taAddCoin(){
+  const inp=$('taAddSymbol'),syms=[...new Set((inp?.value||'').split(/[\s,;]+/).map(taNormSym).filter(Boolean))];
+  if(!syms.length)return;
+  const btn=$('taAddCoin');if(btn)btn.disabled=true;const ok=[],bad=[];
+  try{
+    for(const sym of syms){
+      if(TA_COINS.includes(sym)){bad.push(sym+'(중복)');continue;}
+      if(TA_COINS.length>=40){bad.push(sym+'(최대 40개)');continue;}
+      try{const d=await call('/candles',{symbol:sym,frame:'day',count:3},15000);if(!d?.ok||!Array.isArray(d.candles)||!d.candles.length)throw Error('no data');TA_COINS.push(sym);ok.push(sym);}
+      catch(e){bad.push(sym+'(업비트/대체 거래소 데이터 없음)');}
+    }
+    if(ok.length){taSaveCoins();taRenderCoins();$('taSymbol').value=ok[0];if(inp)inp.value='';loadTaLab(true);}
+    else $('taStatus').textContent='추가 실패: '+bad.join(', ');
+  }finally{if(btn)btn.disabled=false;}
+}
+function taRemoveCoin(sym){if(TA_COINS.length<=1){$('taStatus').textContent='최소 1개 코인은 남겨야 합니다.';return;}TA_COINS=TA_COINS.filter(x=>x!==sym);taSaveCoins();taRenderCoins();loadTaLab(true)}
+function taSMA(arr,n){const out=new Array(arr.length).fill(null);let sum=0;for(let i=0;i<arr.length;i++){sum+=arr[i];if(i>=n)sum-=arr[i-n];if(i>=n-1)out[i]=sum/n;}return out;}
+function taStd(arr,n,means){const out=new Array(arr.length).fill(null);for(let i=n-1;i<arr.length;i++){const m=means[i];if(m==null)continue;let ss=0;for(let j=i-n+1;j<=i;j++)ss+=(arr[j]-m)**2;out[i]=Math.sqrt(ss/n);}return out;}
+function taEMASeries(arr,n){const out=new Array(arr.length).fill(null);if(arr.length<n)return out;const k=2/(n+1);let e=arr.slice(0,n).reduce((a,b)=>a+b,0)/n;out[n-1]=e;for(let i=n;i<arr.length;i++){e=arr[i]*k+e*(1-k);out[i]=e;}return out;}
+function taRSISeries(arr,n=14){const out=new Array(arr.length).fill(null);if(arr.length<n+1)return out;let g=0,l=0;for(let i=1;i<=n;i++){const d=arr[i]-arr[i-1];if(d>0)g+=d;else l-=d;}let ag=g/n,al=l/n;out[n]=ag===0&&al===0?50:al===0?100:100-100/(1+ag/al);for(let i=n+1;i<arr.length;i++){const d=arr[i]-arr[i-1];ag=(ag*(n-1)+Math.max(0,d))/n;al=(al*(n-1)+Math.max(0,-d))/n;out[i]=ag===0&&al===0?50:al===0?100:100-100/(1+ag/al);}return out;}
+function taBollinger(closes,period=20,mult=2){const mid=taSMA(closes,period),sd=taStd(closes,period,mid);const upper=mid.map((m,i)=>m==null||sd[i]==null?null:m+mult*sd[i]),lower=mid.map((m,i)=>m==null||sd[i]==null?null:m-mult*sd[i]);const bw=mid.map((m,i)=>m&&upper[i]!=null?(upper[i]-lower[i])/m*100:null);return{mid,upper,lower,bw};}
+function taADX(candles,n=14){const len=candles.length,tr=Array(len).fill(null),pdm=Array(len).fill(0),mdm=Array(len).fill(0),out=Array(len).fill(null);for(let i=1;i<len;i++){const h=+candles[i][2],l=+candles[i][3],ph=+candles[i-1][2],pl=+candles[i-1][3],pc=+candles[i-1][4];tr[i]=Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc));const up=h-ph,dn=pl-l;pdm[i]=up>dn&&up>0?up:0;mdm[i]=dn>up&&dn>0?dn:0;}let atr=0,ps=0,ms=0;for(let i=1;i<=n&&i<len;i++){atr+=tr[i]||0;ps+=pdm[i];ms+=mdm[i];}if(len<=n)return out;atr/=n;ps/=n;ms/=n;const dx=[];for(let i=n;i<len;i++){if(i>n){atr=(atr*(n-1)+(tr[i]||0))/n;ps=(ps*(n-1)+pdm[i])/n;ms=(ms*(n-1)+mdm[i])/n;}const p=atr?100*ps/atr:0,m=atr?100*ms/atr:0;dx.push({i,v:p+m?100*Math.abs(p-m)/(p+m):0});if(dx.length===n){out[i]=dx.reduce((a,x)=>a+x.v,0)/n;}else if(dx.length>n){const prev=out[i-1];if(prev!=null)out[i]=(prev*(n-1)+dx.at(-1).v)/n;}}return out;}
+function taMACD(arr){const a=taEMASeries(arr,12),b=taEMASeries(arr,26),line=arr.map((_,i)=>a[i]==null||b[i]==null?null:a[i]-b[i]),first=line.findIndex(x=>x!=null),sig=new Array(arr.length).fill(null);if(first>=0){const s=taEMASeries(line.slice(first),9);for(let k=0;k<s.length;k++)if(s[k]!=null)sig[first+k]=s[k];}return{line,signal:sig};}
+function taATR(candles,n=14){const tr=Array(candles.length).fill(null),out=Array(candles.length).fill(null);for(let i=1;i<candles.length;i++){const h=+candles[i][2],l=+candles[i][3],pc=+candles[i-1][4];tr[i]=Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc));}if(candles.length<=n)return out;let a=tr.slice(1,n+1).reduce((x,y)=>x+(y||0),0)/n;out[n]=a;for(let i=n+1;i<candles.length;i++){a=(a*(n-1)+(tr[i]||0))/n;out[i]=a;}return out;}
+function taWilson(w,n,z=1.96){if(!n)return null;const p=w/n,z2=z*z,den=1+z2/n,center=(p+z2/(2*n))/den,half=z*Math.sqrt((p*(1-p)+z2/(4*n))/n)/den;return[Math.max(0,center-half)*100,Math.min(1,center+half)*100];}
+function taNormSym(s){s=String(s||'').toUpperCase().trim().replace(/^KRW[-\/]/,'').replace(/[-\/](KRW|USDT|USD|BTC)$/,'').replace(/^(.{2,}?)USDT$/,'$1');return s.replace(/[^A-Z0-9]/g,'').slice(0,12);}
+function taDetectSignals(candles,horizon,feePct=0.10,regime='all',exitMode='time',btcOk=null){
+ const n=candles.length,closes=candles.map(x=>+x[4]),bb=taBollinger(closes),ema20=taEMASeries(closes,20),ema50=taEMASeries(closes,50),rsi=taRSISeries(closes),adx=taADX(candles),macd=taMACD(closes),atr=taATR(candles),signals=[];
+ const O=i=>+candles[i][1],H=i=>+candles[i][2],L=i=>+candles[i][3],V=i=>+candles[i][5]||0;
+ const add=(i,type,key,label)=>signals.push({i,type,key,label,price:closes[i],t:candles[i][0]});
+ const piv=(i,low)=>{const out=[];for(let j=i-29;j<i-5;j++){if(low?(L(j)<=L(j-1)&&L(j)<L(j+1)):(H(j)>=H(j-1)&&H(j)>H(j+1)))out.push(j);}return out;};
+ for(let i=50;i<n-1;i++){
+  const c=closes[i],p=closes[i-1],up=bb.upper[i],lo=bb.lower[i],mid=bb.mid[i],up1=bb.upper[i-1],lo1=bb.lower[i-1];
+  if(up==null||lo==null||mid==null||up1==null||lo1==null)continue;
+  if(p<=lo1&&c>lo&&c<mid)add(i,'buy','bb_lower_bounce','BB 하단 복귀');
+  if(p>=up1&&c<up&&c>mid)add(i,'sell','bb_upper_reject','BB 상단 재진입');
+  const bw=bb.bw.slice(Math.max(0,i-40),i).filter(x=>x!=null);
+  if(bw.length>=20&&bb.bw[i-1]!=null){const sd=[...bw].sort((a,b)=>a-b),p20=sd[Math.floor(sd.length*.2)];if(bb.bw[i-1]<=p20){if(c>up&&p<=up1)add(i,'buy','bb_squeeze_break','BB 수축 상단 돌파');if(c<lo&&p>=lo1)add(i,'sell','bb_squeeze_break_dn','BB 수축 하단 이탈');}}
+  if(ema20[i]!=null&&ema50[i]!=null&&ema20[i-1]!=null&&ema50[i-1]!=null){if(ema20[i-1]<=ema50[i-1]&&ema20[i]>ema50[i])add(i,'buy','golden_cross','EMA 골든크로스');if(ema20[i-1]>=ema50[i-1]&&ema20[i]<ema50[i])add(i,'sell','death_cross','EMA 데드크로스');}
+  if(rsi[i]!=null&&rsi[i-1]!=null){if(rsi[i-1]<30&&rsi[i]>=30)add(i,'buy','rsi_oversold_exit','RSI 과매도 탈출');if(rsi[i-1]>70&&rsi[i]<=70)add(i,'sell','rsi_overbought_exit','RSI 과매수 해소');}
+  if(macd.line[i]!=null&&macd.signal[i]!=null&&macd.line[i-1]!=null&&macd.signal[i-1]!=null){if(macd.line[i-1]<=macd.signal[i-1]&&macd.line[i]>macd.signal[i])add(i,'buy','macd_bull_cross','MACD 상승 교차');if(macd.line[i-1]>=macd.signal[i-1]&&macd.line[i]<macd.signal[i])add(i,'sell','macd_bear_cross','MACD 하락 교차');}
+  /* 캔들 패턴: 볼린저 밴드 터치와 결합한 장악형 */
+  if(H(i)>L(i)){
+   if(closes[i-1]<O(i-1)&&c>O(i)&&c>=O(i-1)&&O(i)<=closes[i-1]&&L(i)<=lo)add(i,'buy','bull_engulf_bb','하단 양봉 장악형');
+   if(closes[i-1]>O(i-1)&&c<O(i)&&c<=O(i-1)&&O(i)>=closes[i-1]&&H(i)>=up)add(i,'sell','bear_engulf_bb','상단 음봉 장악형');
+  }
+  /* 이중바닥/이중천장: 넥라인을 '처음' 돌파·이탈한 확정봉 + 거래량 증가 */
+  if(i>=35){
+   let sv=0;for(let j=i-20;j<i;j++)sv+=V(j);const av=sv/20,vol=V(i);
+   const lw=piv(i,true);if(lw.length>=2){const l2=lw.at(-1),l1=[...lw].reverse().find(j=>j<l2&&l2-j>=5);if(l1!=null){const v1=L(l1),v2=L(l2);let neck=-Infinity;for(let j=l1+1;j<l2;j++)neck=Math.max(neck,H(j));if(v1>0&&Math.abs(v1-v2)/v1<=.02&&c>neck&&p<=neck&&vol>av*1.2)add(i,'buy','double_bottom','이중바닥 넥라인 돌파');}}
+   const hg=piv(i,false);if(hg.length>=2){const h2=hg.at(-1),h1=[...hg].reverse().find(j=>j<h2&&h2-j>=5);if(h1!=null){const v1=H(h1),v2=H(h2);let neck=Infinity;for(let j=h1+1;j<h2;j++)neck=Math.min(neck,L(j));if(v1>0&&Math.abs(v1-v2)/v1<=.02&&c<neck&&p>=neck&&vol>av*1.2)add(i,'sell','double_top','이중천장 넥라인 이탈');}}
+  }
+  /* 헤드앤숄더 / 역헤드앤숄더: 피벗 3개(가운데가 2% 이상 두드러짐, 어깨 높이 차 5% 이내), 넥라인=두 골(봉)의 평균, 처음 이탈·돌파한 확정봉 */
+  if(i>=70){
+   const pv=low=>{const o=[];for(let j=i-59;j<i-3;j++){if(low?(L(j)<=L(j-1)&&L(j)<=L(j-2)&&L(j)<L(j+1)&&L(j)<L(j+2)):(H(j)>=H(j-1)&&H(j)>=H(j-2)&&H(j)>H(j+1)&&H(j)>H(j+2)))o.push(j);}return o;};
+   const ph=pv(false);if(ph.length>=3){const [a,b,d]=ph.slice(-3),ha=H(a),hb=H(b),hd=H(d);if(b-a>=4&&d-b>=4&&hb>ha*1.02&&hb>hd*1.02&&Math.abs(ha-hd)/Math.max(ha,hd)<=.05){let m1=Infinity,m2=Infinity;for(let j=a;j<=b;j++)m1=Math.min(m1,L(j));for(let j=b;j<=d;j++)m2=Math.min(m2,L(j));const neck=(m1+m2)/2;if(c<neck&&p>=neck)add(i,'sell','head_shoulders','헤드앤숄더 넥라인 이탈');}}
+   const pl=pv(true);if(pl.length>=3){const [a,b,d]=pl.slice(-3),la=L(a),lb=L(b),ld=L(d);if(b-a>=4&&d-b>=4&&lb<la*.98&&lb<ld*.98&&Math.abs(la-ld)/Math.max(la,ld)<=.05){let m1=-Infinity,m2=-Infinity;for(let j=a;j<=b;j++)m1=Math.max(m1,H(j));for(let j=b;j<=d;j++)m2=Math.max(m2,H(j));const neck=(m1+m2)/2;if(c>neck&&p<=neck)add(i,'buy','inv_head_shoulders','역헤드앤숄더 넥라인 돌파');}}
+  }
+ }
+ /* 기저 승률: 신호와 무관하게 아무 봉에서 진입했을 때의 승률 (같은 기간·보유봉·비용·청산규칙·국면 필터) */
+ const split=50+Math.floor((n-51)*.7),base={buy:{w:0,n:0},sell:{w:0,n:0}};
+ const okR=i=>regime==='all'||(regime==='btcup'?!!(btcOk&&btcOk.get(candles[i][0])):(adx[i]!=null&&(regime==='trend'?adx[i]>=25:adx[i]<25)));
+ if(regime!=='all'){for(let k=signals.length-1;k>=0;k--)if(!okR(signals[k].i))signals.splice(k,1);}
+ /* 청산: time=horizon봉 뒤 종가 / atr=손절 1.5×ATR·목표 3×ATR(같은 봉에서 둘 다 닿으면 손절 우선), 미도달 시 horizon봉 종가 */
+ const ev=(i,type)=>{const e=i+1,x=e+horizon;if(x>=n)return null;const en=O(e);if(!(en>0&&closes[x]>0))return null;const dir=type==='buy'?1:-1;let ex=closes[x];
+  if(exitMode==='atr'&&atr[i]>0){const a=atr[i],stop=dir>0?en-1.5*a:en+1.5*a,tgt=dir>0?en+3*a:en-3*a;for(let j=e;j<=x;j++){const hs=dir>0?L(j)<=stop:H(j)>=stop,ht=dir>0?H(j)>=tgt:L(j)<=tgt;if(hs){ex=stop;break;}if(ht){ex=tgt;break;}}}
+  return{v:dir*(ex/en-1)*100-feePct,x};};
+ for(let i=50;i<n-1;i++){if(!okR(i))continue;for(const t of['buy','sell']){const r=ev(i,t);if(!r)continue;base[t].n++;if(r.v>0)base[t].w++;}}
+ const groups={};
+ for(const s of signals){const g=groups[s.key]||(groups[s.key]={key:s.key,label:s.label,type:s.type,rets:[],last:null,lastExit:-1});g.last=s;if(s.i<g.lastExit)continue;const r=ev(s.i,s.type);if(!r)continue;g.rets.push({v:r.v,oos:s.i>=split});g.lastExit=r.x;}
+ const K=20,stats=Object.values(groups).map(g=>{const a=g.rets.map(r=>r.v),nn=a.length,w=a.filter(v=>v>0).length,sorted=[...a].sort((x,y)=>x-y),avg=nn?a.reduce((x,y)=>x+y,0)/nn:null,med=nn?(nn%2?sorted[(nn-1)/2]:(sorted[nn/2-1]+sorted[nn/2])/2):null,ci=taWilson(w,nn),bs=base[g.type],b=bs.n?bs.w/bs.n*100:50,o=g.rets.filter(r=>r.oos),ow=o.filter(r=>r.v>0).length;return{key:g.key,label:g.label,type:g.type,n:nn,winRate:nn?w/nn*100:null,ci,avgRet:avg,medRet:med,last:g.last,base:b,post:nn?(w+K*b/100)/(nn+K)*100:b,edge:nn?w/nn*100-b:null,sig:!!(ci&&ci[0]>b),oosN:o.length,oosWin:o.length?ow/o.length*100:null};}).sort((a,b)=>b.n-a.n);
+ const statMap={};stats.forEach(x=>{statMap[x.key]=x});
+ const recent=signals.filter(x=>x.i>=n-120),active=signals.filter(x=>x.i>=n-4),last=n-1,price=closes[last],bbPos=bb.upper[last]!=null&&bb.lower[last]!=null&&bb.upper[last]>bb.lower[last]?(price-bb.lower[last])/(bb.upper[last]-bb.lower[last])*100:null;
+ return{candles,closes,bb,ema20,ema50,rsi,adx,macd,atr,signals,recent,active,stats,statMap,base,current:{price,rsi:rsi[last],adx:adx[last],atr:atr[last],atrPct:price>0&&atr[last]!=null?atr[last]/price*100:null,bbPos,mid:bb.mid[last],upper:bb.upper[last],lower:bb.lower[last],lastSignal:signals.at(-1)||null}};
+}
+function drawTaChart(canvas,result){
+ if(!canvas||!result)return;const dpr=window.devicePixelRatio||1,w=canvas.clientWidth||720,h=canvas.clientHeight||320;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ const {candles,bb,ema20,ema50,recent}=result,n=candles.length,start=Math.max(0,n-120),cs=candles.slice(start),vals=[];for(const c of cs)vals.push(+c[2],+c[3]);for(const arr of [bb.upper,bb.lower,ema20,ema50])for(const v of arr.slice(start))if(v!=null)vals.push(v);if(vals.length<2)return;
+ let mn=Math.min(...vals),mx=Math.max(...vals),span=Math.max(mx-mn,mx*.002);mn-=span*.06;mx+=span*.06;const pad={l:60,r:12,t:12,b:25},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,X=i=>pad.l+(cs.length<=1?0:i/(cs.length-1)*pw),Y=v=>pad.t+(mx-v)/(mx-mn)*ph;
+ ctx.strokeStyle='#e8edf3';ctx.lineWidth=1;ctx.font='10px Arial';ctx.fillStyle='#64748b';for(let g=0;g<=4;g++){const yy=pad.t+g*ph/4,val=mx-g*(mx-mn)/4;ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(w-pad.r,yy);ctx.stroke();ctx.fillText(val>=1000?val.toLocaleString('en-US',{maximumFractionDigits:0}):val.toFixed(3),3,yy+3);}
+ const line=(arr,color,width)=>{ctx.beginPath();let on=false;for(let j=0;j<cs.length;j++){const v=arr[start+j];if(v==null){on=false;continue;}if(!on){ctx.moveTo(X(j),Y(v));on=true;}else ctx.lineTo(X(j),Y(v));}ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
+ line(bb.upper,'#94a3b8',1);line(bb.mid,'#a78bfa',1);line(bb.lower,'#94a3b8',1);line(ema20,'#f59e0b',1);line(ema50,'#0ea5e9',1);
+ const cw=Math.max(2,Math.min(7,pw/cs.length*.62));for(let j=0;j<cs.length;j++){const c=cs[j],o=+c[1],cl=+c[4],hi=+c[2],lo=+c[3],x=X(j),up=cl>=o;ctx.strokeStyle=up?'#16a34a':'#dc2626';ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(x,Y(hi));ctx.lineTo(x,Y(lo));ctx.stroke();const top=Y(Math.max(o,cl)),bot=Y(Math.min(o,cl));ctx.fillRect(x-cw/2,top,cw,Math.max(1,bot-top));}
+ const hits=[],sm=result.statMap||{};
+ recent.forEach((s,k)=>{const j=s.i-start;if(j<0||j>=cs.length)return;const x=X(j),buy=s.type==='buy',cd=candles[s.i],y=buy?Y(+cd[3])+4:Y(+cd[2])-4,col=buy?'#15803d':'#b91c1c';ctx.fillStyle=col;ctx.beginPath();if(buy){ctx.moveTo(x,y);ctx.lineTo(x-6,y+10);ctx.lineTo(x+6,y+10);}else{ctx.moveTo(x,y);ctx.lineTo(x-6,y-10);ctx.lineTo(x+6,y-10);}ctx.closePath();ctx.fill();hits.push({x,y:buy?y+5:y-5,s});const st=sm[s.key];if(k>=recent.length-6&&st&&st.n){ctx.font='bold 10px Arial';ctx.fillStyle=col;const tx=Math.min(Math.max(x-10,pad.l),w-30);ctx.fillText(Math.round(st.post)+'%',tx,buy?y+22:y-13);}});
+ const sel=canvas._sel;
+ if(sel){const st=sm[sel.key],lines=[`${sel.type==='buy'?'매수':'매도'} · ${sel.label}`,new Date(sel.t).toLocaleString('ko-KR'),st&&st.n?`보정확률 ${st.post.toFixed(0)}% · 기저 ${st.base.toFixed(0)}% · 표본 ${st.n}${st.n<30?' (저신뢰)':''}`:'표본 없음',st&&st.ci?`95% 구간 ${st.ci[0].toFixed(0)}~${st.ci[1].toFixed(0)}% · 평균 ${st.avgRet>0?'+':''}${st.avgRet.toFixed(2)}%`:''].filter(Boolean);ctx.font='11px Arial';const bw2=Math.max(...lines.map(l=>ctx.measureText(l).width))+14,bh=lines.length*15+8,jx=X(Math.max(0,sel.i-start)),bx=Math.min(Math.max(pad.l,jx-bw2/2),w-bw2-4),by=pad.t+4;ctx.fillStyle='rgba(15,23,42,.92)';ctx.fillRect(bx,by,bw2,bh);ctx.fillStyle='#fff';lines.forEach((l,k)=>ctx.fillText(l,bx+7,by+16+k*15));}
+ canvas._hits=hits;
+}
+const TA_CACHE=new Map();
+async function taFetchHistory(sym,frame,target,force){
+ const key=sym+'|'+frame+'|'+target,ttl=frame==='day'?600000:60000,hit=TA_CACHE.get(key);
+ if(!force&&hit&&Date.now()-hit.at<ttl)return hit.v;
+ let all=[],to=null,source=null,pages=0,mixed=false;
+ while(all.length<target&&pages<Math.ceil(target/200)+1){
+  const body={symbol:sym,frame,count:Math.min(200,target-all.length),...(to?{to}:{})};
+  const d=await call('/candles',body,25000);
+  if(!d?.ok||!Array.isArray(d.candles)||!d.candles.length){if(!all.length)throw Error(d?.error||'캔들 데이터 없음');break;}
+  if(source&&d.source&&d.source!==source){mixed=true;break;} /* KRW(업비트)↔USDT(바이낸스) 가격 혼합 방지 */
+  source=d.source||source||'upbit';
+  const batch=d.candles.slice().sort((a,b)=>a[0]-b[0]);const oldest=batch[0][0],before=all.length;all=batch.concat(all);
+  const seen=new Map();for(const c of all)seen.set(c[0],c);all=[...seen.values()].sort((a,b)=>a[0]-b[0]);
+  if(all.length===before||oldest==null)break;to=oldest-1;pages++;
+  if(batch.length<Math.min(200,target-before))break;
+  await new Promise(r=>setTimeout(r,120));
+ }
+ const v={candles:all.slice(-target),source:source||'upbit',pages,mixed};TA_CACHE.set(key,{at:Date.now(),v});return v;
+}
+let TA_TOK=0;
+const taFmtP=v=>v==null?'—':v.toLocaleString('en-US',{maximumFractionDigits:v>100?0:4});
+function taFeeVal(){const f=parseFloat($('taFee')?.value);return Number.isFinite(f)?Math.max(0,Math.min(2,f)):0.10;}
+function taVerdictHTML(r){
+ const rows=r.active.map(s=>({s,st:r.statMap[s.key]})).filter(x=>x.st&&x.st.n);
+ if(!rows.length)return '최근 3개 확정봉 내 신호 없음 → <b>관망</b>';
+ const line=x=>`${x.s.type==='buy'?'🟢 매수':'🔴 매도'} ${esc(x.s.label)} · 보정확률 ${x.st.post.toFixed(0)}% (기저 ${x.st.base.toFixed(0)}%, 표본 ${x.st.n}${x.st.n<30?' · 저신뢰':''})`;
+ const good=rows.filter(x=>x.st.n>=30&&x.st.sig).sort((a,b)=>(b.st.ci[0]-b.st.base)-(a.st.ci[0]-a.st.base))[0];
+ const head=good?`<b>${good.s.type==='buy'?'매수':'매도'} 우위 후보</b> — ${esc(good.s.label)}: 신뢰구간 하단이 기저 승률을 넘음 (과거 통계일 뿐 보장 아님)`:'<b>통계적으로 유의한 우위 없음 → 관망</b>';
+ return head+'<br>'+rows.map(line).join('<br>');
+}
+function taBtcMap(cs){const cl=cs.map(x=>+x[4]),e=taEMASeries(cl,50),m=new Map();cs.forEach((c,i)=>m.set(c[0],e[i]!=null&&cl[i]>e[i]));return m;}
+/* 연결 판정: TA 매수 신호 × BTC 국면(Compass) × 자금순환(GLOBAL + 코인별 BTC 대비 강도) — 규칙 기반 점검표 */
+function taGateEval(sym,r){
+ const active=(r?.active||[]).map(s=>({s,st:r.statMap?.[s.key]})).filter(x=>x.st&&x.st.n);
+ const buys=active.filter(x=>x.s.type==='buy');
+ const sells=active.filter(x=>x.s.type==='sell');
+ const goodBuy=buys.filter(x=>x.st.n>=30&&x.st.sig&&x.st.ci&&Number.isFinite(x.st.ci[0]))
+   .sort((a,b)=>(b.st.ci[0]-b.st.base)-(a.st.ci[0]-a.st.base))[0];
+ const anyBuy=buys.sort((a,b)=>(b.st.n-a.st.n))[0];
+ const goodSell=sells.filter(x=>x.st.n>=30&&x.st.sig&&x.st.ci&&Number.isFinite(x.st.ci[0]))
+   .sort((a,b)=>(b.st.ci[0]-b.st.base)-(a.st.ci[0]-a.st.base))[0];
+ const anySell=sells.sort((a,b)=>(b.st.n-a.st.n))[0];
+ const L=[];let block=false,caut=0,unk=0;
+ if(goodBuy)L.push(['TA 매수 신호','ok',`${goodBuy.s.label} · 보정 ${goodBuy.st.post.toFixed(0)}% (기저 ${goodBuy.st.base.toFixed(0)}%, 표본 ${goodBuy.st.n})`]);
+ else if(anyBuy){caut++;L.push(['TA 매수 신호','warn',`${anyBuy.s.label} · 보정 ${anyBuy.st.post.toFixed(0)}% · 표본 ${anyBuy.st.n}${anyBuy.st.n<30?' (부족)':' (통계적 유의성 미확인)'}`]);}
+ else L.push(['TA 매수 신호','no','최근 3개 확정봉에 매수 신호 없음']);
+ if(goodSell)L.push(['TA 매도 신호','no',`${goodSell.s.label} · 보정 ${goodSell.st.post.toFixed(0)}% · 표본 ${goodSell.st.n}`]);
+ else if(anySell)L.push(['TA 매도 신호','warn',`${anySell.s.label} · 표본 ${anySell.st.n}${anySell.st.n<30?' (부족)':' (유의성 미확인)'}`]);
+ else L.push(['TA 매도 신호','ok','최근 3개 확정봉에 매도 신호 없음']);
+
+ const cs=window.__compassState,T='BTC 국면 (MASTER MARKET COMPASS)';
+ const compassAge=cs?.at?Date.now()-cs.at:Infinity;
+ if(!cs||compassAge>6*3600e3){unk++;L.push([T,'unk',!cs?'로드 대기':'데이터 오래됨 · 재조회 필요']);}
+ else if(!cs.quality){unk++;L.push([T,'unk','데이터 품질 미달 → 판단 보류']);}
+ else{
+  const zl={cold:'과열 낮음',mild:'과열 낮음~중간',mid:'과열 중간',warm:'과열 경계',hot:'강한 과열'}[cs.zone]||'과열 구간 미확인';
+  const tr=cs.trend==='confirmed'?'BTC 상승추세 확인':cs.trend==='recovering'?'BTC 회복 중':'BTC 상승추세 미확인';
+  const tx=`${zl} · ${tr}`;
+  if(cs.zone==='hot'){block=true;L.push([T,'no',tx]);}
+  else if(cs.zone==='warm'||cs.trend!=='confirmed'){caut++;L.push([T,'warn',tx]);}
+  else L.push([T,'ok',tx]);
+ }
+
+ const T3='자금순환 (GLOBAL CAPITAL ROTATION)';
+ let coinRel=null;
+ if(sym==='BTC')L.push([T3,'na','BTC는 알트 순환강도 평가 대상이 아님']);
+ else{
+  const rs=window.__rotState,rotAge=rs?.at?Date.now()-rs.at:Infinity;
+  let row=null;try{row=(typeof rotLast!=='undefined'&&rotLast&&Array.isArray(rotLast.rows)?rotLast.rows:[]).find(x=>x.ok&&String(x.sym).toUpperCase()===String(sym).toUpperCase())||null;}catch(e){}
+  const rowAge=typeof rotLastOkAt!=='undefined'&&rotLastOkAt?Date.now()-rotLastOkAt:Infinity;
+  if(!rs||rotAge>45*60e3||!Number.isFinite(rs.hits)){unk++;L.push([T3,'unk',!rs?'로드 대기':rotAge>45*60e3?'요약 데이터 오래됨':'자금순환 데이터 품질 미확인']);}
+  else if(!row||rowAge>45*60e3){unk++;L.push([T3,'unk',!row?`${sym} 개별 상대강도 데이터 없음`:'코인별 상대강도 데이터 오래됨']);}
+  else{
+   coinRel=Number(row.rel24);
+   const strong=Number.isFinite(coinRel)&&coinRel>0;
+   const tx=`시장 조건 ${rs.hits}/4 · ${sym}/BTC 24h 초과수익 ${Number.isFinite(coinRel)?(coinRel>0?'+':'')+coinRel.toFixed(2)+'%':'미확인'}`;
+   if(rs.hits>=3&&strong)L.push([T3,'ok',tx]);
+   else{caut++;L.push([T3,'warn',tx+(rs.hits<3?' · 시장 순환 조건 부족':' · 코인 상대강도 미확인/약세')]);}
+  }
+ }
+
+ let tier,rank,short;
+ if(anySell){tier=goodSell?'🔻 매도 신호 우선 — 보유분 점검':'🟠 매도 신호 관찰 — 추가 확인';rank=4;short=goodSell?'🔻 매도 확인':'🟠 매도 관찰';}
+ else if(!goodBuy&&!anyBuy){tier='⏸ 신호 없음 — 연결 판정 대상 아님';rank=0;short='—';}
+ else if(block){tier='⛔ 보류 — BTC 강한 과열 구간';rank=0;short='⛔ 보류';}
+ else if(unk){tier='❔ 판정 보류 — 일부 데이터 대기 또는 품질 미달';rank=1;short='❔ 대기';}
+ else if(!caut){tier='✅ 3단 일치 — 분할 매수 검토 가능';rank=3;short='✅ 일치';}
+ else{tier='🟡 일부 불일치 — 추가 확인 후 제한적 검토';rank=2;short='🟡 제한';}
+ return{tier,rank,short,L,key:(goodBuy||anyBuy||goodSell||anySell)?.s.key,label:(goodBuy||anyBuy||goodSell||anySell)?.s.label};
+}
+function taGateRender(){
+ const el=$('taGate'),S=window.__taLast;if(!el)return;if(!S){el.innerHTML='';return;}
+ const r=S.resultN||S.result,g=taGateEval(S.sym,r),ic={ok:'✓',warn:'△',no:'✗',unk:'…',na:'–'};let ev='';
+ if(g.key&&S.resultB&&S.resultN){
+  const a=S.resultN.statMap[g.key],b=S.resultB.statMap[g.key];
+  const f=x=>x&&x.n&&x.winRate!=null?`${x.winRate.toFixed(0)}% (표본 ${x.n})`:'표본 없음';
+  if(a&&b)ev=`<br><span class="small">📐 BTC EMA50 상승추세 필터 검증 · ${esc(g.label)}: 전체 ${f(a)} → BTC EMA50 위 ${f(b)} · 필터 기저 ${b.base.toFixed(0)}%</span>`;
+ }
+ el.innerHTML=`<b>🔗 연결 판정 · TA × BTC 국면 × 자금순환</b> — ${g.tier}<br>`+
+  g.L.map(x=>`${ic[x[1]]} <b>${esc(x[0])}</b> ${esc(x[2])}`).join('<br>')+ev+
+  '<br><span class="small">규칙 기반 점검표이며 수익 보장이 아닙니다. 현재 BTC 국면·자금순환 상태는 과거 승률에 소급 적용하지 않습니다. 과거 필터 검증은 BTC EMA50 위 여부만 별도로 계산합니다. 데이터 누락·오래됨·개별 코인 상대강도 미수신 시 매수 우위 판정을 차단합니다.</span>';
+}
+window.taGateRender=taGateRender;
+async function loadTaLab(force=false){
+ const st=$('taStatus'),tb=$('taWinTable')?.querySelector('tbody');if(!st)return;
+ const sym=($('taSymbol')?.value||TA_COINS[0]||'BTC').toUpperCase(),frame=$('taFrame')?.value||'day',horizon=Math.max(3,Math.min(60,Number($('taHorizon')?.value)||12)),target=frame==='day'?1000:5000,fee=taFeeVal(),tok=++TA_TOK;
+ st.textContent=`${sym} ${frame==='day'?'일봉':'5분봉'} 과거 데이터 수집 중…`;
+ try{
+  const d=await taFetchHistory(sym,frame==='day'?'day':'5m',target,force);if(tok!==TA_TOK)return;
+  const raw=d.candles;if(raw.length<80)throw Error('캔들 데이터 부족 ('+raw.length+'개)');
+  const regimeSel=$('taRegime')?.value||'all',exitSel=$('taExit')?.value||'time';let btcMap=null;
+  const getBtc=async()=>{if(btcMap)return btcMap;const bd=sym==='BTC'?d:await taFetchHistory('BTC',frame==='day'?'day':'5m',target,false);btcMap=taBtcMap(bd.candles);return btcMap;};
+  if(regimeSel==='btcup'){try{await getBtc();}catch(e){throw Error('BTC 데이터 필요: '+(e?.message||e));}if(tok!==TA_TOK)return;}
+  const result=taDetectSignals(raw,horizon,fee,regimeSel,exitSel,btcMap),c=result.current,last=c.lastSignal,cv=$('taChart');
+  cv._result=result;cv._sel=null;drawTaChart(cv,result);
+  if(!cv.dataset.bound){cv.dataset.bound='1';const pick=e=>{const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;let b=null,bd=18;for(const h of cv._hits||[]){const dd=Math.hypot(h.x-px,h.y-py);if(dd<bd){bd=dd;b=h;}}const ns=b?b.s:null;if(ns!==cv._sel){cv._sel=ns;if(cv._result)drawTaChart(cv,cv._result);}};cv.addEventListener('pointermove',pick);cv.addEventListener('pointerdown',pick);window.addEventListener('resize',()=>{if(cv._result)drawTaChart(cv,cv._result)});}
+  $('taMetrics').innerHTML=[`<span>${sym} 현재가 ${taFmtP(c.price)}</span>`,`<span>BB 위치 ${c.bbPos==null?'—':c.bbPos.toFixed(0)+'%'}</span>`,`<span>RSI ${c.rsi==null?'—':c.rsi.toFixed(1)}</span>`,`<span>ADX ${c.adx==null?'—':c.adx.toFixed(1)}</span><span>ATR ${c.atrPct==null?'—':c.atrPct.toFixed(2)+'%'}</span>`,`<span>최근 신호 ${last?esc(last.label)+' · '+new Date(last.t).toLocaleString('ko-KR'):'—'}</span>`].join('');
+  $('taVerdict').innerHTML=taVerdictHTML(result);
+  window.__taLast={sym,frame,result,resultN:regimeSel==='all'?result:null,resultB:regimeSel==='btcup'?result:null};taGateRender();
+  (async()=>{try{const m=await getBtc();if(tok!==TA_TOK)return;const rb=regimeSel==='btcup'?result:taDetectSignals(raw,horizon,fee,'btcup',exitSel,m),rn=regimeSel==='all'?result:taDetectSignals(raw,horizon,fee,'all',exitSel,null);if(tok!==TA_TOK)return;window.__taLast={sym,frame,result,resultB:rb,resultN:rn};taGateRender();}catch(e){}})();
+  if(tb){if(!result.stats.length)tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted)">유효 신호 표본이 없습니다.</td></tr>';else tb.innerHTML=result.stats.map(x=>{const wr=x.winRate==null?'—':x.winRate.toFixed(1)+'%',low=x.n<30,cls=low||x.n===0?'neutral':x.sig&&x.edge>0?'good':x.edge<-3?'bad':'neutral',pc=x.n?x.post.toFixed(0)+'%':'—',avg=x.avgRet==null?'—':(x.avgRet>0?'+':'')+x.avgRet.toFixed(2)+'%',ci=x.ci?`${x.ci[0].toFixed(0)}~${x.ci[1].toFixed(0)}%`:'—',oos=x.oosN?`${x.oosWin.toFixed(0)}% (${x.oosN})`:'—',type=x.type==='buy'?'<span class="good">매수</span>':'<span class="bad">매도</span>';return`<tr><td>${esc(x.label)}</td><td>${type}</td><td>${x.n}${low?'*':''}</td><td class="${cls}">${wr}</td><td>${x.base.toFixed(0)}%</td><td class="${cls}"><b>${pc}</b></td><td>${ci}</td><td>${avg}</td><td>${oos}</td><td class="small">${x.last?new Date(x.last.t).toLocaleDateString('ko-KR'):'—'}</td></tr>`}).join('');}
+  st.textContent=`${sym} · ${frame==='day'?'일봉':'5분봉'} ${raw.length.toLocaleString()}개 · ${d.pages}회 조회 · 평가 ${horizon}봉 · ${d.source} · ${new Date().toLocaleString('ko-KR')}${d.mixed?' · ⚠ 거래소 전환 감지: 가격 혼합 방지를 위해 오래된 구간 제외':''}`;
+  $('taNotes').innerHTML=`<b>읽는 법</b> — ${$('taExit')?.value==='atr'?'[청산: 손절 1.5×ATR / 목표 3×ATR, 같은 봉에서 둘 다 닿으면 손절 우선, 미도달 시 '+horizon+'봉 뒤 종가] ':''}${$('taRegime')?.value==='trend'?'[추세장 ADX≥25 구간만] ':$('taRegime')?.value==='range'?'[횡보장 ADX<25 구간만] ':$('taRegime')?.value==='btcup'?'[BTC가 EMA50 위인 시점만] ':''}승률: 신호 확정 다음 봉 시가 진입, ${horizon}봉 뒤 종가 청산, 왕복 비용 ${fee.toFixed(2)}% 차감 후 수익>0 비율. <b>기저</b>: 신호 없이 아무 봉에서 진입했을 때의 같은 기준 승률(상승장에선 매수 승률이 원래 높음). <b>보정확률</b>: 표본 20개만큼 기저 승률 쪽으로 당긴 베이지안 추정(표본이 적을수록 기저에 가까움). 신뢰구간 하단이 기저를 넘고 표본 30개 이상일 때만 '유의'로 봅니다. <b>OOS</b>: 가장 최근 30% 구간만 따로 본 승률(괄호는 표본 수)로, 과거에만 맞춘 신호인지 점검합니다. * = 표본 30개 미만. 코인·신호를 많이 훑어볼수록 우연히 좋아 보이는 결과가 섞입니다. 매도 신호는 하락 회피 점수이지 공매도 수익이 아니며, 실제 체결·호가·세금과 다를 수 있고 투자 권유가 아닙니다.`;
+ }catch(e){if(tok!==TA_TOK)return;st.textContent='TA 분석 실패 · '+(e?.message||String(e)).slice(0,150);if(tb)tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--red)">데이터 로드 실패</td></tr>';}
+}
+async function taScanAll(){
+ const out=$('taScanOut'),btn=$('taScan');if(!out||!btn)return;btn.disabled=true;
+ const frame=$('taFrame')?.value||'day',horizon=Math.max(3,Math.min(60,Number($('taHorizon')?.value)||12)),fee=taFeeVal(),syms=TA_COINS.slice(),rows=[];let done=0;
+ const work=async sym=>{try{const d=await taFetchHistory(sym,frame==='day'?'day':'5m',frame==='day'?1000:1000,false);if(d.candles.length<80)throw Error('부족');const r=taDetectSignals(d.candles,horizon,fee,['trend','range'].includes($('taRegime')?.value)?$('taRegime').value:'all',$('taExit')?.value||'time'),act=r.active.map(s=>({s,st:r.statMap[s.key]})).filter(x=>x.st&&x.st.n),best=act.sort((a,b)=>(b.st.post-b.st.base)-(a.st.post-a.st.base))[0];rows.push({sym,price:r.current.price,rsi:r.current.rsi,bb:r.current.bbPos,best,g:taGateEval(sym,r)});}catch(e){rows.push({sym,err:1});}done++;out.innerHTML=`<span class="small">전체 스캔 ${done}/${syms.length}…</span>`;};
+ try{const q=syms.slice();await Promise.all([0,1].map(async()=>{while(q.length)await work(q.shift());}));
+  const rank=x=>x.err?-9:(x.g?x.g.rank:0)*10+(x.best?(x.best.st.n>=30&&x.best.st.sig?2:1):0);rows.sort((a,b)=>rank(b)-rank(a)||a.sym.localeCompare(b.sym));
+  out.innerHTML=`<table class="ta-table" style="min-width:560px"><thead><tr><th>코인(클릭=상세)</th><th>현재가</th><th>RSI</th><th>BB위치</th><th>최근 3봉 신호</th><th>보정확률</th><th>기저</th><th>표본</th><th>연결 판정</th></tr></thead><tbody>${rows.map(x=>x.err?`<tr><td>${esc(x.sym)}</td><td colspan="8" class="bad">데이터 실패</td></tr>`:`<tr data-ta-pick="${esc(x.sym)}" style="cursor:pointer"><td>${esc(x.sym)}</td><td>${taFmtP(x.price)}</td><td>${x.rsi==null?'—':x.rsi.toFixed(0)}</td><td>${x.bb==null?'—':x.bb.toFixed(0)+'%'}</td><td>${x.best?(x.best.s.type==='buy'?'<span class="good">매수</span> ':'<span class="bad">매도</span> ')+esc(x.best.s.label):'—'}</td><td>${x.best?x.best.st.post.toFixed(0)+'%':'—'}</td><td>${x.best?x.best.st.base.toFixed(0)+'%':'—'}</td><td>${x.best?x.best.st.n+(x.best.st.n<30?'*':''):'—'}</td><td>${x.g.short}</td></tr>`).join('')}</tbody></table><div class="ta-note">정렬: 연결 판정(✅→🟡→❔→나머지) 우선, 그다음 유의한 신호 순. 연결 판정은 현재 BTC 국면·자금순환 값을 모든 코인에 동일하게 적용합니다. 5분봉 스캔은 최근 1,000봉(약 3.5일)만 사용하므로 신뢰도가 낮습니다.</div>`;
+ }finally{btn.disabled=false;}
+}
+
 async function loadCapitalRotation(force=false){
   const st=$('rotationStatus'),ph=$('rotationPhases');if(!st||!ph)return;
   st.textContent=force?'자금순환 데이터 강제 갱신 중…':'자금순환 데이터 조회 중…';
@@ -2408,16 +2724,34 @@ async function loadCapitalRotation(force=false){
     else if(hits>=3)verdict='순환 가설 일부 지지 · '+hits+'/4 조건 충족. 직접 자금흐름은 BTC ETF에서만 확인하세요.';
     else if(hits<=1)verdict='자금 순환 증거 제한적 · '+hits+'/4 조건 충족. 아직 단계적 이동을 확인하기 어렵습니다.';
     $('rotationVerdict').innerHTML=checks.map(x=>`<span>${x[1]?'✓':'✕'} ${esc(x[0])}</span>`).join('')+`<span><b>${esc(verdict)}</b></span>`;
+    window.__rotState={hits,seq:!!d.summary?.sequenceConfirmed,at:Date.now()};try{window.taGateRender&&window.taGateRender()}catch(e){}
     const rows=[];for(const group of [['AI · 반도체',d.assets?.ai],['채권 · 현금',d.assets?.defensive],['크립토',d.assets?.crypto]])for(const x of(group[1]||[]))rows.push({...x,group:group[0]});
-    $('rotationAssets').innerHTML='<table class="rotation-table"><thead><tr><th>구분</th><th>자산</th><th>7일</th><th>30일</th><th>90일</th><th>데이터 검증 · 출처</th></tr></thead><tbody>'+rows.map(x=>`<tr><td>${esc(x.group)}</td><td>${esc(x.symbol)}</td><td>${rotationPct(x.d7)}</td><td>${rotationPct(x.d30)}</td><td>${rotationPct(x.d90)}</td><td>${x.ok?'정상':'누락'} · ${esc(x.source||'출처 미확인')}<br><small>${x.ok?`${esc(x.rowCount||0)}개 일봉 · ${esc(x.latestDate||'날짜 미확인')} · ${x.fallbackUsed?'대체 출처 사용':'1차 출처'}`:esc(x.error||'데이터 없음')}</small></td></tr>`).join('')+'</tbody></table>';
+    $('rotationAssets').innerHTML='<table class="rotation-table"><thead><tr><th>구분</th><th>자산</th><th>7일</th><th>30일</th><th>90일</th><th>데이터</th></tr></thead><tbody>'+rows.map(x=>`<tr><td>${esc(x.group)}</td><td>${esc(x.symbol)}</td><td>${rotationPct(x.d7)}</td><td>${rotationPct(x.d30)}</td><td>${rotationPct(x.d90)}</td><td>${x.ok?'정상':'누락'}</td></tr>`).join('')+'</tbody></table>';
     const fr=d.flows||{},flowRows=fr.rows||[];
-    $('rotationFlows').innerHTML='<div class="small" style="margin:8px 0 5px;font-weight:800">BTC 미국 현물 ETF 실제 순유입 · 단위 USD million · '+esc(fr.source||'데이터 출처 미확인')+'</div>'+(flowRows.length?'<table class="rotation-table"><thead><tr><th>미국 거래일</th><th>순유입</th></tr></thead><tbody>'+flowRows.slice(-10).reverse().map(x=>`<tr><td>${esc(x.date)}</td><td>${rotationMoneyHtml(x.flowUsd/1e6)}</td></tr>`).join('')+'</tbody></table>':'BTC ETF 순유입 데이터 수집 실패 · 가격 데이터와 혼합하지 않고 별도 표시합니다.');
+    $('rotationFlows').innerHTML='<div class="small" style="margin:8px 0 5px;font-weight:800">BTC 미국 현물 ETF 실제 순유입 · 단위 USD million · '+esc(fr.source||'데이터 출처 미확인')+'</div>'+(flowRows.length?'<table class="rotation-table"><thead><tr><th>미국 거래일</th><th>순유입</th></tr></thead><tbody>'+flowRows.slice(-10).reverse().map(x=>`<tr><td>${esc(x.date)}</td><td>${rotationMoney(x.flowUsd/1e6)}</td></tr>`).join('')+'</tbody></table>':'BTC ETF 순유입 데이터 수집 실패 · 가격 데이터와 혼합하지 않고 별도 표시합니다.');
     const q=d.quality||{};
-    $('rotationNotes').innerHTML=(d.notes||[]).map(x=>'· '+esc(x)).join('<br>')+`<br>데이터 정상 ${q.available||0}/${q.total||0} · 크립토 ${q.cryptoAvailable||0}/${q.cryptoTotal||0} · 대체 출처 ${q.fallbackCount||0}개 · 지연 확인 ${q.staleAssets?.length||0}개 · ETF 직접 플로우 ${q.flowDirect?'연결':'미연결'} · 업데이트 ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')} · <a href="https://www.tftc.io/bitcoin-etf-flows" target="_blank" rel="noopener">TFTC 원자료</a>`+(q.missing?.length?'<br>누락 자산: '+q.missing.map(x=>esc(x.symbol)+' ('+esc(x.error)+')').join(', '):'');
-    st.textContent=`${d.version||'rotation'} · 가격 데이터 ${q.available||0}/${q.total||0} · 크립토 ${q.cryptoAvailable||0}/${q.cryptoTotal||0} · 대체 출처 ${q.fallbackCount||0}개 · 지연 확인 ${q.staleAssets?.length||0}개 · BTC ETF 플로우 ${q.flowRows||0}일 · 15분 캐시 · ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')}`;
+    $('rotationNotes').innerHTML=(d.notes||[]).map(x=>'· '+esc(x)).join('<br>')+`<br>데이터 정상 ${q.available||0}/${q.total||0} · ETF 직접 플로우 ${q.flowDirect?'연결':'미연결'} · 업데이트 ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')} · <a href="https://www.tftc.io/bitcoin-etf-flows" target="_blank" rel="noopener">TFTC 원자료</a>`;
+    st.textContent=`${d.version||'rotation'} · 가격 데이터 ${q.available||0}/${q.total||0} · BTC ETF 플로우 ${q.flowRows||0}일 · 15분 캐시 · ${new Date(d.updatedAt||Date.now()).toLocaleString('ko-KR')}`;
   }catch(e){st.textContent='자금순환 엔진 연결 실패 · '+(e?.message||String(e)).slice(0,150)+' · Worker URL이 최신인지, /health 에 /rotation 이 있는지 확인하세요.';}
 }
 $('rotationReload')?.addEventListener('click',()=>loadCapitalRotation(true));
+
+taRenderCoins();
+$('taReload')?.addEventListener('click',()=>loadTaLab(true));
+$('taSymbol')?.addEventListener('change',()=>loadTaLab(false));
+$('taFrame')?.addEventListener('change',()=>loadTaLab(false));
+$('taHorizon')?.addEventListener('change',()=>loadTaLab(false));
+$('taAddCoin')?.addEventListener('click',taAddCoin);
+$('taAddSymbol')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();taAddCoin()}});
+$('taResetCoins')?.addEventListener('click',()=>{TA_COINS=TA_DEFAULT_COINS.slice();taSaveCoins();taRenderCoins();loadTaLab(true)});
+$('taCoinChips')?.addEventListener('click',e=>{const b=e.target.closest('[data-ta-del]');if(b)taRemoveCoin(b.dataset.taDel)});
+$('taFee')?.addEventListener('change',()=>loadTaLab(false));
+$('taRegime')?.addEventListener('change',()=>loadTaLab(false));
+$('taExit')?.addEventListener('change',()=>loadTaLab(false));
+$('taScan')?.addEventListener('click',taScanAll);
+$('taScanOut')?.addEventListener('click',e=>{const r=e.target.closest('[data-ta-pick]');if(r){$('taSymbol').value=r.dataset.taPick;loadTaLab(false);}});
+setTimeout(()=>loadTaLab(false),1200);
+
 
 async function loadCompassBacktest(force=false){
   const st=$('compassBtStatus'),tb=$('compassBtTable'),vd=$('compassBtVerdict'),nt=$('compassBtNotes');

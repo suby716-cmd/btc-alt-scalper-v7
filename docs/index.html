@@ -703,24 +703,12 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
     <div class="ta-note" id="taNotes">승률 = 신호 이후 N봉 종가 기준 수익이 0% 초과인 비율입니다. 수수료·슬리피지 미반영. 표본이 적으면 참고만 하세요. 단독 매매 신호가 아닙니다.</div>
   </section>
 
-  <div class="history-wrap" id="asStrategyLab">
-    <div class="history-title">🧪 ALTSEASON 실전 전략 검증실
-      <span class="as-mute">점수 기반 매집·분할매도 · 월봉 데이터 · 자동매매 아님</span>
-    </div>
-    <div class="as-bt-controls">
-      <label>매집 SCORE 이하 <input id="asBtBuy" type="number" min="0" max="100" step="1" value="44"></label>
-      <label>매도 SCORE <input id="asBtSell" type="number" min="1" max="100" step="1" value="65"></label>
-      <label>편도 비용(수수료+슬리피지, %) <input id="asBtCost" type="number" min="0" max="2" step="0.01" value="0.15"></label>
-      <button type="button" class="btn primary" id="asBtRun">월봉 데이터 불러와 검증</button>
-    </div>
-    <div class="as-bt-status small" id="asBtStatus">실행 시 업비트 월봉 데이터와 ALTSEASON SCORE 기록을 맞춰 성과를 계산합니다. 처음 실행은 데이터 조회에 시간이 걸릴 수 있습니다.</div>
-    <div id="asBtSummary" class="history-table"></div>
-    <div id="asBtPeriods" class="history-table"></div>
-    <div class="as-bt-subhead">BTC 대비 상대강도 개선 코인 (마지막 완결 월 기준)</div>
-    <div id="asBtRS" class="history-table">전략 검증 실행 후 표시됩니다.</div>
-    <div class="as-bt-warning">
-      주의: 백테스트는 과거 데이터에 대한 연구 도구이며 미래 수익을 보장하지 않습니다. 현재 상장된 코인만 사용하므로 생존편향이 있고, 상장폐지·거래중단·호가충격·세금·실제 체결 오차를 완전히 반영하지 못합니다. SCORE의 과거 계산 방식이 현재와 달랐던 구간은 별도 해석이 필요합니다. 결과를 실전 매수·매도 신호로 사용하지 말고 페이퍼 트레이딩으로 먼저 확인하세요.
-    </div>
+  <div class="compass-bt" id="compassBt" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff">
+    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:15px">📊 자동 워크포워드 백테스트 <span class="small" style="font-weight:500">과열 점수 구간별 이후 수익률·최대낙폭</span></b><button type="button" class="btn" id="compassBtReload">백테스트 다시 계산</button></div>
+    <div class="small" id="compassBtStatus" style="margin-top:6px">백테스트 계산 중… (처음 1회는 수 초 걸릴 수 있습니다)</div>
+    <div class="compass-verdict" id="compassBtVerdict" style="display:none"></div>
+    <div id="compassBtTable" style="overflow-x:auto;margin-top:8px"></div>
+    <div class="small" id="compassBtNotes" style="margin-top:6px;line-height:1.55;color:var(--muted)"></div>
   </div>
 
   <div class="as-ladder-box">
@@ -803,12 +791,24 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
 
 
 
-  <div class="compass-bt" id="compassBt" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff">
-    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:15px">📊 자동 워크포워드 백테스트 <span class="small" style="font-weight:500">과열 점수 구간별 이후 수익률·최대낙폭</span></b><button type="button" class="btn" id="compassBtReload">백테스트 다시 계산</button></div>
-    <div class="small" id="compassBtStatus" style="margin-top:6px">백테스트 계산 중… (처음 1회는 수 초 걸릴 수 있습니다)</div>
-    <div class="compass-verdict" id="compassBtVerdict" style="display:none"></div>
-    <div id="compassBtTable" style="overflow-x:auto;margin-top:8px"></div>
-    <div class="small" id="compassBtNotes" style="margin-top:6px;line-height:1.55;color:var(--muted)"></div>
+  <div class="history-wrap" id="asStrategyLab">
+    <div class="history-title">🧪 ALTSEASON 실전 전략 검증실
+      <span class="as-mute">점수 기반 매집·분할매도 · 월봉 데이터 · 자동매매 아님</span>
+    </div>
+    <div class="as-bt-controls">
+      <label>매집 SCORE 이하 <input id="asBtBuy" type="number" min="0" max="100" step="1" value="44"></label>
+      <label>매도 SCORE <input id="asBtSell" type="number" min="1" max="100" step="1" value="65"></label>
+      <label>편도 비용(수수료+슬리피지, %) <input id="asBtCost" type="number" min="0" max="2" step="0.01" value="0.15"></label>
+      <button type="button" class="btn primary" id="asBtRun">월봉 데이터 불러와 검증</button>
+    </div>
+    <div class="as-bt-status small" id="asBtStatus">실행 시 업비트 월봉 데이터와 ALTSEASON SCORE 기록을 맞춰 성과를 계산합니다. 처음 실행은 데이터 조회에 시간이 걸릴 수 있습니다.</div>
+    <div id="asBtSummary" class="history-table"></div>
+    <div id="asBtPeriods" class="history-table"></div>
+    <div class="as-bt-subhead">BTC 대비 상대강도 개선 코인 (마지막 완결 월 기준)</div>
+    <div id="asBtRS" class="history-table">전략 검증 실행 후 표시됩니다.</div>
+    <div class="as-bt-warning">
+      주의: 백테스트는 과거 데이터에 대한 연구 도구이며 미래 수익을 보장하지 않습니다. 현재 상장된 코인만 사용하므로 생존편향이 있고, 상장폐지·거래중단·호가충격·세금·실제 체결 오차를 완전히 반영하지 못합니다. SCORE의 과거 계산 방식이 현재와 달랐던 구간은 별도 해석이 필요합니다. 결과를 실전 매수·매도 신호로 사용하지 말고 페이퍼 트레이딩으로 먼저 확인하세요.
+    </div>
   </div>
   <div class="compass-cycles small" id="compassCycles" style="margin-top:10px;overflow-x:auto"></div>
   <div class="small compass-foot">모델 설명: 2011년 이후 완료 월말 종가만으로 로그-로그 분위회귀(5%·50%·95%)를 적합하고, 진행 중인 달은 현재가 평가에만 사용합니다. 4Y Z-score는 직전 48개 완료 월의 로그가격 분포를 기준으로 현재가를 비교합니다. CAGR·3개월 수익률은 일별 자료가 있으면 1461일·90일 전 관측값을 사용하고, 월봉 폴백에서는 근사치로 표시합니다. 과열 점수는 5개 관점 중 최소 4개가 유효할 때만 산출합니다. 데이터 신선도·표본 간격·회귀 경계값 검사를 통과하지 못하면 종합 매수·매도 판단을 보류합니다. 페이지를 열 때 자동으로 워크포워드 백테스트(매월 말 시점까지의 데이터만으로 재계산)를 보여주지만, 점수 구간 경계는 사람이 정한 값이고 표본이 적어 예측력이 입증된 것은 아닙니다. 점수 구간이 바뀌어도 3일 연속 유지될 때만 확정 신호가 바뀝니다(KV 연결 시). 투자 판단 보조용이며 단독 매매 신호가 아닙니다.</div>

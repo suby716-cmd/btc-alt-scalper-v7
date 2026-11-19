@@ -543,6 +543,30 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
 .ta-rsi-chart{display:block;width:100%;height:132px;border:1px solid var(--line);border-radius:9px;background:#fff}
 @media(max-width:640px){.ta-rsi-chart{height:112px}.ta-rsi-heading{font-size:11px}}
 </style>
+<style id="ta-tall-single-ema-style">
+.ta-chart{height:460px!important;image-rendering:auto}
+.ta-rsi-chart{height:165px!important}
+.ta-latest-below{display:none!important;margin:8px 0 12px;padding:11px 14px;border:1px solid #cbd5e1;border-radius:9px;background:#f8fafc;font-size:14px;font-weight:800;line-height:1.55;color:#334155}
+.ta-latest-below.buy{border-color:#86cba2;background:#f0fdf4;color:#166534}
+.ta-latest-below.sell{border-color:#f4a6a6;background:#fef2f2;color:#991b1b}
+.ta-line-options select{font-size:13px;font-weight:700;padding:6px 8px;border:1px solid #cbd5e1;border-radius:7px;background:white;color:#1e293b}
+@media(max-width:640px){.ta-chart{height:390px!important}.ta-rsi-chart{height:145px!important}.ta-latest-below{font-size:13px}}
+</style>
+<style id="ta-mobile-zoom-style">
+.ta-chart-toolbar{display:flex;gap:7px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:8px 0 5px}
+.ta-chart-toolbar .ta-zoom-controls{display:flex;gap:6px;flex-wrap:wrap}
+.ta-zoom-btn{border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;padding:8px 12px;font-size:13px;font-weight:750;cursor:pointer}
+.ta-zoom-btn[aria-pressed="true"]{background:#eaf4ff;border-color:#3b82f6;color:#174c85}
+.ta-chart-scroll{overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x pan-y;scrollbar-width:thin;border-radius:9px}
+.ta-chart-scroll .ta-chart{margin-top:0}
+.ta-zoom-hint{font-size:12px;color:#64748b}
+@media(max-width:640px){
+ .ta-chart-scroll .ta-chart{height:500px!important;max-width:none!important}
+ .ta-rsi-chart{height:175px!important}
+ .ta-chart-toolbar{align-items:flex-start}
+ .ta-zoom-btn{padding:9px 12px}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -651,8 +675,8 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
     <div id="taScanOut" style="overflow-x:auto;margin-top:8px"></div>
     <div class="ta-chart-heading" id="taChartHeading" role="heading" aria-level="3"><strong id="taChartSymbol">BTC</strong><span id="taChartContext">선택한 코인의 차트 · 최근 120봉</span></div>
     <div id="taSignalReasons" class="ta-signal-reasons" aria-live="polite">코인을 선택하면 가장 최근 매수 또는 매도 신호 하나의 발생 이유가 표시됩니다.</div>
-    <div class="ta-line-options"><span><b>차트 선:</b> 회색 볼린저 상·하단 · 보라색 BB20 중심선</span><label><input id="taShowEma" type="checkbox"> 추세선 추가 보기 (주황 EMA20 · 하늘 EMA50)</label></div>
-    <canvas id="taChart" class="ta-chart" aria-label="캔들, 볼린저밴드 상·중·하단, 매수매도 신호 차트. EMA20과 EMA50은 선택 표시"></canvas>
+    <div class="ta-line-options"><span id="taLineLegend"><b>표시:</b> 볼린저밴드 상·중·하단</span><label for="taLineMode">차트 보조선 <select id="taLineMode" aria-label="볼린저밴드 또는 EMA 추세선 한 개 선택"><option value="bb">볼린저밴드</option><option value="ema20">EMA20</option><option value="ema50">EMA50</option><option value="ema120">EMA120</option><option value="ema200">EMA200</option></select></label></div>
+    <div class="ta-chart-toolbar"><div class="ta-zoom-controls" role="group" aria-label="차트 봉 표시 방식"><button type="button" id="taZoom40" class="ta-zoom-btn" aria-pressed="true">최근 40봉 확대</button><button type="button" id="taZoom120" class="ta-zoom-btn" aria-pressed="false">전체 120봉</button></div><span id="taZoomHint" class="ta-zoom-hint">모바일: 좌우로 밀어 과거 차트 확인</span></div><div class="ta-chart-scroll" id="taChartScroll"><canvas id="taChart" class="ta-chart" aria-label="캔들 차트, 볼린저밴드 또는 선택한 EMA 한 개, 매수매도 신호 삼각형"></canvas></div><div id="taChartLatestLabel" class="ta-latest-below" aria-live="polite">최신 신호를 계산 중입니다.</div>
     <div class="ta-rsi-heading"><b>RSI (14) · 상대강도지수</b><span id="taRsiCurrent">현재 RSI —</span></div>
     <canvas id="taRsiChart" class="ta-rsi-chart" aria-label="RSI 14 그래프, 과매수 70과 과매도 30 기준선"></canvas>
     <div class="ta-signal-clarifier">▲ 초록색 = 기술적 매수 후보 · ▼ 빨간색 = 기술적 매도/위험 후보. BTC 국면이 매수를 제한할 때에도 과거 기술 신호는 차트에 남습니다. 실제 매매 판단은 위의 <b>연결 판정</b>을 함께 확인하세요. 표시된 확률은 표본·기간·거래비용에 영향을 받는 과거 추정치입니다.</div>
@@ -2839,7 +2863,7 @@ function taATR(candles,n=14){const tr=Array(candles.length).fill(null),out=Array
 function taWilson(w,n,z=1.96){if(!n)return null;const p=w/n,z2=z*z,den=1+z2/n,center=(p+z2/(2*n))/den,half=z*Math.sqrt((p*(1-p)+z2/(4*n))/n)/den;return[Math.max(0,center-half)*100,Math.min(1,center+half)*100];}
 function taNormSym(s){s=String(s||'').toUpperCase().trim().replace(/^KRW[-\/]/,'').replace(/[-\/](KRW|USDT|USD|BTC)$/,'').replace(/^(.{2,}?)USDT$/,'$1');return s.replace(/[^A-Z0-9]/g,'').slice(0,12);}
 function taDetectSignals(candles,horizon,feePct=0.10,regime='all',exitMode='time',btcOk=null){
- const n=candles.length,closes=candles.map(x=>+x[4]),bb=taBollinger(closes),ema20=taEMASeries(closes,20),ema50=taEMASeries(closes,50),rsi=taRSISeries(closes),adx=taADX(candles),macd=taMACD(closes),atr=taATR(candles),signals=[];
+ const n=candles.length,closes=candles.map(x=>+x[4]),bb=taBollinger(closes),ema20=taEMASeries(closes,20),ema50=taEMASeries(closes,50),ema120=taEMASeries(closes,120),ema200=taEMASeries(closes,200),rsi=taRSISeries(closes),adx=taADX(candles),macd=taMACD(closes),atr=taATR(candles),signals=[];
  const O=i=>+candles[i][1],H=i=>+candles[i][2],L=i=>+candles[i][3],V=i=>+candles[i][5]||0;
  const add=(i,type,key,label)=>signals.push({i,type,key,label,price:closes[i],t:candles[i][0]});
  const piv=(i,low)=>{const out=[];for(let j=i-29;j<i-5;j++){if(low?(L(j)<=L(j-1)&&L(j)<L(j+1)):(H(j)>=H(j-1)&&H(j)>H(j+1)))out.push(j);}return out;};
@@ -2885,7 +2909,7 @@ function taDetectSignals(candles,horizon,feePct=0.10,regime='all',exitMode='time
  const K=20,stats=Object.values(groups).map(g=>{const a=g.rets.map(r=>r.v),nn=a.length,w=a.filter(v=>v>0).length,sorted=[...a].sort((x,y)=>x-y),avg=nn?a.reduce((x,y)=>x+y,0)/nn:null,med=nn?(nn%2?sorted[(nn-1)/2]:(sorted[nn/2-1]+sorted[nn/2])/2):null,ci=taWilson(w,nn),bs=base[g.type],b=bs.n?bs.w/bs.n*100:50,o=g.rets.filter(r=>r.oos),ow=o.filter(r=>r.v>0).length;return{key:g.key,label:g.label,type:g.type,n:nn,winRate:nn?w/nn*100:null,ci,avgRet:avg,medRet:med,last:g.last,base:b,post:nn?(w+K*b/100)/(nn+K)*100:b,edge:nn?w/nn*100-b:null,sig:!!(ci&&ci[0]>b),oosN:o.length,oosWin:o.length?ow/o.length*100:null};}).sort((a,b)=>b.n-a.n);
  const statMap={};stats.forEach(x=>{statMap[x.key]=x});
  const recent=signals.filter(x=>x.i>=n-120),active=signals.filter(x=>x.i>=n-4),last=n-1,price=closes[last],bbPos=bb.upper[last]!=null&&bb.lower[last]!=null&&bb.upper[last]>bb.lower[last]?(price-bb.lower[last])/(bb.upper[last]-bb.lower[last])*100:null;
- return{candles,closes,bb,ema20,ema50,rsi,adx,macd,atr,signals,recent,active,stats,statMap,base,current:{price,rsi:rsi[last],adx:adx[last],atr:atr[last],atrPct:price>0&&atr[last]!=null?atr[last]/price*100:null,bbPos,mid:bb.mid[last],upper:bb.upper[last],lower:bb.lower[last],lastSignal:signals.at(-1)||null}};
+ return{candles,closes,bb,ema20,ema50,ema120,ema200,rsi,adx,macd,atr,signals,recent,active,stats,statMap,base,current:{price,rsi:rsi[last],adx:adx[last],atr:atr[last],atrPct:price>0&&atr[last]!=null?atr[last]/price*100:null,bbPos,mid:bb.mid[last],upper:bb.upper[last],lower:bb.lower[last],lastSignal:signals.at(-1)||null}};
 }
 function taRenderSignalReasons(result){
  const el=$('taSignalReasons');if(!el)return;
@@ -2898,40 +2922,63 @@ function taRenderSignalReasons(result){
  const age=result.candles.length-1-sig.i;
  el.innerHTML=`<div class="ta-reason ${buy?'buy':'sell'}"><strong>${buy?'▲ 최근 매수 후보':'▼ 최근 매도 후보'} · ${esc(sig.label)}</strong><span class="reason-stat">${new Date(sig.t).toLocaleDateString('ko-KR')} · ${age}봉 전 · 보정확률 ${p}${n}</span><span class="reason-detail">가장 최근에 발생한 기술적 신호 1개만 표시합니다. 과거 신호이며 현재 즉시 매매하라는 뜻은 아닙니다.</span></div>`;
 }
+let TA_ZOOM_MODE='40';
+function taApplyZoomLayout(){
+ const cv=$('taChart'),sc=$('taChartScroll');if(!cv||!sc)return;
+ const mobile=window.matchMedia('(max-width:640px)').matches;
+ // On mobile, show ~40 of 120 candles at once. Horizontal swipe reveals older history.
+ const viewport=Math.max(280,sc.clientWidth||window.innerWidth-30);
+ const expanded=mobile&&TA_ZOOM_MODE==='40';
+ const width=expanded?Math.round(viewport*2.65):viewport;
+ const changed=cv.dataset.zoomWidth!==String(width)||cv.dataset.zoomMode!==TA_ZOOM_MODE;
+ cv.style.width=width+'px';cv.style.minWidth=width+'px';cv.dataset.zoomWidth=String(width);cv.dataset.zoomMode=TA_ZOOM_MODE;
+ $('taZoom40')?.setAttribute('aria-pressed',String(TA_ZOOM_MODE==='40'));
+ $('taZoom120')?.setAttribute('aria-pressed',String(TA_ZOOM_MODE==='120'));
+ const hint=$('taZoomHint');if(hint)hint.textContent=expanded?'← 과거 보기 · 좌우로 밀어 이동':'전체 120봉 한 화면 · 모바일에서는 가로모드 권장';
+ if(changed){if(expanded){sc.scrollLeft=sc.scrollWidth-sc.clientWidth;}else sc.scrollLeft=0;}
+}
+function taSetZoom(mode){TA_ZOOM_MODE=mode==='120'?'120':'40';taApplyZoomLayout();const cv=$('taChart');if(cv?._result){drawTaChart(cv,cv._result);drawTaRsiChart($('taRsiChart'),cv._result);}}
+$('taZoom40')?.addEventListener('click',()=>taSetZoom('40'));
+$('taZoom120')?.addEventListener('click',()=>taSetZoom('120'));
 function drawTaChart(canvas,result){
- if(!canvas||!result)return;const dpr=window.devicePixelRatio||1,w=canvas.clientWidth||720,h=canvas.clientHeight||320;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
- const {candles,bb,ema20,ema50,recent}=result,n=candles.length,start=Math.max(0,n-120),cs=candles.slice(start),vals=[];for(const c of cs)vals.push(+c[2],+c[3]);for(const arr of [bb.upper,bb.lower,...($('taShowEma')?.checked?[ema20,ema50]:[])])for(const v of arr.slice(start))if(v!=null)vals.push(v);if(vals.length<2)return;
- let mn=Math.min(...vals),mx=Math.max(...vals),span=Math.max(mx-mn,mx*.002);mn-=span*.06;mx+=span*.06;const pad={l:60,r:12,t:12,b:25},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,X=i=>pad.l+(cs.length<=1?0:i/(cs.length-1)*pw),Y=v=>pad.t+(mx-v)/(mx-mn)*ph;
+ if(!canvas||!result)return;taApplyZoomLayout();const dpr=window.devicePixelRatio||1,w=canvas.clientWidth||720,h=canvas.clientHeight||320;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ const {candles,bb,ema20,ema50,ema120,ema200,recent}=result,n=candles.length,start=Math.max(0,n-120),cs=candles.slice(start),vals=[];const mode=$('taLineMode')?.value||'bb';const emaByMode={ema20,ema50,ema120,ema200};for(const c of cs)vals.push(+c[2],+c[3]);for(const arr of (mode==='bb'?[bb.upper,bb.lower]:[emaByMode[mode]||ema20]))for(const v of arr.slice(start))if(v!=null)vals.push(v);if(vals.length<2)return;
+ let mn=Math.min(...vals),mx=Math.max(...vals),span=Math.max(mx-mn,mx*.002);mn-=span*.06;mx+=span*.06;const pad={l:60,r:12,t:64,b:70},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,X=i=>pad.l+(cs.length<=1?0:i/(cs.length-1)*pw),Y=v=>pad.t+(mx-v)/(mx-mn)*ph;
  ctx.strokeStyle='#e8edf3';ctx.lineWidth=1;ctx.font='10px Arial';ctx.fillStyle='#64748b';for(let g=0;g<=4;g++){const yy=pad.t+g*ph/4,val=mx-g*(mx-mn)/4;ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(w-pad.r,yy);ctx.stroke();ctx.fillText(val>=1000?val.toLocaleString('en-US',{maximumFractionDigits:0}):val.toFixed(3),3,yy+3);}
  const line=(arr,color,width)=>{ctx.beginPath();let on=false;for(let j=0;j<cs.length;j++){const v=arr[start+j];if(v==null){on=false;continue;}if(!on){ctx.moveTo(X(j),Y(v));on=true;}else ctx.lineTo(X(j),Y(v));}ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
- line(bb.upper,'#94a3b8',1);line(bb.mid,'#a78bfa',1);line(bb.lower,'#94a3b8',1);if($('taShowEma')?.checked){line(ema20,'#f59e0b',1.5);line(ema50,'#0ea5e9',1.5);}
+ if(mode==='bb'){line(bb.upper,'#94a3b8',1.4);line(bb.mid,'#a78bfa',1.5);line(bb.lower,'#94a3b8',1.4);}else{line(emaByMode[mode]||ema20,({ema20:'#f59e0b',ema50:'#0284c7',ema120:'#7c3aed',ema200:'#dc2626'})[mode]||'#f59e0b',2.3);}
  const cw=Math.max(2,Math.min(7,pw/cs.length*.62));for(let j=0;j<cs.length;j++){const c=cs[j],o=+c[1],cl=+c[4],hi=+c[2],lo=+c[3],x=X(j),up=cl>=o;ctx.strokeStyle=up?'#16a34a':'#dc2626';ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(x,Y(hi));ctx.lineTo(x,Y(lo));ctx.stroke();const top=Y(Math.max(o,cl)),bot=Y(Math.min(o,cl));ctx.fillRect(x-cw/2,top,cw,Math.max(1,bot-top));}
  const hits=[],sm=result.statMap||{};
  const visibleSignals=recent.filter(s=>s.i>=start&&s.i<n);
  const latestVisible=visibleSignals.at(-1)||null;
  visibleSignals.forEach(s=>{const j=s.i-start,x=X(j),buy=s.type==='buy',cd=candles[s.i],y=buy?Y(+cd[3])+4:Y(+cd[2])-4,col=buy?'#15803d':'#b91c1c';ctx.fillStyle=col;ctx.beginPath();if(buy){ctx.moveTo(x,y);ctx.lineTo(x-6,y+10);ctx.lineTo(x+6,y+10);}else{ctx.moveTo(x,y);ctx.lineTo(x-6,y-10);ctx.lineTo(x+6,y-10);}ctx.closePath();ctx.fill();hits.push({x,y:buy?y+5:y-5,s});
-  // Label only the single latest chronological signal (buy OR sell).
+  // The only prominent callout is anchored near the latest triangle.
   if(latestVisible===s){
-   const st=sm[s.key];const prob=st&&st.n>0&&Number.isFinite(st.post)?`보정확률 ${st.post.toFixed(0)}%`:'표본 부족';
-   const title=buy?'매수시점':'매도시점';const lines=[title,s.label,prob];ctx.font='800 12px sans-serif';
-   const tw=Math.max(...lines.map(t=>ctx.measureText(t).width));const bw=Math.min(Math.max(105,tw+16),Math.max(105,pw-6)),bh=49;
-   const tx=Math.max(pad.l+2,Math.min(w-pad.r-bw-2,x-bw/2));
-   // Prefer below the buy marker and above the sell marker, but keep labels inside the plot.
-   let top=buy?y+15:y-bh-15;
-   if(top<pad.t+2||top+bh>h-pad.b-2)top=buy?y-bh-15:y+15;
-   top=Math.max(pad.t+2,Math.min(h-pad.b-bh-2,top));
-   ctx.fillStyle='rgba(255,255,255,.98)';ctx.strokeStyle=buy?'#15803d':'#b91c1c';ctx.lineWidth=1.5;
-   ctx.fillRect(tx,top,bw,bh);ctx.strokeRect(tx+.5,top+.5,bw-1,bh-1);
-   ctx.fillStyle=col;ctx.textAlign='center';ctx.font='800 12px sans-serif';ctx.fillText(title,tx+bw/2,top+14);
-   ctx.font='bold 11px sans-serif';ctx.fillText(s.label,tx+bw/2,top+29,bw-8);
-   ctx.font='800 11px sans-serif';ctx.fillText(prob,tx+bw/2,top+43);ctx.textAlign='start';
+   const st=sm[s.key],prob=st&&st.n>0&&Number.isFinite(st.post)?`${st.post.toFixed(0)}%`:'표본 부족';
+   const title=buy?'▲ 매수시점':'▼ 매도시점';
+   const detail=`${s.label} · 보정 ${prob}`;
+   ctx.save();ctx.font='bold 12px sans-serif';
+   const tw=Math.max(ctx.measureText(title).width,ctx.measureText(detail).width);
+   const bw=Math.min(Math.max(110,tw+20),Math.max(110,w-pad.l-pad.r-8)),bh=43;
+   const bx=Math.max(pad.l+3,Math.min(w-pad.r-bw-3,x-bw/2));
+   // Reserve a small top/bottom margin for the callout: buy below, sell above.
+   const by=buy?Math.min(h-bh-5,y+17):Math.max(5,y-bh-17);
+   ctx.strokeStyle=buy?'#15803d':'#b91c1c';ctx.fillStyle=buy?'#f0fdf4':'#fff1f2';ctx.lineWidth=1.3;
+   ctx.beginPath();ctx.roundRect(bx,by,bw,bh,6);ctx.fill();ctx.stroke();
+   ctx.fillStyle=buy?'#166534':'#991b1b';ctx.textAlign='center';
+   ctx.font='bold 12px sans-serif';ctx.fillText(title,bx+bw/2,by+17);
+   ctx.font='bold 10px sans-serif';
+   let short=detail;while(ctx.measureText(short).width>bw-12&&short.length>5)short=short.slice(0,-2)+'…';
+   ctx.fillText(short,bx+bw/2,by+33);
+   ctx.strokeStyle=buy?'#15803d':'#b91c1c';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(x,buy?y+11:by+bh);ctx.lineTo(x,buy?by:y-11);ctx.stroke();ctx.restore();
   }
  });
+ if(!latestVisible){const box=$('taChartLatestLabel');if(box){box.textContent='최근 120봉에 매수·매도 신호가 없습니다.';}}
  const sel=canvas._sel;
  if(sel){const st=sm[sel.key],lines=[`${sel.type==='buy'?'매수':'매도'} · ${sel.label}`,new Date(sel.t).toLocaleString('ko-KR'),st&&st.n?`보정확률 ${st.post.toFixed(0)}% · 기저 ${st.base.toFixed(0)}% · 표본 ${st.n}${st.n<30?' (저신뢰)':''}`:'표본 없음',st&&st.ci?`95% 구간 ${st.ci[0].toFixed(0)}~${st.ci[1].toFixed(0)}% · 평균 ${st.avgRet>0?'+':''}${st.avgRet.toFixed(2)}%`:''].filter(Boolean);ctx.font='11px Arial';const bw2=Math.max(...lines.map(l=>ctx.measureText(l).width))+14,bh=lines.length*15+8,jx=X(Math.max(0,sel.i-start)),bx=Math.min(Math.max(pad.l,jx-bw2/2),w-bw2-4),by=pad.t+4;ctx.fillStyle='rgba(15,23,42,.92)';ctx.fillRect(bx,by,bw2,bh);ctx.fillStyle='#fff';lines.forEach((l,k)=>ctx.fillText(l,bx+7,by+16+k*15));}
  canvas._hits=hits;
 }
-$('taShowEma')?.addEventListener('change',()=>{const cv=$('taChart');if(cv?._result)drawTaChart(cv,cv._result);});
+$('taLineMode')?.addEventListener('change',()=>{const mode=$('taLineMode').value,legend=$('taLineLegend');if(legend)legend.textContent=mode==='bb'?'표시: 볼린저밴드 상·중·하단':`표시: ${mode.toUpperCase()} 한 개 · 볼린저밴드 숨김`;const cv=$('taChart');if(cv?._result)drawTaChart(cv,cv._result);});
 function drawTaRsiChart(canvas,result){
  if(!canvas||!result)return;
  const dpr=window.devicePixelRatio||1,w=canvas.clientWidth||720,h=canvas.clientHeight||132;

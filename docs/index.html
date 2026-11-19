@@ -364,6 +364,45 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
 }
 
 </style>
+<style id="mmc-responsive-hotfix">
+
+/* MMC UI hotfix · 2026-11-19 · keep full KRW and candle time on one line */
+.grid>.card{min-width:0}
+.grid>.card .value{font-size:clamp(16px,1.05vw,20px);line-height:1.35;letter-spacing:-.035em;overflow-wrap:normal;word-break:keep-all}
+#btc,#candle{font-size:clamp(15px,1vw,19px);white-space:nowrap;overflow-wrap:normal;word-break:normal;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.grid>.card .label{font-size:13px;line-height:1.45}
+.market-row>.market-spark,.market-table-head>div:last-child{display:block!important;visibility:visible!important}
+.market-row>.market-spark{width:100%;max-width:none;min-width:0;height:34px;overflow:hidden}
+.market-row>.market-spark svg{display:block;width:100%;height:100%}
+.market-table-head,.market-row{grid-template-columns:minmax(90px,1.4fr) minmax(65px,1fr) minmax(50px,.78fr) minmax(50px,.78fr) minmax(74px,.95fr)}
+.market-row{gap:5px}
+@media(max-width:900px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid>.card .value{font-size:clamp(16px,3.8vw,21px)}
+  #btc,#candle{font-size:clamp(15px,3.5vw,19px)}
+}
+@media(max-width:620px){
+  .market-table-head,.market-row{
+    grid-template-columns:minmax(68px,1.2fr) minmax(61px,1fr) minmax(43px,.68fr) minmax(43px,.68fr) minmax(68px,1fr)!important;
+    gap:3px;padding-left:6px;padding-right:6px;
+  }
+  .market-table-head>div:last-child,.market-row>.market-spark{display:block!important}
+  .market-table-head{font-size:10px}
+  .market-symbol,.market-price,.market-change,.market-premium{font-size:11px;white-space:nowrap}
+  .market-korean{font-size:10px}
+  .market-row>.market-spark{height:32px;min-width:0}
+  .market-row{min-height:56px}
+}
+@media(max-width:380px){
+  .market-table-head,.market-row{
+    grid-template-columns:minmax(63px,1.15fr) minmax(57px,1fr) minmax(40px,.68fr) minmax(40px,.68fr) minmax(60px,.95fr)!important;
+    gap:2px;padding-left:4px;padding-right:4px
+  }
+  .market-price,.market-change,.market-premium{font-size:10.5px}
+  .market-row>.market-spark{height:29px}
+}
+
+</style>
 </head>
 <body>
 <div class="wrap">

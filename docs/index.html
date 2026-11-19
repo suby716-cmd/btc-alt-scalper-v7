@@ -434,7 +434,24 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
   .grid>.card .value{font-size:clamp(16px,3.8vw,20px)!important}
   #btc,#candle{font-size:clamp(15px,3.5vw,19px)!important}
 }
-\n</style>\n</head>
+\n</style>\n<style id="mmc-focused-ui-refinement">
+
+/* 2026-11-19 · MASTER MARKET COMPASS focused layout refinement */
+.compass-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.compass-card{min-width:0;overflow:hidden}
+.compass-card>b{font-size:clamp(16px,1.23vw,19px)!important;line-height:1.48!important;letter-spacing:-.035em;word-break:keep-all!important;overflow-wrap:normal!important;hyphens:none}
+.compass-card .compass-desc{overflow-wrap:break-word}
+#compassTrend{font-size:clamp(15px,1.12vw,18px)!important;letter-spacing:-.055em}
+#taScan{background:#174f72!important;border-color:#174f72!important;color:#fff!important;font-weight:750;box-shadow:0 2px 5px rgba(23,79,114,.12);transition:background .15s ease,box-shadow .15s ease}
+#taScan:hover:not(:disabled){background:#103b57!important;box-shadow:0 3px 9px rgba(23,79,114,.18)}
+#taScan:disabled{background:#64748b!important;border-color:#64748b!important;color:#fff!important;opacity:.85;cursor:progress}
+#taScan:focus-visible{outline:3px solid #9ccce2;outline-offset:3px}
+.ta-signal-clarifier{margin:8px 0 4px;padding:9px 11px;background:#f4f8fc;border:1px solid #d9e4ef;border-radius:9px;color:#43566c;font-size:12px;line-height:1.65}
+@media(max-width:1150px){.compass-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.compass-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.compass-card>b{font-size:clamp(15px,3.65vw,18px)!important}#compassTrend{font-size:clamp(14px,3.4vw,17px)!important}.ta-signal-clarifier{font-size:12px}}
+@media(max-width:370px){.compass-grid{grid-template-columns:1fr 1fr}.compass-card{padding:10px!important}#compassTrend{font-size:14px!important}}
+</style>
+</head>
 <body>
 <div class="wrap">
   <div class="head">
@@ -632,12 +649,13 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
     <div class="ta-note" id="taVerdict" style="font-size:12px;color:inherit;margin-top:10px"></div>
     <div id="taScanOut" style="overflow-x:auto;margin-top:8px"></div>
     <canvas id="taChart" class="ta-chart" aria-label="볼린저밴드 및 매수매도 신호 차트"></canvas>
+    <div class="ta-signal-clarifier">▲ 초록색 = 기술적 매수 후보 · ▼ 빨간색 = 기술적 매도/위험 후보. BTC 국면이 매수를 제한할 때에도 과거 기술 신호는 차트에 남습니다. 실제 매매 판단은 위의 <b>연결 판정</b>을 함께 확인하세요. 표시된 확률은 표본·기간·거래비용에 영향을 받는 과거 추정치입니다.</div>
     <div class="ta-legend">
       <span><i></i>종가</span>
       <span><i class="bb"></i>볼린저 상·중·하단</span>
       <span><i class="buy"></i>매수 신호</span>
       <span><i class="sell"></i>매도 신호</span>
-      <span>마커 옆 % = 보정 승률 · 마커를 탭/호버하면 상세</span>
+      <span>마커 옆 % = 과거 표본 기반 보정확률(미래 승률 보장 아님) · 탭/호버하면 표본·기저 확인</span>
     </div>
     <div style="overflow-x:auto;margin-top:10px">
       <table class="ta-table" id="taWinTable">

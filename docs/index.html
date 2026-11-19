@@ -236,6 +236,7 @@
 #taScanOut .ta-buy{color:#087a42!important;font-weight:800!important;white-space:nowrap}
 #taScanOut .ta-sell{color:#c62828!important;font-weight:800!important;white-space:nowrap}
 @media(max-width:640px){#taScanOut .ta-table th:first-child,#taScanOut .ta-table td:first-child{min-width:66px;max-width:66px}#taScanOut .ta-table th:nth-child(2),#taScanOut .ta-table td:nth-child(2){left:66px;min-width:165px;max-width:190px;font-size:12px}}
+.ta-line-options{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 6px;font-size:12px;color:var(--muted)}.ta-line-options label{cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:6px 9px;border-radius:8px;background:var(--panel2)}.ta-line-options input{accent-color:#2563eb}
 </style>
 <style>
 /* Research lab readable typography and responsive charts */
@@ -528,6 +529,12 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
 .ta-chart-heading span{font-size:12px;color:#64748b}
 @media(max-width:640px){#taScanOut .ta-coin-select{font-size:12px;padding:7px 6px;min-width:50px}.ta-chart-heading strong{font-size:16px}}
 </style>
+<style id="ta-rsi-chart-style">
+.ta-rsi-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:12px 2px 5px;font-size:12px;color:#334155}
+.ta-rsi-heading span{font-size:12px;color:#6d28d9;font-weight:650}
+.ta-rsi-chart{display:block;width:100%;height:132px;border:1px solid var(--line);border-radius:9px;background:#fff}
+@media(max-width:640px){.ta-rsi-chart{height:112px}.ta-rsi-heading{font-size:11px}}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -587,6 +594,74 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
   <canvas id="asChart" class="as-chart"></canvas>
   <div class="as-caption" id="asCaption">차트 위에 마우스를 올리면 월별 값이 표시됩니다.</div>
   <div class="as-legend" id="asLegend"></div>
+
+  <section class="ta-lab" id="taSignalLab">
+    <div class="ta-lab-head">
+      <div>
+        <b>📈 TA SIGNAL LAB · 볼린저 · 패턴 · 승률</b>
+        <div class="small" id="taStatus">주요 코인 캔들 기반 볼린저밴드·패턴 신호와 과거 승률을 계산합니다.</div>
+      </div>
+      <button type="button" class="btn" id="taReload">신호 다시 계산</button>
+    </div>
+    <div class="ta-controls">
+      <label class="small">코인
+        <select id="taSymbol"><option value="BTC">BTC</option></select>
+      </label>
+      <label class="small">봉
+        <select id="taFrame">
+          <option value="5m">5분봉</option>
+          <option value="day" selected>일봉</option>
+        </select>
+      </label>
+      <label class="small">보유 평가 구간
+        <select id="taHorizon">
+          <option value="3">3봉 후</option>
+          <option value="6">6봉 후</option>
+          <option value="12" selected>12봉 후</option>
+          <option value="24">24봉 후</option>
+          <option value="48">48봉 후</option>
+        </select>
+      </label>
+      <label class="small">시장 국면 <select id="taRegime"><option value="all">전체</option><option value="trend">추세장(ADX≥25)</option><option value="range">횡보장(ADX&lt;25)</option><option value="btcup">BTC 상승추세(EMA50 위)</option></select></label>
+      <label class="small">청산 방식 <select id="taExit"><option value="time">보유봉 종가</option><option value="atr">ATR 손절·목표</option></select></label>
+      <label class="small">수수료·슬리피지(%) <input id="taFee" type="number" step="0.01" min="0" max="2" value="0.10" style="width:72px"></label>
+      <span class="ta-scan-control"><button type="button" class="btn" id="taScan">전체 코인 스캔</button><span id="taScanProgress" role="status" aria-live="polite">대기 중</span></span>
+    </div>
+    <div class="ta-coin-manager">
+      <b class="small">분석 코인 관리</b>
+      <input id="taAddSymbol" maxlength="80" placeholder="예: HBAR, ARB, OP (여러 개 가능)" aria-label="추가할 코인 심볼">
+      <button type="button" class="btn" id="taAddCoin">코인 추가</button>
+      <button type="button" class="btn" id="taResetCoins">기본 목록</button>
+      <span class="small" id="taCoinCount">0개</span>
+      <div class="ta-coin-chips" id="taCoinChips"></div>
+    </div>
+    <div class="ta-metrics" id="taMetrics">
+      <span>현재가 —</span><span>BB 위치 —</span><span>RSI —</span><span>최근 신호 —</span>
+    </div>
+    <div class="ta-note" id="taGate" style="font-size:12px;color:inherit;margin-top:10px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);line-height:1.7"></div>
+    <div class="ta-note" id="taVerdict" style="font-size:12px;color:inherit;margin-top:10px"></div>
+    <div id="taScanOut" style="overflow-x:auto;margin-top:8px"></div>
+    <div class="ta-chart-heading" id="taChartHeading" role="heading" aria-level="3"><strong id="taChartSymbol">BTC</strong><span id="taChartContext">선택한 코인의 차트 · 최근 120봉</span></div>
+    <div class="ta-line-options"><span><b>차트 선:</b> 회색 볼린저 상·하단 · 보라색 BB20 중심선</span><label><input id="taShowEma" type="checkbox"> 추세선 추가 보기 (주황 EMA20 · 하늘 EMA50)</label></div>
+    <canvas id="taChart" class="ta-chart" aria-label="캔들, 볼린저밴드 상·중·하단, 매수매도 신호 차트. EMA20과 EMA50은 선택 표시"></canvas>
+    <div class="ta-rsi-heading"><b>RSI (14) · 상대강도지수</b><span id="taRsiCurrent">현재 RSI —</span></div>
+    <canvas id="taRsiChart" class="ta-rsi-chart" aria-label="RSI 14 그래프, 과매수 70과 과매도 30 기준선"></canvas>
+    <div class="ta-signal-clarifier">▲ 초록색 = 기술적 매수 후보 · ▼ 빨간색 = 기술적 매도/위험 후보. BTC 국면이 매수를 제한할 때에도 과거 기술 신호는 차트에 남습니다. 실제 매매 판단은 위의 <b>연결 판정</b>을 함께 확인하세요. 표시된 확률은 표본·기간·거래비용에 영향을 받는 과거 추정치입니다.</div>
+    <div class="ta-legend">
+      <span>초록·빨강 캔들 = 시가·종가·고가·저가</span>
+      <span><i class="bb"></i>회색: BB 상·하단 / 보라색: BB20 중심선</span>
+      <span><i class="buy"></i>매수 신호</span>
+      <span><i class="sell"></i>매도 신호</span>
+      <span>마지막 매수·매도 삼각점에 보정확률 표시 · 표본 부족 시 확률 대신 안내 · 삼각점을 탭/호버하면 상세 확인</span>
+    </div>
+    <div style="overflow-x:auto;margin-top:10px">
+      <table class="ta-table" id="taWinTable">
+        <thead><tr><th>신호</th><th>유형</th><th>표본</th><th>승률</th><th>기저</th><th>보정확률</th><th>95% 구간</th><th>평균 순수익</th><th>OOS(최근30%)</th><th>최근 발생</th></tr></thead>
+        <tbody><tr><td colspan="10" style="text-align:center;color:var(--muted)">계산 중…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="ta-note" id="taNotes">승률 = 신호 이후 N봉 종가 기준 수익이 0% 초과인 비율입니다. 수수료·슬리피지 미반영. 표본이 적으면 참고만 하세요. 단독 매매 신호가 아닙니다.</div>
+  </section>
 
   <div class="history-wrap" id="asStrategyLab">
     <div class="history-title">🧪 ALTSEASON 실전 전략 검증실
@@ -686,70 +761,7 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
     <div class="rotation-table-wrap" id="rotationFlows"></div>
     <div class="rotation-note" id="rotationNotes">주의: 가격 상승·하락은 자금 유출입과 동일하지 않습니다. 직접 확인된 ETF 순유입과 가격 기반 proxy를 구분합니다.</div>
 
-  <section class="ta-lab" id="taSignalLab">
-    <div class="ta-lab-head">
-      <div>
-        <b>📈 TA SIGNAL LAB · 볼린저 · 패턴 · 승률</b>
-        <div class="small" id="taStatus">주요 코인 캔들 기반 볼린저밴드·패턴 신호와 과거 승률을 계산합니다.</div>
-      </div>
-      <button type="button" class="btn" id="taReload">신호 다시 계산</button>
-    </div>
-    <div class="ta-controls">
-      <label class="small">코인
-        <select id="taSymbol"><option value="BTC">BTC</option></select>
-      </label>
-      <label class="small">봉
-        <select id="taFrame">
-          <option value="5m">5분봉</option>
-          <option value="day" selected>일봉</option>
-        </select>
-      </label>
-      <label class="small">보유 평가 구간
-        <select id="taHorizon">
-          <option value="3">3봉 후</option>
-          <option value="6">6봉 후</option>
-          <option value="12" selected>12봉 후</option>
-          <option value="24">24봉 후</option>
-          <option value="48">48봉 후</option>
-        </select>
-      </label>
-      <label class="small">시장 국면 <select id="taRegime"><option value="all">전체</option><option value="trend">추세장(ADX≥25)</option><option value="range">횡보장(ADX&lt;25)</option><option value="btcup">BTC 상승추세(EMA50 위)</option></select></label>
-      <label class="small">청산 방식 <select id="taExit"><option value="time">보유봉 종가</option><option value="atr">ATR 손절·목표</option></select></label>
-      <label class="small">수수료·슬리피지(%) <input id="taFee" type="number" step="0.01" min="0" max="2" value="0.10" style="width:72px"></label>
-      <span class="ta-scan-control"><button type="button" class="btn" id="taScan">전체 코인 스캔</button><span id="taScanProgress" role="status" aria-live="polite">대기 중</span></span>
-    </div>
-    <div class="ta-coin-manager">
-      <b class="small">분석 코인 관리</b>
-      <input id="taAddSymbol" maxlength="80" placeholder="예: HBAR, ARB, OP (여러 개 가능)" aria-label="추가할 코인 심볼">
-      <button type="button" class="btn" id="taAddCoin">코인 추가</button>
-      <button type="button" class="btn" id="taResetCoins">기본 목록</button>
-      <span class="small" id="taCoinCount">0개</span>
-      <div class="ta-coin-chips" id="taCoinChips"></div>
-    </div>
-    <div class="ta-metrics" id="taMetrics">
-      <span>현재가 —</span><span>BB 위치 —</span><span>RSI —</span><span>최근 신호 —</span>
-    </div>
-    <div class="ta-note" id="taGate" style="font-size:12px;color:inherit;margin-top:10px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);line-height:1.7"></div>
-    <div class="ta-note" id="taVerdict" style="font-size:12px;color:inherit;margin-top:10px"></div>
-    <div id="taScanOut" style="overflow-x:auto;margin-top:8px"></div>
-    <div class="ta-chart-heading" id="taChartHeading" role="heading" aria-level="3"><strong id="taChartSymbol">BTC</strong><span id="taChartContext">선택한 코인의 차트 · 최근 120봉</span></div>
-    <canvas id="taChart" class="ta-chart" aria-label="볼린저밴드 및 매수매도 신호 차트"></canvas>
-    <div class="ta-signal-clarifier">▲ 초록색 = 기술적 매수 후보 · ▼ 빨간색 = 기술적 매도/위험 후보. BTC 국면이 매수를 제한할 때에도 과거 기술 신호는 차트에 남습니다. 실제 매매 판단은 위의 <b>연결 판정</b>을 함께 확인하세요. 표시된 확률은 표본·기간·거래비용에 영향을 받는 과거 추정치입니다.</div>
-    <div class="ta-legend">
-      <span><i></i>종가</span>
-      <span><i class="bb"></i>볼린저 상·중·하단</span>
-      <span><i class="buy"></i>매수 신호</span>
-      <span><i class="sell"></i>매도 신호</span>
-      <span>마지막 초록·빨강 삼각점에만 매수시점·매도시점 표기 · 삼각점을 탭/호버하면 표본·기저 확인</span>
-    </div>
-    <div style="overflow-x:auto;margin-top:10px">
-      <table class="ta-table" id="taWinTable">
-        <thead><tr><th>신호</th><th>유형</th><th>표본</th><th>승률</th><th>기저</th><th>보정확률</th><th>95% 구간</th><th>평균 순수익</th><th>OOS(최근30%)</th><th>최근 발생</th></tr></thead>
-        <tbody><tr><td colspan="10" style="text-align:center;color:var(--muted)">계산 중…</td></tr></tbody>
-      </table>
-    </div>
-    <div class="ta-note" id="taNotes">승률 = 신호 이후 N봉 종가 기준 수익이 0% 초과인 비율입니다. 수수료·슬리피지 미반영. 표본이 적으면 참고만 하세요. 단독 매매 신호가 아닙니다.</div>
-  </section>
+
 
   <div class="compass-bt" id="compassBt" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff">
     <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:15px">📊 자동 워크포워드 백테스트 <span class="small" style="font-weight:500">과열 점수 구간별 이후 수익률·최대낙폭</span></b><button type="button" class="btn" id="compassBtReload">백테스트 다시 계산</button></div>
@@ -2868,22 +2880,51 @@ function taDetectSignals(candles,horizon,feePct=0.10,regime='all',exitMode='time
 }
 function drawTaChart(canvas,result){
  if(!canvas||!result)return;const dpr=window.devicePixelRatio||1,w=canvas.clientWidth||720,h=canvas.clientHeight||320;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
- const {candles,bb,ema20,ema50,recent}=result,n=candles.length,start=Math.max(0,n-120),cs=candles.slice(start),vals=[];for(const c of cs)vals.push(+c[2],+c[3]);for(const arr of [bb.upper,bb.lower,ema20,ema50])for(const v of arr.slice(start))if(v!=null)vals.push(v);if(vals.length<2)return;
+ const {candles,bb,ema20,ema50,recent}=result,n=candles.length,start=Math.max(0,n-120),cs=candles.slice(start),vals=[];for(const c of cs)vals.push(+c[2],+c[3]);for(const arr of [bb.upper,bb.lower,...($('taShowEma')?.checked?[ema20,ema50]:[])])for(const v of arr.slice(start))if(v!=null)vals.push(v);if(vals.length<2)return;
  let mn=Math.min(...vals),mx=Math.max(...vals),span=Math.max(mx-mn,mx*.002);mn-=span*.06;mx+=span*.06;const pad={l:60,r:12,t:12,b:25},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,X=i=>pad.l+(cs.length<=1?0:i/(cs.length-1)*pw),Y=v=>pad.t+(mx-v)/(mx-mn)*ph;
  ctx.strokeStyle='#e8edf3';ctx.lineWidth=1;ctx.font='10px Arial';ctx.fillStyle='#64748b';for(let g=0;g<=4;g++){const yy=pad.t+g*ph/4,val=mx-g*(mx-mn)/4;ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(w-pad.r,yy);ctx.stroke();ctx.fillText(val>=1000?val.toLocaleString('en-US',{maximumFractionDigits:0}):val.toFixed(3),3,yy+3);}
  const line=(arr,color,width)=>{ctx.beginPath();let on=false;for(let j=0;j<cs.length;j++){const v=arr[start+j];if(v==null){on=false;continue;}if(!on){ctx.moveTo(X(j),Y(v));on=true;}else ctx.lineTo(X(j),Y(v));}ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();};
- line(bb.upper,'#94a3b8',1);line(bb.mid,'#a78bfa',1);line(bb.lower,'#94a3b8',1);line(ema20,'#f59e0b',1);line(ema50,'#0ea5e9',1);
+ line(bb.upper,'#94a3b8',1);line(bb.mid,'#a78bfa',1);line(bb.lower,'#94a3b8',1);if($('taShowEma')?.checked){line(ema20,'#f59e0b',1.5);line(ema50,'#0ea5e9',1.5);}
  const cw=Math.max(2,Math.min(7,pw/cs.length*.62));for(let j=0;j<cs.length;j++){const c=cs[j],o=+c[1],cl=+c[4],hi=+c[2],lo=+c[3],x=X(j),up=cl>=o;ctx.strokeStyle=up?'#16a34a':'#dc2626';ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(x,Y(hi));ctx.lineTo(x,Y(lo));ctx.stroke();const top=Y(Math.max(o,cl)),bot=Y(Math.min(o,cl));ctx.fillRect(x-cw/2,top,cw,Math.max(1,bot-top));}
  const hits=[],sm=result.statMap||{};
  const visibleSignals=recent.filter(s=>s.i>=start&&s.i<n);
  const lastByType={};for(const s of visibleSignals)lastByType[s.type]=s;
  visibleSignals.forEach(s=>{const j=s.i-start,x=X(j),buy=s.type==='buy',cd=candles[s.i],y=buy?Y(+cd[3])+4:Y(+cd[2])-4,col=buy?'#15803d':'#b91c1c';ctx.fillStyle=col;ctx.beginPath();if(buy){ctx.moveTo(x,y);ctx.lineTo(x-6,y+10);ctx.lineTo(x+6,y+10);}else{ctx.moveTo(x,y);ctx.lineTo(x-6,y-10);ctx.lineTo(x+6,y-10);}ctx.closePath();ctx.fill();hits.push({x,y:buy?y+5:y-5,s});
   // Show wording on only the latest visible triangle of each type; never on all historical triangles.
-  if(lastByType[s.type]===s){const label=buy?'매수시점':'매도시점';ctx.font='bold 11px sans-serif';const tw=ctx.measureText(label).width,tx=Math.max(pad.l+2,Math.min(w-pad.r-tw-7,x-tw/2)),ty=buy?Math.min(h-pad.b-2,y+24):Math.max(pad.t+12,y-15);ctx.fillStyle='rgba(255,255,255,.94)';ctx.fillRect(tx-3,ty-11,tw+6,15);ctx.fillStyle=col;ctx.fillText(label,tx,ty);}
+  if(lastByType[s.type]===s){
+   const st=sm[s.key];const prob=st&&st.n>0&&Number.isFinite(st.post)?`보정확률 ${st.post.toFixed(0)}%`:'표본 부족';
+   const title=buy?'매수시점':'매도시점';const lines=[title,prob];ctx.font='bold 11px sans-serif';
+   const tw=Math.max(...lines.map(t=>ctx.measureText(t).width));const bw=tw+12,bh=32;
+   const tx=Math.max(pad.l+2,Math.min(w-pad.r-bw-2,x-bw/2));
+   // Prefer below the buy marker and above the sell marker, but keep labels inside the plot.
+   let top=buy?y+15:y-bh-15;
+   if(top<pad.t+2||top+bh>h-pad.b-2)top=buy?y-bh-15:y+15;
+   top=Math.max(pad.t+2,Math.min(h-pad.b-bh-2,top));
+   ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle=buy?'#86bba0':'#d8a4a4';ctx.lineWidth=1;
+   ctx.fillRect(tx,top,bw,bh);ctx.strokeRect(tx+.5,top+.5,bw-1,bh-1);
+   ctx.fillStyle=col;ctx.textAlign='center';ctx.fillText(title,tx+bw/2,top+13);
+   ctx.font='bold 10px sans-serif';ctx.fillText(prob,tx+bw/2,top+26);ctx.textAlign='start';
+  }
  });
  const sel=canvas._sel;
  if(sel){const st=sm[sel.key],lines=[`${sel.type==='buy'?'매수':'매도'} · ${sel.label}`,new Date(sel.t).toLocaleString('ko-KR'),st&&st.n?`보정확률 ${st.post.toFixed(0)}% · 기저 ${st.base.toFixed(0)}% · 표본 ${st.n}${st.n<30?' (저신뢰)':''}`:'표본 없음',st&&st.ci?`95% 구간 ${st.ci[0].toFixed(0)}~${st.ci[1].toFixed(0)}% · 평균 ${st.avgRet>0?'+':''}${st.avgRet.toFixed(2)}%`:''].filter(Boolean);ctx.font='11px Arial';const bw2=Math.max(...lines.map(l=>ctx.measureText(l).width))+14,bh=lines.length*15+8,jx=X(Math.max(0,sel.i-start)),bx=Math.min(Math.max(pad.l,jx-bw2/2),w-bw2-4),by=pad.t+4;ctx.fillStyle='rgba(15,23,42,.92)';ctx.fillRect(bx,by,bw2,bh);ctx.fillStyle='#fff';lines.forEach((l,k)=>ctx.fillText(l,bx+7,by+16+k*15));}
  canvas._hits=hits;
+}
+$('taShowEma')?.addEventListener('change',()=>{const cv=$('taChart');if(cv?._result)drawTaChart(cv,cv._result);});
+function drawTaRsiChart(canvas,result){
+ if(!canvas||!result)return;
+ const dpr=window.devicePixelRatio||1,w=canvas.clientWidth||720,h=canvas.clientHeight||132;
+ if(w<80||h<40)return;
+ canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+ const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ const vals=result.rsi||[],start=Math.max(0,vals.length-120),v=vals.slice(start),p={l:38,r:12,t:12,b:20};
+ const pw=w-p.l-p.r,ph=h-p.t-p.b,X=i=>p.l+(v.length<=1?0:i/(v.length-1)*pw),Y=n=>p.t+(100-n)/100*ph;
+ for(const level of [70,50,30]){const y=Y(level);ctx.beginPath();ctx.setLineDash(level===50?[2,4]:[5,4]);ctx.strokeStyle=level===70?'#d98c8c':level===30?'#86bca2':'#cbd5e1';ctx.moveTo(p.l,y);ctx.lineTo(w-p.r,y);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#64748b';ctx.font='11px Arial';ctx.fillText(String(level),8,y+4);}
+ ctx.beginPath();let on=false;for(let i=0;i<v.length;i++){const n=v[i];if(!Number.isFinite(n)){on=false;continue;}if(!on){ctx.moveTo(X(i),Y(n));on=true;}else ctx.lineTo(X(i),Y(n));}
+ ctx.strokeStyle='#6d28d9';ctx.lineWidth=1.8;ctx.stroke();
+ const last=v.at(-1),label=document.getElementById('taRsiCurrent');
+ if(label)label.textContent=Number.isFinite(last)?`현재 RSI ${last.toFixed(1)} / 100 · 과매도 30 · 과매수 70`:'현재 RSI 계산 불가';
+ if(Number.isFinite(last)){const x=X(v.length-1),y=Y(last);ctx.fillStyle='#6d28d9';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();}
 }
 const TA_CACHE=new Map();
 async function taFetchHistory(sym,frame,target,force){
@@ -3015,8 +3056,8 @@ async function loadTaLab(force=false){
   const getBtc=async()=>{if(btcMap)return btcMap;const bd=sym==='BTC'?d:await taFetchHistory('BTC',frame==='day'?'day':'5m',target,false);btcMap=taBtcMap(bd.candles);return btcMap;};
   if(regimeSel==='btcup'){try{await getBtc();}catch(e){throw Error('BTC 데이터 필요: '+(e?.message||e));}if(tok!==TA_TOK)return;}
   const result=taDetectSignals(raw,horizon,fee,regimeSel,exitSel,btcMap),c=result.current,last=c.lastSignal,cv=$('taChart');
-  cv._result=result;cv._sel=null;if(chartContext)chartContext.textContent=`${frame==='day'?'일봉':'5분봉'} · 최근 120봉 · 초록 ▲ 매수 후보 / 빨강 ▼ 매도 후보`;drawTaChart(cv,result);
-  if(!cv.dataset.bound){cv.dataset.bound='1';const pick=e=>{const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;let b=null,bd=18;for(const h of cv._hits||[]){const dd=Math.hypot(h.x-px,h.y-py);if(dd<bd){bd=dd;b=h;}}const ns=b?b.s:null;if(ns!==cv._sel){cv._sel=ns;if(cv._result)drawTaChart(cv,cv._result);}};cv.addEventListener('pointermove',pick);cv.addEventListener('pointerdown',pick);window.addEventListener('resize',()=>{if(cv._result)drawTaChart(cv,cv._result)});}
+  cv._result=result;cv._sel=null;if(chartContext)chartContext.textContent=`${frame==='day'?'일봉':'5분봉'} · 최근 120봉 · 초록 ▲ 매수 후보 / 빨강 ▼ 매도 후보`;drawTaChart(cv,result);drawTaRsiChart($('taRsiChart'),result);
+  if(!cv.dataset.bound){cv.dataset.bound='1';const pick=e=>{const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;let b=null,bd=18;for(const h of cv._hits||[]){const dd=Math.hypot(h.x-px,h.y-py);if(dd<bd){bd=dd;b=h;}}const ns=b?b.s:null;if(ns!==cv._sel){cv._sel=ns;if(cv._result)drawTaChart(cv,cv._result);}};cv.addEventListener('pointermove',pick);cv.addEventListener('pointerdown',pick);window.addEventListener('resize',()=>{if(cv._result){drawTaChart(cv,cv._result);drawTaRsiChart($('taRsiChart'),cv._result);}});}
   $('taMetrics').innerHTML=[`<span>${sym} 현재가 ${taFmtP(c.price)}</span>`,`<span>BB 위치 ${c.bbPos==null?'—':c.bbPos.toFixed(0)+'%'}</span>`,`<span>RSI ${c.rsi==null?'—':c.rsi.toFixed(1)}</span>`,`<span>ADX ${c.adx==null?'—':c.adx.toFixed(1)}</span><span>ATR ${c.atrPct==null?'—':c.atrPct.toFixed(2)+'%'}</span>`,`<span>최근 신호 ${last?esc(last.label)+' · '+new Date(last.t).toLocaleString('ko-KR'):'—'}</span>`].join('');
   $('taVerdict').innerHTML=taVerdictHTML(result);
   window.__taLast={sym,frame,result,resultN:regimeSel==='all'?result:null,resultB:regimeSel==='btcup'?result:null};taGateRender();
@@ -3024,7 +3065,7 @@ async function loadTaLab(force=false){
   if(tb){if(!result.stats.length)tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted)">유효 신호 표본이 없습니다.</td></tr>';else tb.innerHTML=result.stats.map(x=>{const wr=x.winRate==null?'—':x.winRate.toFixed(1)+'%',low=x.n<30,cls=low||x.n===0?'neutral':x.sig&&x.edge>0?'good':x.edge<-3?'bad':'neutral',pc=x.n?x.post.toFixed(0)+'%':'—',avg=x.avgRet==null?'—':(x.avgRet>0?'+':'')+x.avgRet.toFixed(2)+'%',ci=x.ci?`${x.ci[0].toFixed(0)}~${x.ci[1].toFixed(0)}%`:'—',oos=x.oosN?`${x.oosWin.toFixed(0)}% (${x.oosN})`:'—',type=x.type==='buy'?'<span class="good">매수</span>':'<span class="bad">매도</span>';return`<tr><td>${esc(x.label)}</td><td>${type}</td><td>${x.n}${low?'*':''}</td><td class="${cls}">${wr}</td><td>${x.base.toFixed(0)}%</td><td class="${cls}"><b>${pc}</b></td><td>${ci}</td><td>${avg}</td><td>${oos}</td><td class="small">${x.last?new Date(x.last.t).toLocaleDateString('ko-KR'):'—'}</td></tr>`}).join('');}
   st.textContent=`${sym} · ${frame==='day'?'일봉':'5분봉'} ${raw.length.toLocaleString()}개 · ${d.pages}회 조회 · 평가 ${horizon}봉 · ${d.source} · ${new Date().toLocaleString('ko-KR')}${d.mixed?' · ⚠ 거래소 전환 감지: 가격 혼합 방지를 위해 오래된 구간 제외':''}`;
   $('taNotes').innerHTML=`<b>읽는 법</b> — ${$('taExit')?.value==='atr'?'[청산: 손절 1.5×ATR / 목표 3×ATR, 같은 봉에서 둘 다 닿으면 손절 우선, 미도달 시 '+horizon+'봉 뒤 종가] ':''}${$('taRegime')?.value==='trend'?'[추세장 ADX≥25 구간만] ':$('taRegime')?.value==='range'?'[횡보장 ADX<25 구간만] ':$('taRegime')?.value==='btcup'?'[BTC가 EMA50 위인 시점만] ':''}승률: 신호 확정 다음 봉 시가 진입, ${horizon}봉 뒤 종가 청산, 왕복 비용 ${fee.toFixed(2)}% 차감 후 수익>0 비율. <b>기저</b>: 신호 없이 아무 봉에서 진입했을 때의 같은 기준 승률(상승장에선 매수 승률이 원래 높음). <b>보정확률</b>: 표본 20개만큼 기저 승률 쪽으로 당긴 베이지안 추정(표본이 적을수록 기저에 가까움). 신뢰구간 하단이 기저를 넘고 표본 30개 이상일 때만 '유의'로 봅니다. <b>OOS</b>: 가장 최근 30% 구간만 따로 본 승률(괄호는 표본 수)로, 과거에만 맞춘 신호인지 점검합니다. * = 표본 30개 미만. 코인·신호를 많이 훑어볼수록 우연히 좋아 보이는 결과가 섞입니다. 매도 신호는 하락 회피 점수이지 공매도 수익이 아니며, 실제 체결·호가·세금과 다를 수 있고 투자 권유가 아닙니다.`;
- }catch(e){if(tok!==TA_TOK)return;st.textContent='TA 분석 실패 · '+(e?.message||String(e)).slice(0,150);if(chartContext)chartContext.textContent='데이터 조회 실패 · 이전 차트가 남아 있을 수 있습니다';if(tb)tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--red)">데이터 로드 실패</td></tr>';}
+ }catch(e){if(tok!==TA_TOK)return;st.textContent='TA 분석 실패 · '+(e?.message||String(e)).slice(0,150);if($('taRsiCurrent'))$('taRsiCurrent').textContent='RSI 데이터 조회 실패';if(chartContext)chartContext.textContent='데이터 조회 실패 · 이전 차트가 남아 있을 수 있습니다';if(tb)tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--red)">데이터 로드 실패</td></tr>';}
 }
 let TA_SCAN_RUNNING=false;
 async function taScanAll(){

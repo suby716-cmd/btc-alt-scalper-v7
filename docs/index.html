@@ -228,6 +228,9 @@
 .ta-note{font-size:11px;color:var(--muted);line-height:1.55;margin-top:8px}
 
 </style>
+<style>
+.qm-panel{background:#fff;border:1px solid #dfe5ec;border-radius:14px;padding:16px;margin:14px 0}.qm-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.qm-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.qm-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px}.qm-box strong{font-size:20px;display:block;margin-top:5px}.qm-chart{width:100%;height:240px;border:1px solid #e5e7eb;border-radius:8px}.qm-charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}.qm-muted{color:#64748b;font-size:12px}.qm-table{overflow-x:auto}.qm-table table{width:100%}@media(max-width:750px){.qm-grid,.qm-charts{grid-template-columns:1fr 1fr}.qm-chart{height:170px}}@media(max-width:500px){.qm-charts{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -330,6 +333,12 @@
   <div class="macro-context" id="asFoot">데이터 연결 중…</div>
 </div>
 
+<section class="qm-panel" id="quantumLab">
+<div class="qm-head"><div><h2 style="margin:0">🔬 QUANTUM LONG-CYCLE RESEARCH LAB</h2><div class="qm-muted">BTC 장기 저평가 · 금/BTC · 구리/BTC · 미국 장단기 금리차 · 데이터 품질</div></div><button class="btn" type="button" id="qmRefresh">연구 데이터 새로고침</button></div>
+<div class="qm-muted" id="qmStatus">연구 데이터 연결 대기</div><div class="qm-grid" id="qmCards"></div>
+<div class="qm-charts"><div><h3>금/BTC · 기준 100</h3><canvas class="qm-chart" id="qmGold"></canvas></div><div><h3>구리/BTC · 기준 100</h3><canvas class="qm-chart" id="qmCopper"></canvas></div><div><h3>미국 10년-2년 금리차 (%p)</h3><canvas class="qm-chart" id="qmCurve"></canvas></div><div><h3>미국 10년-3개월 금리차 (%p)</h3><canvas class="qm-chart" id="qmCurve3"></canvas></div></div>
+<div class="qm-table" id="qmCorr"></div><div class="qm-muted" id="qmQuality"></div>
+<p class="qm-muted">연구용 보조지표이며 매매 신호가 아닙니다. 원자재 가격 단위·거래시간·선물 롤오버, 데이터 결측 및 상관관계의 비인과성을 유의하세요. MVRV·온체인·실제 ETF 자금유입 등 미검증 항목은 이 연구실에서 계산하지 않습니다.</p></section>
 <section class="panel compass-panel" id="masterCompass">
   <div class="compass-head"><div><div class="compass-title">🧭 MASTER MARKET COMPASS <span>BTC 장기 가치 → 상승장 확인 → 알트 순환매 → 과열 분할매도</span></div><div class="small" id="compassStatus">장기 BTC 월봉 데이터 연결 중…</div></div><button type="button" class="btn" id="compassReload">장기 데이터 새로고침</button></div>
   <div class="compass-grid">
@@ -2826,6 +2835,13 @@ function setConn(text,color){
 }
 
 bootApp();
+</script>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id), fmt=(v,d=2)=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('ko-KR',{maximumFractionDigits:d}):'자료 없음';
+function chart(id,rows,key){const el=$(id);if(!el)return;const ctx=el.getContext('2d');const w=el.clientWidth||350,h=el.clientHeight||220,dpr=window.devicePixelRatio||1;el.width=Math.round(w*dpr);el.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const a=(rows||[]).filter(r=>Number.isFinite(r[key])).slice(-96);ctx.strokeStyle='#e5e7eb';ctx.strokeRect(40,12,w-55,h-40);if(a.length<3){ctx.fillStyle='#64748b';ctx.fillText('데이터 부족',50,45);return;}let vs=a.map(r=>r[key]),lo=Math.min(...vs),hi=Math.max(...vs);if(hi===lo){hi++;lo--;}let X=i=>40+i*(w-55)/(a.length-1),Y=v=>12+(hi-v)*(h-40)/(hi-lo);ctx.fillStyle='#64748b';ctx.font='11px sans-serif';ctx.fillText(fmt(hi),2,20);ctx.fillText(fmt(lo),2,h-29);if(lo<0&&hi>0){ctx.strokeStyle='#cbd5e1';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(40,Y(0));ctx.lineTo(w-15,Y(0));ctx.stroke();ctx.setLineDash([]);}ctx.beginPath();a.forEach((r,i)=>i?ctx.lineTo(X(i),Y(r[key])):ctx.moveTo(X(i),Y(r[key])));ctx.strokeStyle='#2563eb';ctx.lineWidth=2;ctx.stroke();ctx.fillText(a[0].month||'',40,h-7);ctx.fillText(a.at(-1).month||'',Math.max(40,w-90),h-7);}
+async function run(force=false){$('qmStatus').textContent='장기 데이터 검증 중…';try{let base=window.WORKER_BASE||window.WORKER_URL||'https://btc-alt-scalper-v7.suby716.workers.dev';let u=String(base).replace(/\/$/,'')+'/quantum-lab'+(force?'?force=1':'');let r=await fetch(u,{cache:'no-store'});let d=await r.json();if(!d.ok){throw Error(d.error||'입력 데이터 미충족')}let b=d.btc;let labels=[['BTC 현재가','$'+fmt(b.price,0)],['고점 대비 낙폭',fmt(b.drawdownPct)+'%'],['일봉 RSI(14)',fmt(b.rsi14)],['매집 관찰 점수',b.accumulation.score+'/'+b.accumulation.maxScore]];$('qmCards').innerHTML=labels.map(([a,v])=>'<div class="qm-box"><span class="qm-muted">'+a+'</span><strong>'+v+'</strong></div>').join('');chart('qmGold',d.ratios.goldBtc.series,'indexed');chart('qmCopper',d.ratios.copperBtc.series,'indexed');chart('qmCurve',d.yieldCurve.tenMinusTwo,'value');chart('qmCurve3',d.yieldCurve.tenMinusThreeMonth,'value');let rows=[['금/BTC',d.ratios.goldBtc],['구리/BTC',d.ratios.copperBtc],['은/BTC',d.ratios.silverBtc]];$('qmCorr').innerHTML='<h3>BTC와 원자재 일간 수익률 상관관계</h3><table><thead><tr><th>비교</th><th>30일</th><th>90일</th><th>365일</th></tr></thead><tbody>'+rows.map(([n,v])=>'<tr><td>'+n+'</td>'+[30,90,365].map(k=>'<td>'+fmt(v.correlations[k].corr,3)+' (n='+v.correlations[k].n+')</td>').join('')+'</tr>').join('')+'</tbody></table>';$('qmQuality').textContent='출처·최종일: '+Object.entries(d.quality).map(([k,v])=>k+' '+(v.source||'미확보')+' '+(v.last||'—')).join(' | ');$('qmStatus').textContent='연구용 · '+d.built+' · '+b.accumulation.status+' · '+b.accumulation.reasons.join(' / ');}catch(e){$('qmStatus').textContent='데이터 검증 실패: '+e.message+' (신호 산출 중단)';}}
+$('qmRefresh')?.addEventListener('click',()=>run(true));run();})();
 </script>
 </body>
 </html>

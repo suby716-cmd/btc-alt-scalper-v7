@@ -2947,6 +2947,24 @@ function taApplyZoomLayout(){
 function taSetZoom(mode){TA_ZOOM_MODE=mode==='120'?'120':'40';taApplyZoomLayout();const cv=$('taChart');if(cv?._result){drawTaChart(cv,cv._result);drawTaRsiChart($('taRsiChart'),cv._result);}}
 $('taZoom40')?.addEventListener('click',()=>taSetZoom('40'));
 $('taZoom120')?.addEventListener('click',()=>taSetZoom('120'));
+
+function taDrawDateAxis(ctx,candles,start,count,X,y,w,right){
+ if(count<2)return;
+ const frame=document.getElementById('taFrame')?.value==='5m'?'5m':'day';
+ const ticks=Math.min(6,Math.max(2,Math.floor((w-75)/110)));
+ ctx.save();ctx.fillStyle='#475569';ctx.strokeStyle='#cbd5e1';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+ for(let k=0;k<ticks;k++){
+  const j=Math.round((count-1)*k/(ticks-1)),raw=candles[start+j]?.[0];
+  if(raw==null)continue;
+  const t=Number(raw),d=new Date(t<1e11?t*1000:t);
+  if(!Number.isFinite(d.getTime()))continue;
+  const label=frame==='5m'?new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(d):new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',year:'2-digit',month:'2-digit',day:'2-digit'}).format(d);
+  const x=X(j);ctx.beginPath();ctx.moveTo(x,y-8);ctx.lineTo(x,y-4);ctx.stroke();
+  ctx.fillText(label,Math.max(44,Math.min(w-right-42,x)),y+10);
+ }
+ ctx.restore();
+}
+
 function drawTaChart(canvas,result){
  if(!canvas||!result)return;taApplyZoomLayout();const dpr=window.devicePixelRatio||1,w=canvas.clientWidth||720,h=canvas.clientHeight||320;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  const {candles,bb,ema20,ema50,ema120,ema200,recent}=result,n=candles.length,start=Math.max(0,n-120),cs=candles.slice(start),vals=[];const mode=$('taLineMode')?.value||'bb';const emaByMode={ema20,ema50,ema120,ema200};for(const c of cs)vals.push(+c[2],+c[3]);for(const arr of (mode==='bb'?[bb.upper,bb.lower]:[emaByMode[mode]||ema20]))for(const v of arr.slice(start))if(v!=null)vals.push(v);if(vals.length<2)return;
@@ -2986,6 +3004,7 @@ function drawTaChart(canvas,result){
  if(!latestVisible){const box=$('taChartLatestLabel');if(box){box.textContent='최근 120봉에 매수·매도 신호가 없습니다.';}}
  const sel=canvas._sel;
  if(sel){const st=sm[sel.key],lines=[`${sel.type==='buy'?'매수':'매도'} · ${sel.label}`,new Date(sel.t).toLocaleString('ko-KR'),st&&st.n?`보정확률 ${st.post.toFixed(0)}% · 기저 ${st.base.toFixed(0)}% · 표본 ${st.n}${st.n<30?' (저신뢰)':''}`:'표본 없음',st&&st.ci?`95% 구간 ${st.ci[0].toFixed(0)}~${st.ci[1].toFixed(0)}% · 평균 ${st.avgRet>0?'+':''}${st.avgRet.toFixed(2)}%`:''].filter(Boolean);ctx.font='11px Arial';const bw2=Math.max(...lines.map(l=>ctx.measureText(l).width))+14,bh=lines.length*15+8,jx=X(Math.max(0,sel.i-start)),bx=Math.min(Math.max(pad.l,jx-bw2/2),w-bw2-4),by=pad.t+4;ctx.fillStyle='rgba(15,23,42,.92)';ctx.fillRect(bx,by,bw2,bh);ctx.fillStyle='#fff';lines.forEach((l,k)=>ctx.fillText(l,bx+7,by+16+k*15));}
+ taDrawDateAxis(ctx,candles,start,cs.length,X,h-30,w,pad.r);
  canvas._hits=hits;
 }
 function taRefreshPeriodButtons(){
@@ -3009,14 +3028,14 @@ function drawTaRsiChart(canvas,result){
  if(w<80||h<40)return;
  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
  const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
- const vals=result.rsi||[],start=Math.max(0,vals.length-120),v=vals.slice(start),p={l:38,r:12,t:12,b:20};
+ const vals=result.rsi||[],start=Math.max(0,vals.length-120),v=vals.slice(start),p={l:60,r:12,t:12,b:34};
  const pw=w-p.l-p.r,ph=h-p.t-p.b,X=i=>p.l+(v.length<=1?0:i/(v.length-1)*pw),Y=n=>p.t+(100-n)/100*ph;
  for(const level of [70,50,30]){const y=Y(level);ctx.beginPath();ctx.setLineDash(level===50?[2,4]:[5,4]);ctx.strokeStyle=level===70?'#d98c8c':level===30?'#86bca2':'#cbd5e1';ctx.moveTo(p.l,y);ctx.lineTo(w-p.r,y);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#64748b';ctx.font='11px Arial';ctx.fillText(String(level),8,y+4);}
  ctx.beginPath();let on=false;for(let i=0;i<v.length;i++){const n=v[i];if(!Number.isFinite(n)){on=false;continue;}if(!on){ctx.moveTo(X(i),Y(n));on=true;}else ctx.lineTo(X(i),Y(n));}
  ctx.strokeStyle='#6d28d9';ctx.lineWidth=1.8;ctx.stroke();
  const last=v.at(-1),label=document.getElementById('taRsiCurrent');
  if(label)label.textContent=Number.isFinite(last)?`현재 RSI ${last.toFixed(1)} / 100 · 과매도 30 · 과매수 70`:'현재 RSI 계산 불가';
- if(Number.isFinite(last)){const x=X(v.length-1),y=Y(last);ctx.fillStyle='#6d28d9';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();}
+ if(Number.isFinite(last)){const x=X(v.length-1),y=Y(last);ctx.fillStyle='#6d28d9';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();} const cs=result.candles||[];taDrawDateAxis(ctx,cs,Math.max(0,cs.length-v.length),v.length,X,h-23,w,p.r);
 }
 const TA_CACHE=new Map();
 async function taFetchHistory(sym,frame,target,force){

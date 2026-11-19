@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff">
 <link rel="manifest" href="manifest.json">
-<title>BTC ALT REGIME TRADER v10.15.0 · MASTER MARKET COMPASS</title>
+<title>BTC ALT REGIME TRADER v10.15.1 · MASTER MARKET COMPASS</title>
 <style>
 :root{--bg:#f5f7fa;--panel:#ffffff;--panel2:#f8fafc;--line:#dfe5ec;--text:#1f2937;--muted:#6b7280;--green:#0f9d58;--yellow:#b7791f;--red:#d93025;--blue:#1976d2;--violet:#7c3aed}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}.wrap{max-width:1720px;margin:auto;padding:20px}.head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:14px}.title h1{margin:0;font-size:27px}.sub{color:var(--muted);margin-top:5px}.status{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--yellow);margin-right:7px}.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px}.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px}.card{padding:13px}.label{color:var(--muted);font-size:12px}.value{font-size:19px;font-weight:700;margin-top:4px}.panel{padding:14px;margin-top:11px}.controls,.btgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;align-items:center}.controls input,.controls select,.btgrid input,.btgrid select{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px;width:100%}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{border-color:var(--blue)}.btn.primary{border-color:var(--blue)}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:12px}.buy{color:var(--green);font-weight:700}.watch{color:var(--yellow);font-weight:700}.idle,.stale{color:var(--muted)}.error{color:var(--red)}.small{font-size:12px;color:var(--muted)}.signal{font-size:18px;font-weight:700}.reason{color:var(--muted);font-size:12px}.log{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:11px;min-height:55px}.subpanel{margin-top:10px;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}.metricgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}.metric b{display:block;font-size:18px;margin-top:3px}.good{color:var(--green)}.bad{color:var(--red)}.neutral{color:var(--yellow)}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.note{border-left:3px solid var(--violet);padding:9px 11px;background:#f8f5ff}.danger{border-left-color:var(--red)}.ok{border-left-color:var(--green)}.ledgergrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ledger-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.ledger-actions{display:flex;gap:8px;flex-wrap:wrap}.ledger-input{width:110px;max-width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:6px 7px;border-radius:7px}.mini-btn{padding:6px 8px;font-size:12px}.pnl-pos{color:var(--green);font-weight:700}.pnl-neg{color:var(--red);font-weight:700}
@@ -227,6 +227,15 @@
 .ta-table th:first-child,.ta-table td:first-child{text-align:left}
 .ta-note{font-size:11px;color:var(--muted);line-height:1.55;margin-top:8px}
 
+
+/* v10.15.1 mobile TA signal legibility, scoped to scan table */
+#taScanOut .ta-table{border-collapse:separate;border-spacing:0;min-width:760px}
+#taScanOut .ta-table th:first-child,#taScanOut .ta-table td:first-child{position:sticky;left:0;z-index:3;background:#fff;min-width:88px}
+#taScanOut .ta-table th:nth-child(2),#taScanOut .ta-table td:nth-child(2){position:sticky;left:88px;z-index:2;background:#fff;min-width:185px;max-width:235px;white-space:normal;line-height:1.45;box-shadow:2px 0 4px #0000000c}
+#taScanOut .ta-table thead th:first-child,#taScanOut .ta-table thead th:nth-child(2){z-index:5;background:#f3f6fb}
+#taScanOut .ta-buy{color:#087a42!important;font-weight:800!important;white-space:nowrap}
+#taScanOut .ta-sell{color:#c62828!important;font-weight:800!important;white-space:nowrap}
+@media(max-width:640px){#taScanOut .ta-table th:first-child,#taScanOut .ta-table td:first-child{min-width:66px;max-width:66px}#taScanOut .ta-table th:nth-child(2),#taScanOut .ta-table td:nth-child(2){left:66px;min-width:165px;max-width:190px;font-size:12px}}
 </style>
 <style>
 /* Research lab readable typography and responsive charts */
@@ -2382,7 +2391,7 @@ function asBtRunStrategy(keys,scores,prices,opts,from,to,kind){
     const btc1=asBtReturn(btc,keys[i-2],prev);
     const btc3=asBtReturn(btc,keys[i-4],prev);
     const risk=kind==='guarded'&&((Number.isFinite(btc1)&&btc1<=-12)||(Number.isFinite(btc3)&&btc3<=-25));
-    const available=altSymbols.filter(s=>Number.isFinite(asBtReturn(prices[s]||new Map(),prev,key)));
+    const available=altSymbols.filter(s=>{const pm=prices[s]||new Map();return Number.isFinite(pm.get(prev))&&pm.get(prev)>0;}); // Eligibility known at prior month close; no future return lookahead
     if(available.length<2)continue; // avoid reporting fake returns where the historical basket is not observable
     let selected=available.filter(s=>{
       const pm=prices[s];
@@ -2394,8 +2403,9 @@ function asBtRunStrategy(keys,scores,prices,opts,from,to,kind){
     else if(!invested&&score<=opts.buy&&(!risk)&&(kind!=='guarded'||selected.length>=2))invested=true;
     let ret=null;
     if(invested){
-      const rs=selected.map(s=>asBtReturn(prices[s],prev,key)).filter(Number.isFinite);
-      ret=rs.length?rs.reduce((a,b)=>a+b,0)/rs.length:null;
+      const rs=selected.map(s=>asBtReturn(prices[s],prev,key));
+      // A missing future price cannot be silently dropped: doing so creates survivorship bias.
+      ret=rs.length&&rs.every(Number.isFinite)?rs.reduce((a,b)=>a+b,0)/rs.length:null;
       if(!Number.isFinite(ret))invested=false;
     }
     rows.push({month:key,score,invested,ret,cost:opts.cost,selected:selected.length,risk,btc1,btc3});
@@ -2925,6 +2935,21 @@ function taGateEval(sym,r){
   }
  }
 
+ // Research-30 → TA: availability/quality is a guardrail, never a fabricated predictive score.
+ const T4='30개 장기 연구지표 (RESEARCH-30)';
+ const research=window.__mmcResearch30;
+ const researchAge=research?.receivedAt?Date.now()-research.receivedAt:Infinity;
+ if(!research||researchAge>6*3600e3){unk++;L.push([T4,'unk',!research?'연구 데이터 조회 대기':'연구 데이터 수신 후 6시간 경과']);}
+ else if(!research.ok){unk++;L.push([T4,'unk',research.reason||'연구 데이터 수집 실패']);}
+ else{
+  const q=research.quality||{},cov=Array.isArray(research.coverage)?research.coverage:[];
+  const mvrv=!!q.mvrv?.available,etf=!!q.etfNetFlows?.available,btc=!!q.btc?.fresh;
+  const implemented=cov.filter(x=>/^(연결|구현|완료|검증)/.test(String(x.status||''))).length;
+  const txt=`연구항목 ${cov.length}개 · 상태표시상 구현 ${implemented}개 · BTC ${btc?'최신':'미확인'} · MVRV ${mvrv?'실측 확인':'미확보'} · ETF 순유입 ${etf?'실측 확인':'미확보'}`;
+  // A research endpoint's coverage table is metadata, not proof of a valid buy signal.
+  if(!btc||!mvrv||!etf){unk++;L.push([T4,'unk',txt+' · 필수 실측 미확보, 매수 우위 보류']);}
+  else {L.push([T4,'ok',txt+' · 자료 확보 (방향성은 별도 검증 필요)']);}
+ }
  let tier,rank,short;
  if(anySell){tier=goodSell?'🔻 매도 신호 우선 — 보유분 점검':'🟠 매도 신호 관찰 — 추가 확인';rank=4;short=goodSell?'🔻 매도 확인':'🟠 매도 관찰';}
  else if(!goodBuy&&!anyBuy){tier='⏸ 신호 없음 — 연결 판정 대상 아님';rank=0;short='—';}
@@ -2942,9 +2967,9 @@ function taGateRender(){
   const f=x=>x&&x.n&&x.winRate!=null?`${x.winRate.toFixed(0)}% (표본 ${x.n})`:'표본 없음';
   if(a&&b)ev=`<br><span class="small">📐 BTC EMA50 상승추세 필터 검증 · ${esc(g.label)}: 전체 ${f(a)} → BTC EMA50 위 ${f(b)} · 필터 기저 ${b.base.toFixed(0)}%</span>`;
  }
- el.innerHTML=`<b>🔗 연결 판정 · TA × BTC 국면 × 자금순환</b> — ${g.tier}<br>`+
+ el.innerHTML=`<b>🔗 연결 판정 · TA × BTC 국면 × 자금순환 × RESEARCH-30</b> — ${g.tier}<br>`+
   g.L.map(x=>`${ic[x[1]]} <b>${esc(x[0])}</b> ${esc(x[2])}`).join('<br>')+ev+
-  '<br><span class="small">규칙 기반 점검표이며 수익 보장이 아닙니다. 현재 BTC 국면·자금순환 상태는 과거 승률에 소급 적용하지 않습니다. 과거 필터 검증은 BTC EMA50 위 여부만 별도로 계산합니다. 데이터 누락·오래됨·개별 코인 상대강도 미수신 시 매수 우위 판정을 차단합니다.</span>';
+  '<br><span class="small">규칙 기반 점검표이며 수익 보장이 아닙니다. 현재 BTC 국면·자금순환·30개 연구지표 상태는 과거 승률에 소급 적용하지 않습니다. 과거 필터 검증은 BTC EMA50 위 여부만 별도로 계산합니다. 데이터 누락·오래됨·개별 코인 상대강도 미수신 시 매수 우위 판정을 차단합니다.</span>';
 }
 window.taGateRender=taGateRender;
 async function loadTaLab(force=false){
@@ -2985,7 +3010,7 @@ async function taScanAll(){
    if(d.candles.length<80)throw Error('캔들 데이터 부족');
    const r=taDetectSignals(d.candles,horizon,fee,['trend','range'].includes($('taRegime')?.value)?$('taRegime').value:'all',$('taExit')?.value||'time');
    const act=r.active.map(s=>({s,st:r.statMap[s.key]})).filter(x=>x.st&&x.st.n);
-   const best=act.sort((a,b)=>(b.st.post-b.st.base)-(a.st.post-a.st.base))[0];
+   const best=act.sort((a,b)=>((b.st.ci?.[0]??0)-b.st.base)-((a.st.ci?.[0]??0)-a.st.base))[0];
    rows.push({sym,price:r.current.price,rsi:r.current.rsi,bb:r.current.bbPos,best,g:taGateEval(sym,r)});
   }catch(e){failed++;rows.push({sym,err:1,reason:String(e?.message||e).slice(0,100)});}
   finally{done++;showProgress('running',`스캔 중 ${done}/${syms.length} · 실패 ${failed}`);}
@@ -2995,7 +3020,7 @@ async function taScanAll(){
   await Promise.all([0,1].map(async()=>{while(q.length)await work(q.shift());}));
   const rank=x=>x.err?-9:(x.g?x.g.rank:0)*10+(x.best?(x.best.st.n>=30&&x.best.st.sig?2:1):0);
   rows.sort((a,b)=>rank(b)-rank(a)||a.sym.localeCompare(b.sym));
-  out.innerHTML=`<table class="ta-table" style="min-width:560px"><thead><tr><th>코인(클릭=상세)</th><th>현재가</th><th>RSI</th><th>BB위치</th><th>최근 3봉 신호</th><th>보정확률</th><th>기저</th><th>표본</th><th>연결 판정</th></tr></thead><tbody>${rows.map(x=>x.err?`<tr><td>${esc(x.sym)}</td><td colspan="8" class="bad">데이터 실패 · ${esc(x.reason||'연결 확인 필요')}</td></tr>`:`<tr data-ta-pick="${esc(x.sym)}" style="cursor:pointer"><td>${esc(x.sym)}</td><td>${taFmtP(x.price)}</td><td>${x.rsi==null?'—':x.rsi.toFixed(0)}</td><td>${x.bb==null?'—':x.bb.toFixed(0)+'%'}</td><td>${x.best?(x.best.s.type==='buy'?'<span class="good">매수</span> ':'<span class="bad">매도</span> ')+esc(x.best.s.label):'—'}</td><td>${x.best?x.best.st.post.toFixed(0)+'%':'—'}</td><td>${x.best?x.best.st.base.toFixed(0)+'%':'—'}</td><td>${x.best?x.best.st.n+(x.best.st.n<30?'*':''):'—'}</td><td>${x.g.short}</td></tr>`).join('')}</tbody></table><div class="ta-note">정렬: 연결 판정(✅→🟡→❔→나머지) 우선, 그다음 유의한 신호 순. 연결 판정은 현재 BTC 국면·자금순환 값을 모든 코인에 동일하게 적용합니다. 5분봉 스캔은 최근 1,000봉(약 3.5일)만 사용하므로 신뢰도가 낮습니다.</div>`;
+  out.innerHTML=`<table class="ta-table" style="min-width:560px"><thead><tr><th>코인(클릭=상세)</th><th>최근 3봉 신호</th><th>현재가</th><th>RSI</th><th title="볼린저밴드 내 현재 가격의 상대적 위치. 0%=하단, 50%=중앙, 100%=상단">BB위치 ⓘ</th><th>보정확률</th><th>95% 하한</th><th>OOS 승률</th><th>기저</th><th>표본</th><th>연결 판정</th></tr></thead><tbody>${rows.map(x=>x.err?`<tr><td>${esc(x.sym)}</td><td colspan="10" class="bad">데이터 실패 · ${esc(x.reason||'연결 확인 필요')}</td></tr>`:`<tr data-ta-pick="${esc(x.sym)}" style="cursor:pointer"><td>${esc(x.sym)}</td><td class="ta-signal">${x.best?(x.best.s.type==='buy'?'<span class="ta-buy">매수</span> ':'<span class="ta-sell">매도</span> ')+esc(x.best.s.label):'—'}</td><td>${taFmtP(x.price)}</td><td>${x.rsi==null?'—':x.rsi.toFixed(0)}</td><td>${x.bb==null?'—':x.bb.toFixed(0)+'%'}</td><td>${x.best?x.best.st.post.toFixed(0)+'%':'—'}</td><td>${x.best?.st.ci?x.best.st.ci[0].toFixed(0)+'%':'—'}</td><td>${x.best?.st.oosN?x.best.st.oosWin.toFixed(0)+'% ('+x.best.st.oosN+')':'—'}</td><td>${x.best?x.best.st.base.toFixed(0)+'%':'—'}</td><td>${x.best?x.best.st.n+(x.best.st.n<30?'*':''):'—'}</td><td>${x.g.short}</td></tr>`).join('')}</tbody></table><div class="ta-note"><strong>BB위치란?</strong> 볼린저밴드 안에서 현재 가격이 어느 지점에 있는지 나타내는 백분율입니다. 하단선 0%, 중심선 50%, 상단선 100%이며, 밴드 밖에서는 0% 미만 또는 100% 초과도 가능합니다. <strong>매수 성공확률이 아닙니다.</strong><br>정렬: 연결 판정(✅→🟡→❔→나머지) 우선, 그다음 유의한 신호 순. 연결 판정은 현재 BTC 국면·자금순환·연구지표의 데이터 품질을 모든 코인에 동일하게 적용합니다. 연구지표의 값 자체를 과거 신호 승률로 오인하지 마세요. 95% 하한은 승률의 Wilson 신뢰구간 하단이며, OOS는 최신 30% 표본입니다. 표본 30 미만 또는 OOS 표본 부족은 검증 완료가 아닙니다. 5분봉 스캔은 최근 1,000봉(약 3.5일)만 사용하므로 신뢰도가 낮습니다.</div>`;
   showProgress(failed===syms.length?'error':failed?'error':'done',`완료 ${done}/${syms.length} · 성공 ${done-failed} · 실패 ${failed}`);
  }catch(e){showProgress('error','스캔 중단 · '+String(e?.message||e).slice(0,90));out.textContent='전체 코인 스캔 오류. 데이터 연결 및 Worker 상태를 확인하세요.';}
  finally{TA_SCAN_RUNNING=false;btn.disabled=false;}
@@ -3154,9 +3179,9 @@ for(const s of series){const a=s.rows.filter(x=>Number.isFinite(x.value));if(a.l
 const simple=(id,rows,key)=>draw(id,[{color:'#2563eb',rows:(rows||[]).slice(-96).map(x=>({month:x.month,value:x[key]}))}]);
 function comparison(id,btc,commodity,color,label,insightId){const b=new Map((btc||[]).map(x=>[x.month,x.value])),c=new Map((commodity||[]).map(x=>[x.month,x.value]));const keys=[...b.keys()].filter(k=>c.has(k)&&b.get(k)>0&&c.get(k)>0).sort().slice(-96);if(keys.length<3){draw(id,[]);$(insightId).textContent='비교할 공통 월별 데이터가 부족합니다. 원본 수집 상태를 확인하세요.';return;}
 const b0=b.get(keys[0]),c0=c.get(keys[0]);const bb=keys.map(month=>({month,value:100*b.get(month)/b0})),cc=keys.map(month=>({month,value:100*c.get(month)/c0}));draw(id,[{color:'#2563eb',rows:bb},{color,rows:cc}]);const br=bb.at(-1).value-100,cr=cc.at(-1).value-100;$(insightId).textContent=`${keys[0]} ~ ${keys.at(-1)} · BTC ${br>=0?'+':''}${fmt(br,1)}%, ${label} ${cr>=0?'+':''}${fmt(cr,1)}%. ${br>cr?'이 기간에는 BTC가 '+label+'보다 강했습니다.':br<cr?label+'이(가) BTC보다 강했습니다.':'두 자산의 성과가 비슷합니다.'} (각 자산의 시작 가격=100)`;}
-async function run(force=false){$('qmStatus').textContent='장기 데이터 확인 중…';try{const base=window.WORKER_BASE||window.WORKER_URL||'https://btc-alt-scalper-v7.suby716.workers.dev';const u=String(base).replace(/\/$/,'')+'/quantum-lab'+(force?'?force=1':'');const r=await fetch(u,{cache:'no-store'}),d=await r.json();if(!d.ok)throw Error(d.error||'입력 데이터 미충족');const b=d.btc;const labels=[['BTC 현재가','$'+fmt(b.price,0)],['고점 대비 낙폭',fmt(b.drawdownPct)+'%'],['일봉 RSI(14)',fmt(b.rsi14)],['매집 관찰 점수',b.accumulation.score+'/'+b.accumulation.maxScore]];$('qmCards').innerHTML=labels.map(([a,v])=>'<div class="qm-box"><span class="qm-muted">'+a+'</span><strong>'+v+'</strong></div>').join('');
+async function run(force=false){$('qmStatus').textContent='장기 데이터 확인 중…';try{const base=window.WORKER_BASE||window.WORKER_URL||'https://btc-alt-scalper-v7.suby716.workers.dev';const u=String(base).replace(/\/$/,'')+'/quantum-lab'+(force?'?force=1':'');const r=await fetch(u,{cache:'no-store'});const raw=await r.text();let d;try{d=JSON.parse(raw)}catch{throw Error('HTTP '+r.status+' · JSON 응답 아님 · Worker 주소/배포 확인')}if(!d.btc||!d.ratios||!d.yieldCurve)throw Error('HTTP '+r.status+' · '+(d.error||'QUANTUM 경로 미배포')+' · Worker /health 및 /quantum-lab 확인');const b=d.btc;const labels=[['BTC 현재가','$'+fmt(b.price,0)],['고점 대비 낙폭',fmt(b.drawdownPct)+'%'],['일봉 RSI(14)',fmt(b.rsi14)],['매집 관찰 점수',b.accumulation.score+'/'+b.accumulation.maxScore]];$('qmCards').innerHTML=labels.map(([a,v])=>'<div class="qm-box"><span class="qm-muted">'+a+'</span><strong>'+v+'</strong></div>').join('');
 const btcHistory=d.btc.monthlyPrices||[];comparison('qmGoldCompare',btcHistory,d.commodities.gold.history,'#c08b18','금','qmGoldInsight');comparison('qmCopperCompare',btcHistory,d.commodities.copper.history,'#b45309','구리','qmCopperInsight');simple('qmGold',d.ratios.goldBtc.series,'indexed');simple('qmCopper',d.ratios.copperBtc.series,'indexed');simple('qmCurve',d.yieldCurve.tenMinusTwo,'value');simple('qmCurve3',d.yieldCurve.tenMinusThreeMonth,'value');$('qmYieldInfo').textContent='출처: '+(d.yieldCurve.source||'미국 재무부')+' · 관측치 '+(d.yieldCurve.observations||0)+'개 · '+(d.yieldCurve.diagnostics||'수집 정보 없음');
-const rows=[['금/BTC',d.ratios.goldBtc],['구리/BTC',d.ratios.copperBtc],['은/BTC',d.ratios.silverBtc]];$('qmCorr').innerHTML='<h3>BTC와 원자재 일간 수익률 상관관계</h3><table><thead><tr><th>비교</th><th>30일</th><th>90일</th><th>365일</th></tr></thead><tbody>'+rows.map(([n,v])=>'<tr><td>'+n+'</td>'+[30,90,365].map(k=>'<td>'+fmt(v.correlations[k].corr,3)+' (n='+v.correlations[k].n+')</td>').join('')+'</tr>').join('')+'</tbody></table>';$('qmQuality').textContent='출처·최종일: '+Object.entries(d.quality).map(([k,v])=>k+' '+(v.source||'미확보')+' '+(v.last||'—')).join(' | ');$('qmStatus').textContent='연구용 · '+d.built+' · '+b.accumulation.status+' · '+b.accumulation.reasons.join(' / ')+(d.cache==='stale'?' · ⚠ 이전 저장 데이터 (최신 신호 아님)':'');if(summary)summary.textContent='연구실 데이터 수신 · '+d.built+' · 상세 그래프는 펼쳐서 확인';
+const rows=[['금/BTC',d.ratios.goldBtc],['구리/BTC',d.ratios.copperBtc],['은/BTC',d.ratios.silverBtc]];$('qmCorr').innerHTML='<h3>BTC와 원자재 일간 수익률 상관관계</h3><table><thead><tr><th>비교</th><th>30일</th><th>90일</th><th>365일</th></tr></thead><tbody>'+rows.map(([n,v])=>'<tr><td>'+n+'</td>'+[30,90,365].map(k=>'<td>'+fmt(v.correlations[k].corr,3)+' (n='+v.correlations[k].n+')</td>').join('')+'</tr>').join('')+'</tbody></table>';$('qmQuality').textContent='출처·최종일: '+Object.entries(d.quality).map(([k,v])=>k+' '+(v.source||'미확보')+' '+(v.last||'—')).join(' | ');$('qmStatus').textContent=(d.ok?'연구용 · ':'⚠ 부분 자료만 표시 · BTC 검증 미통과 · ')+d.built+' · '+b.accumulation.status+' · '+b.accumulation.reasons.join(' / ');if(summary)summary.textContent=(d.ok?'연구실 데이터 수신':'연구실 부분 데이터 수신 (매집 신호 차단)')+' · '+d.built+' · 상세 그래프는 펼쳐서 확인';
 }catch(e){$('qmStatus').textContent='데이터 검증 실패: '+e.message+' (연구실 신호 산출 중단)';if(summary)summary.textContent='연구실 데이터 연결 실패 · '+e.message+' · 메인 대시보드와 별개';}}
 const toggle=$('qmToggle'),details=$('qmDetails'),refresh=$('qmRefresh'),summary=$('qmSummary');
 let loaded=false;
@@ -3170,26 +3195,100 @@ refresh?.addEventListener('click',()=>run(true));
 <details id="mmcResearch30"><summary>🔬 장기 투자 30개 엔진 · 데이터·검증 현황 (연구용)</summary>
 <div class="mmcR30tools"><button type="button" id="mmcR30Refresh">실제 데이터 확인</button><span class="mmcR30status" id="mmcR30Status">펼친 뒤 버튼을 누르면 연결 상태를 확인합니다.</span></div>
 <div class="mmcR30cards" id="mmcR30Cards"></div><div class="mmcR30table" id="mmcR30Table"></div>
-<p style="font-size:13px;color:#53657a">MVRV는 Coin Metrics 실측이 확보된 경우에만 표시합니다. ETF 실제 순유입·언락은 미확보 시 추정치로 대체하지 않습니다. 백테스트는 BTC 종가 데이터 확보 기간에만 수행하며 수익 보장이 아닙니다.</p></details>
+<p style="font-size:13px;color:#53657a">미확보된 MVRV·ETF 순유입·언락은 추정치로 대체하지 않습니다. 백테스트는 BTC 종가 데이터 확보 기간에만 수행하며 수익 보장이 아닙니다.</p></details>
 
 <script id="mmc-research30-client">
-(()=>{'use strict';
-const $=id=>document.getElementById(id),esc=s=>String(s??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const num=(n,d=1)=>Number.isFinite(n)?Number(n).toFixed(d)+'%':'데이터 없음';
-async function load(){const btn=$('mmcR30Refresh'),status=$('mmcR30Status');if(!btn||btn.disabled)return;
-btn.disabled=true;status.textContent='데이터 요청 중…';
-try{const base=typeof workerBase==='function'?workerBase():'https://btc-alt-scalper-v7.suby716.workers.dev';
-const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),25000);
-let r;try{r=await fetch(base.replace(/\/$/,'')+'/research-30',{signal:ctrl.signal,cache:'no-store'})}finally{clearTimeout(timeout)}
-const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'HTTP '+r.status);
-const q=d.quality?.btc||{},t=d.historicalTest||{};
-status.textContent='갱신 '+new Date(d.asOf).toLocaleString('ko-KR')+' · BTC '+(q.fresh?'최신':'오래됨/결측')+' · '+(q.points||0)+'개 관측';
-const cells=[['BTC 원자료',q.fresh?'최근 자료':'미검증'],['MVRV 실측',d.liveSources?.onchain?.ok?'실측 '+Number(d.liveSources.onchain.latest.mvrv).toFixed(2):'실측 수집 실패'],['ETF 실제 순유입',d.quality?.etfNetFlows?.available?'연결':'미연결'],['파생·스테이블',d.liveSources?.derivatives?.ok&&d.liveSources?.stablecoins?.ok?'수집 성공':'일부 실패'],['스테이블 유통액',d.liveSources?.stablecoins?.ok?(d.liveSources.stablecoins.totalUsd/1e9).toFixed(1)+'십억 달러':'수집 실패'],['장기 백테스트',t.ok?'계산됨':'데이터 부족']];
-if(t.ok){cells.push(['BTC 단순보유',num(t.buyHold?.totalReturnPct)],['200일 추세',num(t.trend200?.totalReturnPct)],['표본 외 최대낙폭',num(t.outOfSample?.trend200?.maxDrawdownPct)])}
-$('mmcR30Cards').innerHTML=cells.map(([a,b])=>'<div class="mmcR30card"><span>'+esc(a)+'</span><b>'+esc(b)+'</b></div>').join('');
-$('mmcR30Table').innerHTML='<table><thead><tr><th>번호</th><th>연구 항목</th><th>구현 상태</th><th>추가 검증</th></tr></thead><tbody>'+d.coverage.map(x=>'<tr><td>'+esc(x.id)+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.status)+'</td><td>'+esc(x.note)+'</td></tr>').join('')+'</tbody></table>';
-}catch(e){status.textContent='데이터 요청 실패: '+String(e?.message||e)+' · Worker /research-30 경로와 배포를 확인하세요.'}finally{btn.disabled=false}}
-document.addEventListener('DOMContentLoaded',()=>{$('mmcR30Refresh')?.addEventListener('click',load)});
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '—').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+  const num = (n, d = 1) => Number.isFinite(n) ? Number(n).toFixed(d) + '%' : '데이터 없음';
+
+  function resolveWorkerBase() {
+    if (typeof workerBase === 'function') {
+      try {
+        const b = workerBase();
+        if (b) return String(b).replace(/\/$/, '');
+      } catch (_) {}
+    }
+    if (window.WORKER_BASE) return String(window.WORKER_BASE).replace(/\/$/, '');
+    if (window.WORKER_URL) return String(window.WORKER_URL).replace(/\/$/, '');
+    const input = document.getElementById('worker');
+    if (input && input.value.trim()) return input.value.trim().replace(/\/$/, '');
+    return 'https://btc-alt-scalper-v7.suby716.workers.dev';
+  }
+
+  async function load() {
+    const btn = $('mmcR30Refresh');
+    const status = $('mmcR30Status');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    status.textContent = '데이터 요청 중…';
+    try {
+      const base = resolveWorkerBase();
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 25000);
+      let r;
+      try {
+        r = await fetch(base + '/research-30', { signal: ctrl.signal, cache: 'no-store' });
+      } finally {
+        clearTimeout(timeout);
+      }
+      const d = await r.json();
+      if (!r.ok || !d.ok) throw Error(d.error || 'HTTP ' + r.status);
+
+      window.__mmcResearch30={ok:true,receivedAt:Date.now(),quality:d.quality||{},coverage:d.coverage||[],historicalTest:d.historicalTest||{}};
+      try{window.taGateRender?.();}catch(_){}
+      const q = d.quality?.btc || {};
+      const t = d.historicalTest || {};
+      status.textContent =
+        '갱신 ' + new Date(d.asOf).toLocaleString('ko-KR') +
+        ' · BTC ' + (q.fresh ? '최신' : '오래됨/결측') +
+        ' · ' + (q.points || 0) + '개 관측' +
+        (d.version ? ' · ' + d.version : '');
+
+      const cells = [
+        ['BTC 원자료', q.fresh ? '최근 자료' : '미검증'],
+        ['MVRV', d.quality?.mvrv?.available ? '연결' : '미연결'],
+        ['ETF 실제 순유입', d.quality?.etfNetFlows?.available ? '연결' : '미연결'],
+        ['장기 백테스트', t.ok ? '계산됨' : '데이터 부족']
+      ];
+      if (t.ok) {
+        cells.push(
+          ['BTC 단순보유', num(t.buyHold?.totalReturnPct)],
+          ['200일 추세', num(t.trend200?.totalReturnPct)],
+          ['표본 외 최대낙폭', num(t.outOfSample?.trend200?.maxDrawdownPct)]
+        );
+      }
+      $('mmcR30Cards').innerHTML = cells
+        .map(([a, b]) => '<div class="mmcR30card"><span>' + esc(a) + '</span><b>' + esc(b) + '</b></div>')
+        .join('');
+      $('mmcR30Table').innerHTML =
+        '<table><thead><tr><th>번호</th><th>연구 항목</th><th>구현 상태</th><th>추가 검증</th></tr></thead><tbody>' +
+        (d.coverage || [])
+          .map((x) =>
+            '<tr><td>' + esc(x.id) + '</td><td>' + esc(x.name) + '</td><td>' +
+            esc(x.status) + '</td><td>' + esc(x.note) + '</td></tr>'
+          )
+          .join('') +
+        '</tbody></table>';
+    } catch (e) {
+      window.__mmcResearch30={ok:false,receivedAt:Date.now(),reason:String(e?.message||e)};
+      try{window.taGateRender?.();}catch(_){}
+      status.textContent =
+        '데이터 요청 실패: ' + String(e?.message || e) +
+        ' · Worker /research-30 경로와 배포를 확인하세요.';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    $('mmcR30Refresh')?.addEventListener('click', load);
+    setTimeout(load, 3200);
+  });
 })();
 </script>
 </body>

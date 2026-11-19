@@ -507,6 +507,17 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
 #mmcResearch30 .mmcR30table{max-height:340px;overflow:auto}
 @media(max-width:620px){#mmcResearch30{padding:12px}#mmcResearch30 .mmcR30cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
+<style id="mmc-integrated-compact-style">
+.mmc-decision-strip{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 14px;margin:10px 0;border:1px solid #d9e3ef;background:#f7faff;border-radius:12px;font-size:13px;line-height:1.55;color:#23364d}
+.mmc-decision-strip b{font-size:14px;color:#17416c}.mmc-decision-strip span{flex:1;min-width:220px}.mmc-decision-strip button{font-size:12px}
+#masterCompass .mmc-embedded-quantum{margin:7px 0;padding:8px 12px;border:1px solid #e3e9f1;border-radius:10px;background:white;box-shadow:none}
+#masterCompass .mmc-embedded-quantum .qm-head h2{font-size:14px!important}#masterCompass .mmc-embedded-quantum .qm-head .qm-muted{font-size:11px}
+#masterCompass .mmc-embedded-quantum .qm-compact-note{font-size:12px;padding:3px 0}
+#masterCompass .mmc-embedded-quantum .qm-chart{height:145px!important}
+#masterCompass #mmcResearch30{margin:7px 0 12px;border:1px solid #e3e9f1;border-radius:10px;padding:10px 12px;background:white}
+#masterCompass #mmcResearch30 summary{font-size:13px;font-weight:600;cursor:pointer}
+@media(max-width:680px){.mmc-decision-strip{align-items:flex-start}.mmc-decision-strip span{min-width:100%}.mmc-decision-strip button{margin-left:auto}#masterCompass .qm-charts{grid-template-columns:1fr!important}}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -609,8 +620,11 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
   <div class="macro-context" id="asFoot">데이터 연결 중…</div>
 </div>
 
-<section class="qm-panel" id="quantumLab">
-<div class="qm-head"><div><h2 style="margin:0">🔬 QUANTUM LONG-CYCLE RESEARCH LAB</h2><div class="qm-muted">BTC 장기 저평가 · 금/BTC · 구리/BTC · 미국 장단기 금리차 · 데이터 품질</div></div><div class="qm-actions"><button class="btn" type="button" id="qmToggle" aria-expanded="false" aria-controls="qmDetails">상세 그래프 펼치기 ▾</button><button class="btn" type="button" id="qmRefresh" hidden>데이터 새로고침</button></div></div>
+
+<section class="panel compass-panel" id="masterCompass">
+  <div class="compass-head"><div><div class="compass-title">🧭 MASTER MARKET COMPASS <span>BTC 장기 가치 → 상승장 확인 → 알트 순환매 → 과열 분할매도</span></div><div class="small" id="compassStatus">장기 BTC 월봉 데이터 연결 중…</div></div><button type="button" class="btn" id="compassReload">장기 데이터 새로고침</button></div>
+  <div class="mmc-decision-strip" id="mmcDecisionStrip" role="status" aria-live="polite"><b>오늘의 장기 판단</b><span id="mmcDecisionText">BTC 국면·자금순환·TA 분석을 확인 중입니다. 연구 데이터가 없으면 매수 확신을 표시하지 않습니다.</span><button type="button" class="btn" id="mmcCheckApi">데이터 진단</button></div><div class="qm-panel mmc-embedded-quantum" id="quantumLab">
+<div class="qm-head"><div><h2 style="margin:0">금·구리·금리차 보조분석</h2><div class="qm-muted">검증된 데이터가 있을 때만 그래프 표시</div></div><div class="qm-actions"><button class="btn" type="button" id="qmToggle" aria-expanded="false" aria-controls="qmDetails">상세 그래프 펼치기 ▾</button><button class="btn" type="button" id="qmRefresh" hidden>데이터 새로고침</button></div></div>
 <div class="qm-compact-note" id="qmSummary">보조 연구 지표 · 기본 접힘 · 상세 보기에서 데이터 상태를 확인할 수 있습니다.</div>
 <div id="qmDetails" hidden>
 <div class="qm-muted" id="qmStatus">연구 데이터 연결 대기</div><div class="qm-grid" id="qmCards"></div>
@@ -624,9 +638,10 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
 </div>
 <div class="qm-table" id="qmCorr"></div><div class="qm-muted" id="qmQuality"></div>
 <p class="qm-muted">연구용 보조지표이며 매매 신호가 아닙니다. 원자재 가격 단위·거래시간·선물 롤오버, 데이터 결측 및 상관관계의 비인과성을 유의하세요. MVRV·온체인·실제 ETF 자금유입 등 미검증 항목은 이 연구실에서 계산하지 않습니다.</p></div>
-</section>
-<section class="panel compass-panel" id="masterCompass">
-  <div class="compass-head"><div><div class="compass-title">🧭 MASTER MARKET COMPASS <span>BTC 장기 가치 → 상승장 확인 → 알트 순환매 → 과열 분할매도</span></div><div class="small" id="compassStatus">장기 BTC 월봉 데이터 연결 중…</div></div><button type="button" class="btn" id="compassReload">장기 데이터 새로고침</button></div>
+</div><details id="mmcResearch30"><summary>30개 연구 데이터·검증 상세 (필요할 때 펼치기)</summary>
+<div class="mmcR30tools"><button type="button" id="mmcR30Refresh">실제 데이터 확인</button><span class="mmcR30status" id="mmcR30Status">펼친 뒤 버튼을 누르면 연결 상태를 확인합니다.</span></div>
+<div class="mmcR30cards" id="mmcR30Cards"></div><div class="mmcR30table" id="mmcR30Table"></div>
+<p style="font-size:13px;color:#53657a">미확보된 MVRV·ETF 순유입·언락은 추정치로 대체하지 않습니다. 백테스트는 BTC 종가 데이터 확보 기간에만 수행하며 수익 보장이 아닙니다.</p></details>
   <div class="compass-grid">
     <article class="compass-card"><div class="compass-kicker">01 · BTC 장기 가치</div><b id="compassValue">—</b><div class="compass-desc" id="compassValueDesc">Power-law 분위회귀 밴드 · 2011년 이후 월말 종가</div></article>
     <article class="compass-card"><div class="compass-kicker">02 · 상승장 전환</div><b id="compassTrend">—</b><div class="compass-desc" id="compassTrendDesc">10개월 평균 · 3개월 모멘텀</div></article>
@@ -3179,10 +3194,10 @@ for(const s of series){const a=s.rows.filter(x=>Number.isFinite(x.value));if(a.l
 const simple=(id,rows,key)=>draw(id,[{color:'#2563eb',rows:(rows||[]).slice(-96).map(x=>({month:x.month,value:x[key]}))}]);
 function comparison(id,btc,commodity,color,label,insightId){const b=new Map((btc||[]).map(x=>[x.month,x.value])),c=new Map((commodity||[]).map(x=>[x.month,x.value]));const keys=[...b.keys()].filter(k=>c.has(k)&&b.get(k)>0&&c.get(k)>0).sort().slice(-96);if(keys.length<3){draw(id,[]);$(insightId).textContent='비교할 공통 월별 데이터가 부족합니다. 원본 수집 상태를 확인하세요.';return;}
 const b0=b.get(keys[0]),c0=c.get(keys[0]);const bb=keys.map(month=>({month,value:100*b.get(month)/b0})),cc=keys.map(month=>({month,value:100*c.get(month)/c0}));draw(id,[{color:'#2563eb',rows:bb},{color,rows:cc}]);const br=bb.at(-1).value-100,cr=cc.at(-1).value-100;$(insightId).textContent=`${keys[0]} ~ ${keys.at(-1)} · BTC ${br>=0?'+':''}${fmt(br,1)}%, ${label} ${cr>=0?'+':''}${fmt(cr,1)}%. ${br>cr?'이 기간에는 BTC가 '+label+'보다 강했습니다.':br<cr?label+'이(가) BTC보다 강했습니다.':'두 자산의 성과가 비슷합니다.'} (각 자산의 시작 가격=100)`;}
-async function run(force=false){$('qmStatus').textContent='장기 데이터 확인 중…';try{const base=window.WORKER_BASE||window.WORKER_URL||'https://btc-alt-scalper-v7.suby716.workers.dev';const u=String(base).replace(/\/$/,'')+'/quantum-lab'+(force?'?force=1':'');const r=await fetch(u,{cache:'no-store'});const raw=await r.text();let d;try{d=JSON.parse(raw)}catch{throw Error('HTTP '+r.status+' · JSON 응답 아님 · Worker 주소/배포 확인')}if(!d.btc||!d.ratios||!d.yieldCurve)throw Error('HTTP '+r.status+' · '+(d.error||'QUANTUM 경로 미배포')+' · Worker /health 및 /quantum-lab 확인');const b=d.btc;const labels=[['BTC 현재가','$'+fmt(b.price,0)],['고점 대비 낙폭',fmt(b.drawdownPct)+'%'],['일봉 RSI(14)',fmt(b.rsi14)],['매집 관찰 점수',b.accumulation.score+'/'+b.accumulation.maxScore]];$('qmCards').innerHTML=labels.map(([a,v])=>'<div class="qm-box"><span class="qm-muted">'+a+'</span><strong>'+v+'</strong></div>').join('');
+async function run(force=false){$('qmStatus').textContent='장기 데이터 확인 중…';try{const base=(typeof workerBase==='function'?workerBase():(document.getElementById('worker')?.value||'https://btc-alt-scalper-v7.suby716.workers.dev'));const u=String(base).replace(/\/$/,'')+'/quantum-lab'+(force?'?force=1':'');const r=await fetch(u,{cache:'no-store'});const raw=await r.text();let d;try{d=JSON.parse(raw)}catch{throw Error('HTTP '+r.status+' · JSON 응답 아님 · Worker 주소/배포 확인')}if(!d.btc||!d.ratios||!d.yieldCurve)throw Error('HTTP '+r.status+' · '+(d.error||'QUANTUM 경로 미배포')+' · Worker /health 및 /quantum-lab 확인');const b=d.btc;const labels=[['BTC 현재가','$'+fmt(b.price,0)],['고점 대비 낙폭',fmt(b.drawdownPct)+'%'],['일봉 RSI(14)',fmt(b.rsi14)],['매집 관찰 점수',b.accumulation.score+'/'+b.accumulation.maxScore]];$('qmCards').innerHTML=labels.map(([a,v])=>'<div class="qm-box"><span class="qm-muted">'+a+'</span><strong>'+v+'</strong></div>').join('');
 const btcHistory=d.btc.monthlyPrices||[];comparison('qmGoldCompare',btcHistory,d.commodities.gold.history,'#c08b18','금','qmGoldInsight');comparison('qmCopperCompare',btcHistory,d.commodities.copper.history,'#b45309','구리','qmCopperInsight');simple('qmGold',d.ratios.goldBtc.series,'indexed');simple('qmCopper',d.ratios.copperBtc.series,'indexed');simple('qmCurve',d.yieldCurve.tenMinusTwo,'value');simple('qmCurve3',d.yieldCurve.tenMinusThreeMonth,'value');$('qmYieldInfo').textContent='출처: '+(d.yieldCurve.source||'미국 재무부')+' · 관측치 '+(d.yieldCurve.observations||0)+'개 · '+(d.yieldCurve.diagnostics||'수집 정보 없음');
 const rows=[['금/BTC',d.ratios.goldBtc],['구리/BTC',d.ratios.copperBtc],['은/BTC',d.ratios.silverBtc]];$('qmCorr').innerHTML='<h3>BTC와 원자재 일간 수익률 상관관계</h3><table><thead><tr><th>비교</th><th>30일</th><th>90일</th><th>365일</th></tr></thead><tbody>'+rows.map(([n,v])=>'<tr><td>'+n+'</td>'+[30,90,365].map(k=>'<td>'+fmt(v.correlations[k].corr,3)+' (n='+v.correlations[k].n+')</td>').join('')+'</tr>').join('')+'</tbody></table>';$('qmQuality').textContent='출처·최종일: '+Object.entries(d.quality).map(([k,v])=>k+' '+(v.source||'미확보')+' '+(v.last||'—')).join(' | ');$('qmStatus').textContent=(d.ok?'연구용 · ':'⚠ 부분 자료만 표시 · BTC 검증 미통과 · ')+d.built+' · '+b.accumulation.status+' · '+b.accumulation.reasons.join(' / ');if(summary)summary.textContent=(d.ok?'연구실 데이터 수신':'연구실 부분 데이터 수신 (매집 신호 차단)')+' · '+d.built+' · 상세 그래프는 펼쳐서 확인';
-}catch(e){$('qmStatus').textContent='데이터 검증 실패: '+e.message+' (연구실 신호 산출 중단)';if(summary)summary.textContent='연구실 데이터 연결 실패 · '+e.message+' · 메인 대시보드와 별개';}}
+}catch(e){$('qmStatus').textContent='데이터 검증 실패: '+e.message+' (연구실 신호 산출 중단)';if(summary)summary.textContent='보조 데이터 미수신 · Worker API 배포 확인 필요 ('+e.message+')'; if(details)details.hidden=true; if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='데이터 진단·그래프 펼치기 ▾';}}}
 const toggle=$('qmToggle'),details=$('qmDetails'),refresh=$('qmRefresh'),summary=$('qmSummary');
 let loaded=false;
 function setOpen(open){details.hidden=!open;refresh.hidden=!open;toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'상세 그래프 접기 ▴':'상세 그래프 펼치기 ▾';if(open&&!loaded){loaded=true;run();}}
@@ -3192,10 +3207,7 @@ refresh?.addEventListener('click',()=>run(true));
 })();
 </script>
 
-<details id="mmcResearch30"><summary>🔬 장기 투자 30개 엔진 · 데이터·검증 현황 (연구용)</summary>
-<div class="mmcR30tools"><button type="button" id="mmcR30Refresh">실제 데이터 확인</button><span class="mmcR30status" id="mmcR30Status">펼친 뒤 버튼을 누르면 연결 상태를 확인합니다.</span></div>
-<div class="mmcR30cards" id="mmcR30Cards"></div><div class="mmcR30table" id="mmcR30Table"></div>
-<p style="font-size:13px;color:#53657a">미확보된 MVRV·ETF 순유입·언락은 추정치로 대체하지 않습니다. 백테스트는 BTC 종가 데이터 확보 기간에만 수행하며 수익 보장이 아닙니다.</p></details>
+
 
 <script id="mmc-research30-client">
 (() => {
@@ -3240,7 +3252,7 @@ refresh?.addEventListener('click',()=>run(true));
       if (!r.ok || !d.ok) throw Error(d.error || 'HTTP ' + r.status);
 
       window.__mmcResearch30={ok:true,receivedAt:Date.now(),quality:d.quality||{},coverage:d.coverage||[],historicalTest:d.historicalTest||{}};
-      try{window.taGateRender?.();}catch(_){}
+      try{window.taGateRender?.();window.mmcDailyUpdate?.();}catch(_){}
       const q = d.quality?.btc || {};
       const t = d.historicalTest || {};
       status.textContent =
@@ -3276,7 +3288,7 @@ refresh?.addEventListener('click',()=>run(true));
         '</tbody></table>';
     } catch (e) {
       window.__mmcResearch30={ok:false,receivedAt:Date.now(),reason:String(e?.message||e)};
-      try{window.taGateRender?.();}catch(_){}
+      try{window.taGateRender?.();window.mmcDailyUpdate?.();}catch(_){}
       status.textContent =
         '데이터 요청 실패: ' + String(e?.message || e) +
         ' · Worker /research-30 경로와 배포를 확인하세요.';
@@ -3289,6 +3301,23 @@ refresh?.addEventListener('click',()=>run(true));
     $('mmcR30Refresh')?.addEventListener('click', load);
     setTimeout(load, 3200);
   });
+})();
+</script>
+<script id="mmc-integrated-daily-ui">
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+function update(){const el=$('mmcDecisionText');if(!el)return;
+const c=window.__compassState,r=window.__mmcResearch30,rot=window.__rotState;
+const bits=[];
+if(c&&c.quality&&Date.now()-(c.at||0)<21600000){bits.push('BTC '+(c.trend==='confirmed'?'상승추세 확인':c.trend==='recovering'?'회복 중':'추세 미확인'));bits.push('과열 '+({cold:'낮음',mild:'낮음~중간',mid:'중간',warm:'경계',hot:'높음'}[c.zone]||'확인 중'));}else bits.push('BTC 장기 국면 확인 대기');
+if(rot&&rot.at&&Date.now()-rot.at<21600000)bits.push('자금순환 자료 수신');else bits.push('자금순환 확인 대기');
+if(r?.ok){const q=r.quality||{};bits.push('30개 연구: BTC '+(q.btc?.fresh?'최신':'검증 필요')+' · MVRV '+(q.mvrv?.available?'실측':'미확보')+' · ETF '+(q.etfNetFlows?.available?'실측':'미확보'));}
+else bits.push('30개 연구 API 미확인 · 검증된 매수 우위 없음');
+el.textContent=bits.join('  |  ');
+}
+window.mmcDailyUpdate=update;
+document.addEventListener('DOMContentLoaded',()=>{$('mmcCheckApi')?.addEventListener('click',()=>{const q=$('qmDetails'),t=$('qmToggle');if(q?.hidden)t?.click();const r=$('mmcResearch30');if(r)r.open=true;});update();});
+setInterval(update,30000);
 })();
 </script>
 </body>

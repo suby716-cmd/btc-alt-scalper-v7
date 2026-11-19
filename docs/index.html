@@ -237,6 +237,14 @@
 #taScanOut .ta-sell{color:#c62828!important;font-weight:800!important;white-space:nowrap}
 @media(max-width:640px){#taScanOut .ta-table th:first-child,#taScanOut .ta-table td:first-child{min-width:66px;max-width:66px}#taScanOut .ta-table th:nth-child(2),#taScanOut .ta-table td:nth-child(2){left:66px;min-width:165px;max-width:190px;font-size:12px}}
 .ta-line-options{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 6px;font-size:12px;color:var(--muted)}.ta-line-options label{cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:6px 9px;border-radius:8px;background:var(--panel2)}.ta-line-options input{accent-color:#2563eb}
+
+/* TA chart: explicit reason for latest buy/sell signal, all selected coins */
+.ta-signal-reasons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 10px;font-size:13px;line-height:1.55}
+.ta-reason{border:1px solid #dbe5ee;border-left:4px solid #64748b;background:#fff;border-radius:8px;padding:9px 11px;min-width:0;overflow-wrap:anywhere;color:#1e293b}
+.ta-reason.buy{border-left-color:#137c43;background:#f1faf4}.ta-reason.sell{border-left-color:#b91c1c;background:#fff6f6}
+.ta-reason strong{display:block;font-size:14px;font-weight:850;color:#0f172a;margin-bottom:2px}
+.ta-reason .reason-detail{font-weight:750;color:#172b43}.ta-reason .reason-stat{display:block;font-size:12px;color:#334155;margin-top:3px}
+@media(max-width:620px){.ta-signal-reasons{grid-template-columns:1fr}.ta-reason{padding:8px 10px}}
 </style>
 <style>
 /* Research lab readable typography and responsive charts */
@@ -642,6 +650,7 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
     <div class="ta-note" id="taVerdict" style="font-size:12px;color:inherit;margin-top:10px"></div>
     <div id="taScanOut" style="overflow-x:auto;margin-top:8px"></div>
     <div class="ta-chart-heading" id="taChartHeading" role="heading" aria-level="3"><strong id="taChartSymbol">BTC</strong><span id="taChartContext">선택한 코인의 차트 · 최근 120봉</span></div>
+    <div id="taSignalReasons" class="ta-signal-reasons" aria-live="polite">코인을 선택하면 가장 최근 매수 또는 매도 신호 하나의 발생 이유가 표시됩니다.</div>
     <div class="ta-line-options"><span><b>차트 선:</b> 회색 볼린저 상·하단 · 보라색 BB20 중심선</span><label><input id="taShowEma" type="checkbox"> 추세선 추가 보기 (주황 EMA20 · 하늘 EMA50)</label></div>
     <canvas id="taChart" class="ta-chart" aria-label="캔들, 볼린저밴드 상·중·하단, 매수매도 신호 차트. EMA20과 EMA50은 선택 표시"></canvas>
     <div class="ta-rsi-heading"><b>RSI (14) · 상대강도지수</b><span id="taRsiCurrent">현재 RSI —</span></div>
@@ -2878,6 +2887,17 @@ function taDetectSignals(candles,horizon,feePct=0.10,regime='all',exitMode='time
  const recent=signals.filter(x=>x.i>=n-120),active=signals.filter(x=>x.i>=n-4),last=n-1,price=closes[last],bbPos=bb.upper[last]!=null&&bb.lower[last]!=null&&bb.upper[last]>bb.lower[last]?(price-bb.lower[last])/(bb.upper[last]-bb.lower[last])*100:null;
  return{candles,closes,bb,ema20,ema50,rsi,adx,macd,atr,signals,recent,active,stats,statMap,base,current:{price,rsi:rsi[last],adx:adx[last],atr:atr[last],atrPct:price>0&&atr[last]!=null?atr[last]/price*100:null,bbPos,mid:bb.mid[last],upper:bb.upper[last],lower:bb.lower[last],lastSignal:signals.at(-1)||null}};
 }
+function taRenderSignalReasons(result){
+ const el=$('taSignalReasons');if(!el)return;
+ // Show exactly one most recent event, regardless of direction.
+ const sig=(result.recent||[]).at(-1);
+ if(!sig){el.innerHTML='<div class="ta-reason">최근 120봉에 감지된 매수·매도 신호가 없습니다.</div>';return;}
+ const buy=sig.type==='buy',st=(result.statMap||{})[sig.key];
+ const p=st&&st.n>0&&Number.isFinite(st.post)?`${st.post.toFixed(0)}%`:'표본 부족';
+ const n=st&&st.n>0?` · 표본 ${st.n}개${st.n<30?' (신뢰도 낮음)':''}`:'';
+ const age=result.candles.length-1-sig.i;
+ el.innerHTML=`<div class="ta-reason ${buy?'buy':'sell'}"><strong>${buy?'▲ 최근 매수 후보':'▼ 최근 매도 후보'} · ${esc(sig.label)}</strong><span class="reason-stat">${new Date(sig.t).toLocaleDateString('ko-KR')} · ${age}봉 전 · 보정확률 ${p}${n}</span><span class="reason-detail">가장 최근에 발생한 기술적 신호 1개만 표시합니다. 과거 신호이며 현재 즉시 매매하라는 뜻은 아닙니다.</span></div>`;
+}
 function drawTaChart(canvas,result){
  if(!canvas||!result)return;const dpr=window.devicePixelRatio||1,w=canvas.clientWidth||720,h=canvas.clientHeight||320;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  const {candles,bb,ema20,ema50,recent}=result,n=candles.length,start=Math.max(0,n-120),cs=candles.slice(start),vals=[];for(const c of cs)vals.push(+c[2],+c[3]);for(const arr of [bb.upper,bb.lower,...($('taShowEma')?.checked?[ema20,ema50]:[])])for(const v of arr.slice(start))if(v!=null)vals.push(v);if(vals.length<2)return;
@@ -2888,22 +2908,23 @@ function drawTaChart(canvas,result){
  const cw=Math.max(2,Math.min(7,pw/cs.length*.62));for(let j=0;j<cs.length;j++){const c=cs[j],o=+c[1],cl=+c[4],hi=+c[2],lo=+c[3],x=X(j),up=cl>=o;ctx.strokeStyle=up?'#16a34a':'#dc2626';ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(x,Y(hi));ctx.lineTo(x,Y(lo));ctx.stroke();const top=Y(Math.max(o,cl)),bot=Y(Math.min(o,cl));ctx.fillRect(x-cw/2,top,cw,Math.max(1,bot-top));}
  const hits=[],sm=result.statMap||{};
  const visibleSignals=recent.filter(s=>s.i>=start&&s.i<n);
- const lastByType={};for(const s of visibleSignals)lastByType[s.type]=s;
+ const latestVisible=visibleSignals.at(-1)||null;
  visibleSignals.forEach(s=>{const j=s.i-start,x=X(j),buy=s.type==='buy',cd=candles[s.i],y=buy?Y(+cd[3])+4:Y(+cd[2])-4,col=buy?'#15803d':'#b91c1c';ctx.fillStyle=col;ctx.beginPath();if(buy){ctx.moveTo(x,y);ctx.lineTo(x-6,y+10);ctx.lineTo(x+6,y+10);}else{ctx.moveTo(x,y);ctx.lineTo(x-6,y-10);ctx.lineTo(x+6,y-10);}ctx.closePath();ctx.fill();hits.push({x,y:buy?y+5:y-5,s});
-  // Show wording on only the latest visible triangle of each type; never on all historical triangles.
-  if(lastByType[s.type]===s){
+  // Label only the single latest chronological signal (buy OR sell).
+  if(latestVisible===s){
    const st=sm[s.key];const prob=st&&st.n>0&&Number.isFinite(st.post)?`보정확률 ${st.post.toFixed(0)}%`:'표본 부족';
-   const title=buy?'매수시점':'매도시점';const lines=[title,prob];ctx.font='bold 11px sans-serif';
-   const tw=Math.max(...lines.map(t=>ctx.measureText(t).width));const bw=tw+12,bh=32;
+   const title=buy?'매수시점':'매도시점';const lines=[title,s.label,prob];ctx.font='800 12px sans-serif';
+   const tw=Math.max(...lines.map(t=>ctx.measureText(t).width));const bw=Math.min(Math.max(105,tw+16),Math.max(105,pw-6)),bh=49;
    const tx=Math.max(pad.l+2,Math.min(w-pad.r-bw-2,x-bw/2));
    // Prefer below the buy marker and above the sell marker, but keep labels inside the plot.
    let top=buy?y+15:y-bh-15;
    if(top<pad.t+2||top+bh>h-pad.b-2)top=buy?y-bh-15:y+15;
    top=Math.max(pad.t+2,Math.min(h-pad.b-bh-2,top));
-   ctx.fillStyle='rgba(255,255,255,.96)';ctx.strokeStyle=buy?'#86bba0':'#d8a4a4';ctx.lineWidth=1;
+   ctx.fillStyle='rgba(255,255,255,.98)';ctx.strokeStyle=buy?'#15803d':'#b91c1c';ctx.lineWidth=1.5;
    ctx.fillRect(tx,top,bw,bh);ctx.strokeRect(tx+.5,top+.5,bw-1,bh-1);
-   ctx.fillStyle=col;ctx.textAlign='center';ctx.fillText(title,tx+bw/2,top+13);
-   ctx.font='bold 10px sans-serif';ctx.fillText(prob,tx+bw/2,top+26);ctx.textAlign='start';
+   ctx.fillStyle=col;ctx.textAlign='center';ctx.font='800 12px sans-serif';ctx.fillText(title,tx+bw/2,top+14);
+   ctx.font='bold 11px sans-serif';ctx.fillText(s.label,tx+bw/2,top+29,bw-8);
+   ctx.font='800 11px sans-serif';ctx.fillText(prob,tx+bw/2,top+43);ctx.textAlign='start';
   }
  });
  const sel=canvas._sel;
@@ -3056,7 +3077,7 @@ async function loadTaLab(force=false){
   const getBtc=async()=>{if(btcMap)return btcMap;const bd=sym==='BTC'?d:await taFetchHistory('BTC',frame==='day'?'day':'5m',target,false);btcMap=taBtcMap(bd.candles);return btcMap;};
   if(regimeSel==='btcup'){try{await getBtc();}catch(e){throw Error('BTC 데이터 필요: '+(e?.message||e));}if(tok!==TA_TOK)return;}
   const result=taDetectSignals(raw,horizon,fee,regimeSel,exitSel,btcMap),c=result.current,last=c.lastSignal,cv=$('taChart');
-  cv._result=result;cv._sel=null;if(chartContext)chartContext.textContent=`${frame==='day'?'일봉':'5분봉'} · 최근 120봉 · 초록 ▲ 매수 후보 / 빨강 ▼ 매도 후보`;drawTaChart(cv,result);drawTaRsiChart($('taRsiChart'),result);
+  cv._result=result;cv._sel=null;if(chartContext)chartContext.textContent=`${frame==='day'?'일봉':'5분봉'} · 최근 120봉 · 마지막 신호 1개만 이름·보정확률 표시 (과거 삼각형은 유지)`;drawTaChart(cv,result);drawTaRsiChart($('taRsiChart'),result);taRenderSignalReasons(result);
   if(!cv.dataset.bound){cv.dataset.bound='1';const pick=e=>{const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;let b=null,bd=18;for(const h of cv._hits||[]){const dd=Math.hypot(h.x-px,h.y-py);if(dd<bd){bd=dd;b=h;}}const ns=b?b.s:null;if(ns!==cv._sel){cv._sel=ns;if(cv._result)drawTaChart(cv,cv._result);}};cv.addEventListener('pointermove',pick);cv.addEventListener('pointerdown',pick);window.addEventListener('resize',()=>{if(cv._result){drawTaChart(cv,cv._result);drawTaRsiChart($('taRsiChart'),cv._result);}});}
   $('taMetrics').innerHTML=[`<span>${sym} 현재가 ${taFmtP(c.price)}</span>`,`<span>BB 위치 ${c.bbPos==null?'—':c.bbPos.toFixed(0)+'%'}</span>`,`<span>RSI ${c.rsi==null?'—':c.rsi.toFixed(1)}</span>`,`<span>ADX ${c.adx==null?'—':c.adx.toFixed(1)}</span><span>ATR ${c.atrPct==null?'—':c.atrPct.toFixed(2)+'%'}</span>`,`<span>최근 신호 ${last?esc(last.label)+' · '+new Date(last.t).toLocaleString('ko-KR'):'—'}</span>`].join('');
   $('taVerdict').innerHTML=taVerdictHTML(result);
@@ -3065,7 +3086,7 @@ async function loadTaLab(force=false){
   if(tb){if(!result.stats.length)tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted)">유효 신호 표본이 없습니다.</td></tr>';else tb.innerHTML=result.stats.map(x=>{const wr=x.winRate==null?'—':x.winRate.toFixed(1)+'%',low=x.n<30,cls=low||x.n===0?'neutral':x.sig&&x.edge>0?'good':x.edge<-3?'bad':'neutral',pc=x.n?x.post.toFixed(0)+'%':'—',avg=x.avgRet==null?'—':(x.avgRet>0?'+':'')+x.avgRet.toFixed(2)+'%',ci=x.ci?`${x.ci[0].toFixed(0)}~${x.ci[1].toFixed(0)}%`:'—',oos=x.oosN?`${x.oosWin.toFixed(0)}% (${x.oosN})`:'—',type=x.type==='buy'?'<span class="good">매수</span>':'<span class="bad">매도</span>';return`<tr><td>${esc(x.label)}</td><td>${type}</td><td>${x.n}${low?'*':''}</td><td class="${cls}">${wr}</td><td>${x.base.toFixed(0)}%</td><td class="${cls}"><b>${pc}</b></td><td>${ci}</td><td>${avg}</td><td>${oos}</td><td class="small">${x.last?new Date(x.last.t).toLocaleDateString('ko-KR'):'—'}</td></tr>`}).join('');}
   st.textContent=`${sym} · ${frame==='day'?'일봉':'5분봉'} ${raw.length.toLocaleString()}개 · ${d.pages}회 조회 · 평가 ${horizon}봉 · ${d.source} · ${new Date().toLocaleString('ko-KR')}${d.mixed?' · ⚠ 거래소 전환 감지: 가격 혼합 방지를 위해 오래된 구간 제외':''}`;
   $('taNotes').innerHTML=`<b>읽는 법</b> — ${$('taExit')?.value==='atr'?'[청산: 손절 1.5×ATR / 목표 3×ATR, 같은 봉에서 둘 다 닿으면 손절 우선, 미도달 시 '+horizon+'봉 뒤 종가] ':''}${$('taRegime')?.value==='trend'?'[추세장 ADX≥25 구간만] ':$('taRegime')?.value==='range'?'[횡보장 ADX<25 구간만] ':$('taRegime')?.value==='btcup'?'[BTC가 EMA50 위인 시점만] ':''}승률: 신호 확정 다음 봉 시가 진입, ${horizon}봉 뒤 종가 청산, 왕복 비용 ${fee.toFixed(2)}% 차감 후 수익>0 비율. <b>기저</b>: 신호 없이 아무 봉에서 진입했을 때의 같은 기준 승률(상승장에선 매수 승률이 원래 높음). <b>보정확률</b>: 표본 20개만큼 기저 승률 쪽으로 당긴 베이지안 추정(표본이 적을수록 기저에 가까움). 신뢰구간 하단이 기저를 넘고 표본 30개 이상일 때만 '유의'로 봅니다. <b>OOS</b>: 가장 최근 30% 구간만 따로 본 승률(괄호는 표본 수)로, 과거에만 맞춘 신호인지 점검합니다. * = 표본 30개 미만. 코인·신호를 많이 훑어볼수록 우연히 좋아 보이는 결과가 섞입니다. 매도 신호는 하락 회피 점수이지 공매도 수익이 아니며, 실제 체결·호가·세금과 다를 수 있고 투자 권유가 아닙니다.`;
- }catch(e){if(tok!==TA_TOK)return;st.textContent='TA 분석 실패 · '+(e?.message||String(e)).slice(0,150);if($('taRsiCurrent'))$('taRsiCurrent').textContent='RSI 데이터 조회 실패';if(chartContext)chartContext.textContent='데이터 조회 실패 · 이전 차트가 남아 있을 수 있습니다';if(tb)tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--red)">데이터 로드 실패</td></tr>';}
+ }catch(e){if(tok!==TA_TOK)return;st.textContent='TA 분석 실패 · '+(e?.message||String(e)).slice(0,150);if($('taRsiCurrent'))$('taRsiCurrent').textContent='RSI 데이터 조회 실패';if(chartContext)chartContext.textContent='데이터 조회 실패 · 이전 차트가 남아 있을 수 있습니다';if($('taSignalReasons'))$('taSignalReasons').textContent='선택한 코인의 신호 근거를 불러오지 못했습니다.';if(tb)tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--red)">데이터 로드 실패</td></tr>';}
 }
 let TA_SCAN_RUNNING=false;
 async function taScanAll(){

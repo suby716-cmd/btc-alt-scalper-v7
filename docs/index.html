@@ -582,6 +582,14 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
  .ta-zoom-btn{padding:9px 12px}
 }
 </style>
+<style id="ta-stats-collapse-css">
+.ta-stats-details{margin-top:12px;border:1px solid #dce5ed;border-radius:10px;background:#fff;padding:0 12px 10px}
+.ta-stats-details>summary{cursor:pointer;list-style:revert;padding:13px 5px;font-weight:700;color:#26445d;font-size:14px}
+.ta-stats-details>summary:focus-visible{outline:2px solid #2c79b6;outline-offset:2px}
+.ta-stats-hint{font-weight:400;font-size:12px;color:#64748b;margin-left:8px}
+.ta-stats-details:not([open]){padding-bottom:0}
+.ta-stats-details:not([open])>summary{padding-bottom:13px}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -702,6 +710,8 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
       <span><i class="sell"></i>매도 신호</span>
       <span>마지막 매수·매도 삼각점에 보정확률 표시 · 표본 부족 시 확률 대신 안내 · 삼각점을 탭/호버하면 상세 확인</span>
     </div>
+    <details class="ta-stats-details" id="taStatsDetails">
+      <summary>📊 신호별 승률·보정확률 상세 보기 <span class="ta-stats-hint">필요할 때 펼치기</span></summary>
     <div style="overflow-x:auto;margin-top:10px">
       <table class="ta-table" id="taWinTable">
         <thead><tr><th>신호</th><th>유형</th><th>표본</th><th>승률</th><th>기저</th><th>보정확률</th><th>95% 구간</th><th>평균 순수익</th><th>OOS(최근30%)</th><th>최근 발생</th></tr></thead>
@@ -709,6 +719,7 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
       </table>
     </div>
     <div class="ta-note" id="taNotes">승률 = 신호 이후 N봉 종가 기준 수익이 0% 초과인 비율입니다. 수수료·슬리피지 미반영. 표본이 적으면 참고만 하세요. 단독 매매 신호가 아닙니다.</div>
+    </details>
   </section>
 
   <div class="compass-bt" id="compassBt" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff">

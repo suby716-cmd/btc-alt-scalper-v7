@@ -252,6 +252,15 @@
 .ta-overlay-btn[aria-pressed="true"]{background:#eaf4ff;border-color:#2563eb;color:#174c85;box-shadow:inset 0 0 0 1px #2563eb}
 .ta-overlay-btn:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
 @media(max-width:650px){.ta-line-options{align-items:flex-start}.ta-overlay-buttons{justify-content:flex-start}.ta-overlay-btn{padding:9px 10px;font-size:13px}}
+
+/* TA 스캔: 코인 선택과 최근 신호 사이의 읽기 여백 확보 */
+#taScanOut .ta-table{border-spacing:0;min-width:840px}
+#taScanOut .ta-table th:first-child,#taScanOut .ta-table td:first-child{width:148px;min-width:148px;max-width:148px;box-sizing:border-box;padding-left:12px;padding-right:28px}
+#taScanOut .ta-table th:nth-child(2),#taScanOut .ta-table td:nth-child(2){left:148px;min-width:205px;max-width:245px;padding-left:16px;text-align:left}
+@media(max-width:640px){
+ #taScanOut .ta-table th:first-child,#taScanOut .ta-table td:first-child{width:102px;min-width:102px;max-width:102px;padding-left:8px;padding-right:14px}
+ #taScanOut .ta-table th:nth-child(2),#taScanOut .ta-table td:nth-child(2){left:102px;min-width:172px;max-width:195px;padding-left:12px}
+}
 </style>
 <style>
 /* Research lab readable typography and responsive charts */
@@ -3431,12 +3440,12 @@ refresh?.addEventListener('click',()=>run(true));
         (d.version ? ' · ' + d.version : '');
 
       const cells = [
-        ['BTC 원자료', q.fresh ? '최근 자료' : '미검증'],
-        ['MVRV', d.quality?.mvrv?.available ? '연결' : '미연결'],
-        ['ETF 실제 순유입', d.quality?.etfNetFlows?.available ? '연결' : '미연결'],
-        ['장기 백테스트', t.ok ? '계산됨' : '데이터 부족']
+        ['BTC 원자료', q.fresh ? '최근 자료 · '+(q.points||0)+'일' : '미검증'],
+        ['장기 가치(메이어)', Number.isFinite(d.alternatives?.mayerMultiple) ? d.alternatives.mayerMultiple.toFixed(2)+'배 · 가격기반' : '자료 부족'],
+        ['ETF 실측 자금', d.quality?.etfNetFlows?.available ? '실측 확인' : '판정에서 제외'],
+        ['장기 백테스트', t.ok ? '2017년 이후 검증' : '검증 보류: '+(t.error||'자료 부족')]
       ];
-      if (t.ok) {
+      if (t.ok && Number.isFinite(t.buyHold?.totalReturnPct) && Math.abs(t.buyHold.totalReturnPct)<100000 && Number.isFinite(t.trend200?.totalReturnPct) && Math.abs(t.trend200.totalReturnPct)<100000) {
         cells.push(
           ['BTC 단순보유', num(t.buyHold?.totalReturnPct)],
           ['200일 추세', num(t.trend200?.totalReturnPct)],
@@ -3447,8 +3456,8 @@ refresh?.addEventListener('click',()=>run(true));
         .map(([a, b]) => '<div class="mmcR30card"><span>' + esc(a) + '</span><b>' + esc(b) + '</b></div>')
         .join('');
       $('mmcR30Table').innerHTML =
-        '<table><thead><tr><th>번호</th><th>연구 항목</th><th>구현 상태</th><th>추가 검증</th></tr></thead><tbody>' +
-        (d.coverage || [])
+        '<div style="font-size:12px;color:#64748b;margin:8px 0">실측 검증된 연구 항목만 표시합니다. 미확보 지표는 점수에 가산하지 않으며, 메이어 배수는 온체인 MVRV가 아닌 가격기반 대체 지표입니다.</div><table><thead><tr><th>번호</th><th>연구 항목</th><th>구현 상태</th><th>추가 검증</th></tr></thead><tbody>' +
+        (d.coverage || []).filter(x=> !/미구현|미확보|부분 구현/.test(String(x.status)))
           .map((x) =>
             '<tr><td>' + esc(x.id) + '</td><td>' + esc(x.name) + '</td><td>' +
             esc(x.status) + '</td><td>' + esc(x.note) + '</td></tr>'

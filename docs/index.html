@@ -252,15 +252,6 @@
 .ta-overlay-btn[aria-pressed="true"]{background:#eaf4ff;border-color:#2563eb;color:#174c85;box-shadow:inset 0 0 0 1px #2563eb}
 .ta-overlay-btn:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
 @media(max-width:650px){.ta-line-options{align-items:flex-start}.ta-overlay-buttons{justify-content:flex-start}.ta-overlay-btn{padding:9px 10px;font-size:13px}}
-
-/* TA 스캔: 코인 선택과 최근 신호 사이의 읽기 여백 확보 */
-#taScanOut .ta-table{border-spacing:0;min-width:840px}
-#taScanOut .ta-table th:first-child,#taScanOut .ta-table td:first-child{width:148px;min-width:148px;max-width:148px;box-sizing:border-box;padding-left:12px;padding-right:28px}
-#taScanOut .ta-table th:nth-child(2),#taScanOut .ta-table td:nth-child(2){left:148px;min-width:205px;max-width:245px;padding-left:16px;text-align:left}
-@media(max-width:640px){
- #taScanOut .ta-table th:first-child,#taScanOut .ta-table td:first-child{width:102px;min-width:102px;max-width:102px;padding-left:8px;padding-right:14px}
- #taScanOut .ta-table th:nth-child(2),#taScanOut .ta-table td:nth-child(2){left:102px;min-width:172px;max-width:195px;padding-left:12px}
-}
 </style>
 <style>
 /* Research lab readable typography and responsive charts */
@@ -532,6 +523,14 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
 #mmcResearch30 .mmcR30table{max-height:340px;overflow:auto}
 @media(max-width:620px){#mmcResearch30{padding:12px}#mmcResearch30 .mmcR30cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
+<style id="mmc-investment-questions-style">
+.mmc-investment-questions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.mmc-investment-question{border:1px solid #dce5ef;border-radius:12px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:8px;min-width:0}
+.mmc-investment-question strong{font-size:14px;color:#334155;line-height:1.5}
+.mmc-investment-question b{font-size:19px;color:#0f4772}
+.mmc-investment-question small{font-size:12px;color:#56677d;line-height:1.55}
+@media(max-width:700px){.mmc-investment-questions{grid-template-columns:1fr}.mmc-investment-question{padding:12px}}
+</style>
 <style id="mmc-integrated-compact-style">
 .mmc-decision-strip{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 14px;margin:10px 0;border:1px solid #d9e3ef;background:#f7faff;border-radius:12px;font-size:13px;line-height:1.55;color:#23364d}
 .mmc-decision-strip b{font-size:14px;color:#17416c}.mmc-decision-strip span{flex:1;min-width:220px}.mmc-decision-strip button{font-size:12px}
@@ -745,7 +744,12 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
 
 <section class="panel compass-panel" id="masterCompass">
   <div class="compass-head"><div><div class="compass-title">🧭 MASTER MARKET COMPASS <span>BTC 장기 가치 → 상승장 확인 → 알트 순환매 → 과열 분할매도</span></div><div class="small" id="compassStatus">장기 BTC 월봉 데이터 연결 중…</div></div><button type="button" class="btn" id="compassReload">장기 데이터 새로고침</button></div>
-  <div class="mmc-decision-strip" id="mmcDecisionStrip" role="status" aria-live="polite"><b>오늘의 장기 판단</b><span id="mmcDecisionText">BTC 국면·자금순환·TA 분석을 확인 중입니다. 연구 데이터가 없으면 매수 확신을 표시하지 않습니다.</span><button type="button" class="btn" id="mmcCheckApi">데이터 진단</button></div><div class="qm-panel mmc-embedded-quantum" id="quantumLab">
+  <div class="mmc-investment-questions" id="mmcInvestmentQuestions" aria-label="장기 투자 3대 판단">
+<div class="mmc-investment-question"><strong>① 지금 매집할 근거가 충분한가?</strong><b id="mmcAccumulate">검증 중</b><small id="mmcAccumulateWhy">BTC 장기 가치·추세·실측 데이터 확인 중</small></div>
+<div class="mmc-investment-question"><strong>② 상승장을 계속 보유할 때인가?</strong><b id="mmcHold">검증 중</b><small id="mmcHoldWhy">추세와 과열 수준 확인 중</small></div>
+<div class="mmc-investment-question"><strong>③ 과열로 분할매도를 준비할 때인가?</strong><b id="mmcDistribute">검증 중</b><small id="mmcDistributeWhy">과열·추세 훼손 여부 확인 중</small></div>
+</div>
+<div class="mmc-decision-strip" id="mmcDecisionStrip" role="status" aria-live="polite"><b>오늘의 장기 판단</b><span id="mmcDecisionText">BTC 국면·자금순환·TA 분석을 확인 중입니다. 연구 데이터가 없으면 매수 확신을 표시하지 않습니다.</span><button type="button" class="btn" id="mmcCheckApi">데이터 진단</button></div><div class="qm-panel mmc-embedded-quantum" id="quantumLab">
 <div class="qm-head"><div><h2 style="margin:0">금·구리·금리차 보조분석</h2><div class="qm-muted">검증된 데이터가 있을 때만 그래프 표시</div></div><div class="qm-actions"><button class="btn" type="button" id="qmToggle" aria-expanded="false" aria-controls="qmDetails">상세 그래프 펼치기 ▾</button><button class="btn" type="button" id="qmRefresh" hidden>데이터 새로고침</button></div></div>
 <div class="qm-compact-note" id="qmSummary">보조 연구 지표 · 기본 접힘 · 상세 보기에서 데이터 상태를 확인할 수 있습니다.</div>
 <div id="qmDetails" hidden>
@@ -3484,15 +3488,40 @@ refresh?.addEventListener('click',()=>run(true));
 <script id="mmc-integrated-daily-ui">
 (()=>{'use strict';
 const $=id=>document.getElementById(id);
-function update(){const el=$('mmcDecisionText');if(!el)return;
-const c=window.__compassState,r=window.__mmcResearch30,rot=window.__rotState;
-const bits=[];
-if(c&&c.quality&&Date.now()-(c.at||0)<21600000){bits.push('BTC '+(c.trend==='confirmed'?'상승추세 확인':c.trend==='recovering'?'회복 중':'추세 미확인'));bits.push('과열 '+({cold:'낮음',mild:'낮음~중간',mid:'중간',warm:'경계',hot:'높음'}[c.zone]||'확인 중'));}else bits.push('BTC 장기 국면 확인 대기');
-if(rot&&rot.at&&Date.now()-rot.at<21600000)bits.push('자금순환 자료 수신');else bits.push('자금순환 확인 대기');
-if(r?.ok){const q=r.quality||{};bits.push('30개 연구: BTC '+(q.btc?.fresh?'최신':'검증 필요')+' · MVRV '+(q.mvrv?.available?'실측':'미확보')+' · ETF '+(q.etfNetFlows?.available?'실측':'미확보'));}
-else bits.push('30개 연구 API 미확인 · 검증된 매수 우위 없음');
-el.textContent=bits.join('  |  ');
+function update(){
+ const el=$('mmcDecisionText');if(!el)return;
+ const c=window.__compassState,r=window.__mmcResearch30,rot=window.__rotState;
+ const now=Date.now(),fresh=!!(c?.quality&&c?.at&&now-c.at<6*3600e3);
+ const researchFresh=!!(r?.ok&&r.receivedAt&&now-r.receivedAt<6*3600e3&&r.quality?.btc?.fresh);
+ const mvrv=!!(researchFresh&&r.quality?.mvrv?.available);
+ const etf=!!(researchFresh&&r.quality?.etfNetFlows?.available);
+ const ta=window.__taLast;
+ const taSignals=(ta?.resultN||ta?.result)?.active||[];
+ const taBuy=taSignals.some(x=>x.type==='buy'),taSell=taSignals.some(x=>x.type==='sell');
+ const set=(id,why,label,detail)=>{const a=$(id),b=$(why);if(a)a.textContent=label;if(b)b.textContent=detail;};
+ const trend=c?.trend==='confirmed',recover=c?.trend==='recovering';
+ const low=['cold','mild'].includes(c?.zone),hot=c?.zone==='hot',warm=c?.zone==='warm';
+ const value=c?.val==='discount';
+ if(!fresh){
+  set('mmcAccumulate','mmcAccumulateWhy','판단 보류','BTC 장기 국면의 최신·유효 데이터가 필요합니다.');
+  set('mmcHold','mmcHoldWhy','판단 보류','장기 추세를 검증할 수 없습니다.');
+  set('mmcDistribute','mmcDistributeWhy','판단 보류','과열·추세 데이터를 검증할 수 없습니다.');
+ }else{
+  const incomplete=!researchFresh||!mvrv||!etf;
+  set('mmcAccumulate','mmcAccumulateWhy',
+   value&&low&&trend&&!incomplete?'분할 매집 검토':value&&low?'저평가 관찰 · 확증 대기':'매집 근거 부족',
+   `가치 ${value?'저평가':'저평가 미확인'} · 추세 ${trend?'상승 확인':recover?'회복 중':'미확인'} · MVRV ${mvrv?'자료 확보':'실측 부족'} · ETF ${etf?'자료 확보':'실측 부족'}${taBuy?' · 선택 코인 TA 매수 후보':''}. 자료 확보는 자금 방향 검증을 뜻하지 않습니다.`);
+  set('mmcHold','mmcHoldWhy',trend&&!hot?'상승 추세 보유 검토':hot?'과열 위험 점검':'추세 회복 대기',
+   `BTC 장기 추세 ${trend?'확인':recover?'회복 중':'미확인'} · 과열 ${c.zone||'미확인'}${taSell?' · 선택 코인 TA 매도 후보 발생':''}. 보유 여부는 자산별로 재확인해야 합니다.`);
+  set('mmcDistribute','mmcDistributeWhy',hot?'분할매도 준비 검토':warm?'과열 경계 · 비중 점검':'과열 근거 제한적',
+   `BTC 과열 ${c.zone||'미확인'} · 장기 추세 ${trend?'확인':'미확인'}. 단기 TA 신호만으로 장기 매도를 확정하지 않습니다.`);
+ }
+ const bits=[`BTC ${fresh?(trend?'상승추세 확인':recover?'회복 중':'추세 미확인'):'자료 검증 대기'}`,
+ `MVRV ${mvrv?'공급원 확보':'실측 미확보'}`,`ETF ${etf?'공급원 확보':'실측 미확보'}`,
+ rot?.at&&now-rot.at<45*60e3?'자금순환 수신':'자금순환 최신성 미확인'];
+ el.textContent=bits.join(' | ')+' · 데이터 미확보는 매수 확신으로 계산하지 않습니다.';
 }
+
 window.mmcDailyUpdate=update;
 document.addEventListener('DOMContentLoaded',()=>{$('mmcCheckApi')?.addEventListener('click',()=>{const q=$('qmDetails'),t=$('qmToggle');if(q?.hidden)t?.click();const r=$('mmcResearch30');if(r)r.open=true;});update();});
 setInterval(update,30000);

@@ -527,7 +527,7 @@ svg text{font-family:Pretendard,"Noto Sans KR","Malgun Gothic",sans-serif}
 .mmc-investment-questions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
 .mmc-investment-question{border:1px solid #dce5ef;border-radius:12px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:8px;min-width:0}
 .mmc-investment-question strong{font-size:14px;color:#334155;line-height:1.5}
-.mmc-investment-question b{font-size:19px;color:#0f4772}
+.mmc-investment-question b{font-size:21px;font-weight:800;line-height:1.4;color:#0f4772}.mmc-investment-question b[data-signal="watch"]{color:#a16207}.mmc-investment-question b[data-signal="hold"]{color:#1d4ed8}.mmc-investment-question b[data-signal="neutral"]{color:#64748b}.mmc-investment-question b[data-signal="buy"]{color:#15803d}.mmc-investment-question b[data-signal="sell"]{color:#dc2626}.mmc-investment-question b[data-signal="caution"]{color:#b45309}
 .mmc-investment-question small{font-size:12px;color:#56677d;line-height:1.55}
 @media(max-width:700px){.mmc-investment-questions{grid-template-columns:1fr}.mmc-investment-question{padding:12px}}
 </style>
@@ -3509,7 +3509,7 @@ function update(){
  const ta=window.__taLast;
  const taSignals=(ta?.resultN||ta?.result)?.active||[];
  const taBuy=taSignals.some(x=>x.type==='buy'),taSell=taSignals.some(x=>x.type==='sell');
- const set=(id,why,label,detail)=>{const a=$(id),b=$(why);if(a)a.textContent=label;if(b)b.textContent=detail;};
+ const set=(id,why,label,detail)=>{const a=$(id),b=$(why);if(a){a.textContent=label;const category=id==='mmcAccumulate'?(label.includes('분할 매집')?'buy':label.includes('저평가 관찰')?'watch':'neutral'):id==='mmcHold'?(label.includes('보유 검토')?'hold':label.includes('과열')?'caution':label.includes('회복')?'hold':'neutral'):(label.includes('분할매도')?'sell':label.includes('과열 경계')?'caution':'neutral');a.dataset.signal=category;}if(b)b.textContent=detail;};
  const trend=c?.trend==='confirmed',recover=c?.trend==='recovering';
  const low=['cold','mild'].includes(c?.zone),hot=c?.zone==='hot',warm=c?.zone==='warm';
  const value=c?.val==='discount';
